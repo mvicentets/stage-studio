@@ -322,7 +322,7 @@ textarea.in{min-height:250px;resize:vertical;line-height:1.6}
 .grp-h a{color:var(--fg);text-decoration:none}
 .grp-h a:hover{text-decoration:underline}
 .pill.up{text-transform:uppercase;letter-spacing:.04em;font-size:10.5px;padding:3px 8px;border-radius:5px}
-.gtag{display:inline-block;padding:2px 9px;border-radius:5px;background:color-mix(in srgb,var(--c) 16%,var(--surface));color:color-mix(in srgb,var(--c) 70%,var(--fg));font-weight:600;font-size:12px;white-space:nowrap}
+.gtag{display:inline-block;max-width:180px;overflow:hidden;text-overflow:ellipsis;vertical-align:middle;padding:2px 9px;border-radius:5px;background:color-mix(in srgb,var(--c) 16%,var(--surface));color:color-mix(in srgb,var(--c) 70%,var(--fg));font-weight:600;font-size:12px;white-space:nowrap}
 .gtag.lg{font-size:13px;padding:3px 10px}
 .sicon{width:13px;height:13px;border-radius:50%;border:2px solid var(--tf);flex:none}
 .tbl.lite th{border-bottom:1px solid var(--line);padding:6px 10px;font-size:10.5px}
@@ -480,6 +480,18 @@ select.csel option{background:var(--surface);color:var(--fg);font-weight:500}
 .auth-err{color:var(--red);font-size:13px}
 .syncdot{position:fixed;right:14px;bottom:14px;z-index:90;font-size:11.5px;color:var(--faint);background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:4px 10px;pointer-events:none}
 [hidden]{display:none!important}
+.isel{-webkit-appearance:none;appearance:none;border:0;border-radius:99px;padding:3px 22px 3px 10px;font:inherit;font-size:12px;font-weight:600;cursor:pointer;max-width:170px;text-overflow:ellipsis;
+ background:var(--tb,var(--hover)) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='3'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 8px center;color:var(--tf,var(--fg))}
+.isel.plain{background-color:transparent;color:var(--muted);font-weight:500;padding-left:4px}
+.isel:hover{filter:brightness(1.08)}.isel.plain:hover{background-color:var(--hover)}
+.idate{-webkit-appearance:none;appearance:none;border:1px solid transparent;background:transparent;color:var(--muted);font:inherit;font-size:12.5px;border-radius:6px;padding:2px 4px;cursor:pointer;min-width:0;max-width:130px}
+.idate:hover{border-color:var(--line)}.idate.late{color:var(--red)}
+.idate::-webkit-calendar-picker-indicator{opacity:.5;cursor:pointer}
+th.tdel,td.tdel{width:36px;text-align:right}
+.del-btn{width:28px;height:28px;color:var(--faint);opacity:.55}.del-btn svg{width:15px;height:15px}
+tr:hover .del-btn,.card:hover .del-btn{opacity:1}.del-btn:hover{color:var(--red);background:var(--red-bg)}
+.del-btn.armed{opacity:1;color:#fff;background:var(--red)}
+@media (max-width:860px){.isel,.idate{font-size:16px!important}.isel{padding:4px 24px 4px 10px}.del-btn{opacity:1}}
 input[type=date].in,input[type=time].in{-webkit-appearance:none;appearance:none;display:block;width:100%;width:-webkit-fill-available;min-width:0;max-width:100%;height:36px;min-height:0;padding-block:0;line-height:34px;text-align:left}
 input[type=date].in::-webkit-date-and-time-value,input[type=time].in::-webkit-date-and-time-value{text-align:left;margin:0}
 .field{min-width:0}
@@ -506,7 +518,6 @@ input[type=date].in::-webkit-date-and-time-value,input[type=time].in::-webkit-da
 }
 @media (max-width:760px){
  .tbl tr{padding:10px 6px 10px 12px;gap:6px 8px}
- .tbl td:nth-last-child(2) .meta{display:none}
  .tbl td.name .row{gap:6px;flex-wrap:wrap}
  .tbl td.name .ell{flex:1 1 auto;white-space:normal;overflow:visible}
  .tbl td:last-child{margin-left:auto;font-size:12px}
@@ -606,6 +617,7 @@ const ymOf=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}`;
 const nowStamp=()=>{const d=new Date();return`${pad(d.getDate())}/${pad(d.getMonth()+1)} ${pad(d.getHours())}:${pad(d.getMinutes())}`};
 
 const IC={
+ trash:'M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3',
  download:'M12 4v12M7 11l5 5 5-5M4 20h16',
  bolt:'M13 2 4 14h7l-1 8 9-12h-7z',
  archive:'M4 7h16v13H4zM3 4h18v3H3zM10 11h4', star:'M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z',
@@ -931,6 +943,11 @@ function media(p,cls=''){
 }
 function sortDate(a,b){return(a.date||'9999').localeCompare(b.date||'9999')}
 function filtered(){const f=ui.f;return S.posts.filter(p=>!p.archived&&(f.client==='all'||p.client===f.client)&&(f.format==='all'||p.format===f.format)&&(f.owner==='all'||p.owner===f.owner)&&(f.phase==='all'||phase(p)===f.phase)&&(!f.q||(p.title+' '+cl(p.client).name).toLowerCase().includes(f.q.toLowerCase()))).sort(sortDate)}
+const rowStatus=p=>`<select class="isel t-${tone(p)}" data-act="stop" data-chg="rowStatus" data-id="${p.id}" aria-label="Status">${ST[p.stage].statuses.map(x=>opt(x,x,p.status)).join('')}</select>`;
+const rowStage=p=>`<select class="isel plain" data-act="stop" data-chg="rowStage" data-id="${p.id}" aria-label="Etapa">${STAGES.map(x=>opt(x.id,x.name,p.stage)).join('')}</select>`;
+const rowOwner=p=>`<select class="isel plain" data-act="stop" data-chg="rowOwner" data-id="${p.id}" aria-label="Responsável">${S.team.map(u=>opt(u.id,u.name,p.owner)).join('')}</select>`;
+const rowDate=p=>`<input type="date" class="idate ${isLate(p)?'late':''}" value="${esc(p.date||'')}" data-act="stop" data-chg="rowDate" data-id="${p.id}" aria-label="Data de publicação">`;
+const rowDel=p=>`<button class="icon-btn del-btn" data-act="rowDel" data-id="${p.id}" aria-label="Excluir tarefa" title="Excluir">${ic('trash')}</button>`;
 function dateCell(p){return`<span class="meta ${isLate(p)?'late':''}">${fmtD(p.date)}</span>`}
 
 /* ---------- INÍCIO ---------- */
@@ -981,7 +998,7 @@ function vInicio(){
 /* ---------- PRODUÇÃO (uma tela por etapa) ---------- */
 const STAGE_DESC={ideia:'Pautas e ideias planejadas. Daqui seguem para o Copywriting.',copy:'Roteiros e legendas. Clientes que aprovam a copy recebem o texto no portal.',criacao:'Roteiro e gravação. Carrossel e estático seguem para Design; reels seguem para Edição.',design:'Carrossel, estático e stories.',edicao:'Reels.',aprov:'Arte final + legenda esperando o cliente aprovar no portal.',pub:'Conteúdos aprovados. A social media agenda na rede e marca como postado.'};
 const statusTone=(sid,s)=>tone({stage:sid,status:s});
-const ctag=id=>{const c=cl(id);return`<span class="gtag" style="--c:${c.color}">${esc(c.short||c.name)}</span>`};
+const ctag=id=>{const c=cl(id);return`<span class="gtag" style="--c:${c.color}" title="${esc(c.name)}">${esc(c.name)}</span>`};
 function stageToolbar(groups){
  const f=ui.f;const g=groupKey();
  return`<div class="viewtabs"><button data-act="sv" data-v="lista" class="${ui.sv==='lista'?'on':''}">${ic('list')}Lista</button><button data-act="sv" data-v="quadro" class="${ui.sv==='quadro'?'on':''}">${ic('board')}Quadro</button></div>
@@ -1022,8 +1039,8 @@ function areaHtml(){
  groups=groups.filter(x=>x.items.length);
  const showClient=g!=='cliente',showStage=!sid&&g!=='etapa';
  return`<div class="groups">${groups.map(gr=>`<section class="grp"><div class="grp-h">${gr.head}<span class="faint">${gr.items.length}</span></div>
-  <div class="tbl-wrap"><table class="tbl lite"><thead><tr><th>Nome</th>${showClient?'<th>Cliente</th>':''}${showStage?'<th>Etapa</th>':''}<th>Status</th><th>Responsável</th><th>Publicação</th></tr></thead><tbody>
-  ${gr.items.map(p=>`<tr class="click" style="--c:${cl(p.client).color}" data-act="open" data-id="${p.id}"><td class="name" style="--c:${cl(p.client).color}"><div class="row"><span class="sicon t-${tone(p)}"></span><span class="ell">${esc(p.title)}</span>${ftag(p.format)}${camptag(p)}</div></td>${showClient?`<td>${ctag(p.client)}</td>`:''}${showStage?`<td class="muted">${ST[p.stage].name}</td>`:''}<td>${pill(p)}</td><td><div class="row">${av(p.owner)}<span class="meta">${esc(user(p.owner).name)}</span></div></td><td>${dateCell(p)}</td></tr>`).join('')}
+  <div class="tbl-wrap"><table class="tbl lite"><thead><tr><th>Nome</th>${showClient?'<th>Cliente</th>':''}${showStage?'<th>Etapa</th>':''}<th>Status</th><th>Responsável</th><th>Publicação</th><th class="tdel"></th></tr></thead><tbody>
+  ${gr.items.map(p=>`<tr class="click" style="--c:${cl(p.client).color}" data-act="open" data-id="${p.id}"><td class="name" style="--c:${cl(p.client).color}"><div class="row"><span class="sicon t-${tone(p)}"></span><span class="ell">${esc(p.title)}</span>${ftag(p.format)}${camptag(p)}</div></td>${showClient?`<td>${ctag(p.client)}</td>`:''}${showStage?`<td>${rowStage(p)}</td>`:''}<td>${rowStatus(p)}</td><td class="own"><div class="row">${av(p.owner)}${rowOwner(p)}</div></td><td>${rowDate(p)}</td><td class="tdel">${rowDel(p)}</td></tr>`).join('')}
   </tbody></table></div></section>`).join('')}</div>`;
 }
 function board(cols){
@@ -1033,7 +1050,7 @@ function card(p){
  return`<div class="card" style="--c:${cl(p.client).color}" draggable="true" data-drag="${p.id}" data-act="open" data-id="${p.id}" tabindex="0">
   <div class="row between">${cchip(p.client)}${ftag(p.format)}</div>
   <div class="card-t">${esc(p.title)}</div>${camptag(p)?`<div>${camptag(p)}</div>`:''}
-  <div class="row between">${pill(p)}<div class="row">${dateCell(p)}${av(p.owner)}</div></div></div>`;
+  <div class="row between">${pill(p)}<div class="row">${dateCell(p)}${av(p.owner)}${rowDel(p)}</div></div></div>`;
 }
 
 /* ---------- CALENDÁRIO ---------- */
@@ -1480,6 +1497,9 @@ let tt;function toast(t){const el=document.getElementById('toast');el.textConten
 /* ---------- ações ---------- */
 const A={
  profile:()=>profileSheet(),
+ stop:()=>{},
+ rowDel:el=>{if(!el.classList.contains('armed')){el.classList.add('armed');el.title='Clique de novo para excluir';toast('Toque de novo na lixeira para excluir.');setTimeout(()=>{if(el.isConnected)el.classList.remove('armed')},3000);return}
+  const p=S.posts.find(x=>x.id===el.dataset.id);if(!p)return;(p.slides||[]).forEach(x=>{if(x.path&&sb)sb.storage.from('media').remove([x.path]).catch(()=>{})});S.posts=S.posts.filter(x=>x.id!==p.id);save();toast('Tarefa excluída.');render()},
  download:el=>downloadPost(S.posts.find(x=>x.id===el.dataset.id)),
  slDel:el=>{const p=S.posts.find(x=>x.id===ui.modal);const [r]=p.slides.splice(Number(el.dataset.i),1);if(r&&r.path&&sb)sb.storage.from('media').remove([r.path]).catch(()=>{});save();renderModal();render()},
  slMove:el=>{const p=S.posts.find(x=>x.id===ui.modal);const i=Number(el.dataset.i),j=i+Number(el.dataset.d);if(j<0||j>=p.slides.length)return;[p.slides[i],p.slides[j]]=[p.slides[j],p.slides[i]];save();renderModal();render()},
@@ -1551,7 +1571,7 @@ const A={
   S.campaigns=S.campaigns.filter(k=>k.id!==el.dataset.id);S.posts.forEach(p=>{if(p.campaign===el.dataset.id)p.campaign=''});save();closeModal()},
  editClient:el=>clientForm(el.dataset.id),
  saveClient:el=>{const id=el.dataset.id;const name=val('kf-name').trim();if(!name){toast('Coloque o nome do cliente.');return}
-  const d={name,short:name.replace(/^(Dra?\.|Clínica)\s*/,'').split(' ')[0],area:val('kf-area'),fee:Number(val('kf-fee'))||0,color:val('kf-color'),approvesCopy:val('kf-copy')==='1'};
+  const d={name,short:name.replace(/^(Dra?\.?|Clínica)\s+/i,'').split(' ')[0],area:val('kf-area'),fee:Number(val('kf-fee'))||0,color:val('kf-color'),approvesCopy:val('kf-copy')==='1'};
   if(id)Object.assign(S.clients.find(c=>c.id===id),d);else S.clients.push({id:uid('c'),...d});save();toast('Cliente salvo.');closeModal()},
  toggleCopy:el=>{const c=S.clients.find(x=>x.id===el.dataset.id);c.approvesCopy=!c.approvesCopy;save();render()},
  clientCal:el=>{ui.calClient=el.dataset.id;saveUi();go('calendario')},
@@ -1581,6 +1601,10 @@ const C={
  avatar:el=>{const f=el.files&&el.files[0];if(!f)return;if(!f.type.startsWith('image/')){toast('Escolha uma imagem.');return}const img=new Image();img.onload=()=>{const c=document.createElement('canvas');c.width=c.height=160;const g=c.getContext('2d');const s=Math.min(img.width,img.height);g.drawImage(img,(img.width-s)/2,(img.height-s)/2,s,s,0,0,160,160);const url=c.toDataURL('image/jpeg',.82);URL.revokeObjectURL(img.src);S.avatars=S.avatars.filter(a=>a.id!==ME().id);S.avatars.push({id:ME().id,img:url});save();applyTheme();render();profileSheet();toast('Foto atualizada.')};img.src=URL.createObjectURL(f)},
  bkMet:el=>{const p=S.posts.find(x=>x.id===el.dataset.id);p.m=p.m||{};const v=el.value.trim();if(v==='')delete p.m[el.dataset.k];else p.m[el.dataset.k]=el.dataset.k==='tempo'?v:Number(v);save();render()},
  rule:el=>{const r=S.rules.find(x=>x.id===el.dataset.id);const k=el.dataset.k;if(k==='name'){r.name=el.value;save();return}const [g,f2]=k.split('.');r[g][f2]=el.value;if(f2==='stage')r[g].status=g==='when'?'':ST[el.value].statuses[0];save();render()},
+ rowStatus:el=>{const p=S.posts.find(x=>x.id===el.dataset.id);if(!p||p.status===el.value)return;setStatus(p,el.value);save();render()},
+ rowStage:el=>{const p=S.posts.find(x=>x.id===el.dataset.id);if(!p||p.stage===el.value)return;move(p,el.value);save();render()},
+ rowOwner:el=>{const p=S.posts.find(x=>x.id===el.dataset.id);if(!p)return;p.owner=el.value;hist(p,`Passou para ${user(el.value).name}`);render()},
+ rowDate:el=>{const p=S.posts.find(x=>x.id===el.dataset.id);if(!p||!el.value)return;p.date=el.value;hist(p,`Mudou a data para ${fmtD(p.date)}`);render()},
  bkSel:el=>{const p=S.posts.find(x=>x.id===el.dataset.id);p[el.dataset.k]=el.value;save()},
  bkF:el=>{ui.bk[el.dataset.k]=el.value;render()},
  drive:el=>{const p=S.posts.find(x=>x.id===ui.modal);const v=el.value.trim();if(v&&!driveId(v)){toast('Link do Drive não reconhecido.');return}p.driveUrl=v;if(v)hist(p,'Adicionou o link do Google Drive');save();renderModal();render()}
@@ -1592,7 +1616,7 @@ const I={
  teamName:el=>{const u=S.team.find(x=>x.id===el.dataset.id);u.name=el.value||'Sem nome';save();applyTheme()},
  teamEmail:el=>{const u=S.team.find(x=>x.id===el.dataset.id);u.email=el.value.trim();save()}
 };
-document.addEventListener('click',e=>{const el=e.target.closest('[data-act]');if(!el)return;const f=A[el.dataset.act];if(f){e.preventDefault();f(el,e)}});
+document.addEventListener('click',e=>{const el=e.target.closest('[data-act]');if(!el)return;const f=A[el.dataset.act];if(f){if(el.dataset.act!=='stop')e.preventDefault();f(el,e)}});
 document.addEventListener('change',e=>{const el=e.target.closest('[data-chg]');if(el&&C[el.dataset.chg])C[el.dataset.chg](el,e)});
 document.addEventListener('input',e=>{const el=e.target.closest('[data-inp]');if(el&&I[el.dataset.inp])I[el.dataset.inp](el,e)});
 document.addEventListener('keydown',e=>{
