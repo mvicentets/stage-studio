@@ -796,7 +796,7 @@ function vAuto(){
   <div class="row" style="justify-content:flex-end"><button class="btn danger sm" data-act="ruleDel" data-id="${r.id}">Excluir</button></div></article>`;
  return`<div class="page-head"><div><h1>Automações</h1><div class="sub">Regras que movem os conteúdos sozinhas. Valem quando alguém muda o status, quando o cliente aprova no portal e ao abrir o app.</div></div><button class="btn pri" data-act="ruleNew">${ic('plus')}Nova automação</button></div>
  <div class="rule-list">${R.map(card).join('')||'<div class="empty">Nenhuma automação ainda.</div>'}</div>
- <div class="box" style="margin-top:18px"><b>Automações de horário</b><div class="meta" style="margin-top:6px">Sempre ligadas: na hora agendada, o post em “Agendado” vira “Postado”. Dez minutos depois, ele sai da Gestão de publicação e vai para o Banco de posts.</div></div>`;
+ <div class="box" style="margin-top:18px;padding:14px 18px"><b>Automações de horário</b><div class="meta" style="margin-top:6px">Sempre ligadas: na hora agendada, o post em “Agendado” vira “Postado”. Dez minutos depois, ele sai da Gestão de publicação e vai para o Banco de posts.</div></div>`;
 }
 const VIEWS={automacoes:vAuto,banco:vBanco,inicio:vInicio,producao:vTodas,calendario:vCalendario,portal:vPortal2,campanhas:vCampanhas,financeiro:vFinanceiro,clientes:vClientes,equipe:vEquipe};
 const LABELS={banco:'Banco de posts',automacoes:'Automações',inicio:'Início',producao:'Todas as tarefas',calendario:'Calendário',portal:'Portal do cliente',campanhas:'Campanhas',financeiro:'Financeiro',clientes:'Clientes',equipe:'Equipe e aparência'};
