@@ -983,7 +983,7 @@ async function realUpload(p,f){
  const path=`${p.client}/${p.id}/v-${Date.now().toString(36)}.${ext}`;
  const u=UP[p.id]={name:f.name,size:f.size,loaded:0,real:true};const xhr=new XMLHttpRequest();u.xhr=xhr;
  xhr.open('POST',`${CLOUD.url}/storage/v1/object/media/${path}`);
- xhr.setRequestHeader('Authorization','Bearer '+tok);xhr.setRequestHeader('apikey',CLOUD.key);xhr.setRequestHeader('x-upsert','true');xhr.setRequestHeader('cache-control','max-age=31536000');xhr.setRequestHeader('Content-Type',f.type||'video/mp4');
+ xhr.setRequestHeader('Authorization','Bearer '+tok);xhr.setRequestHeader('apikey',CLOUD.key);xhr.setRequestHeader('cache-control','max-age=31536000');xhr.setRequestHeader('Content-Type',f.type||'video/mp4');
  xhr.upload.onprogress=e=>{if(!e.lengthComputable)return;u.loaded=e.loaded;const pct=Math.floor(e.loaded/e.total*100);const b=document.getElementById('upbar'),t=document.getElementById('uptxt');if(ui.modal===p.id&&b){b.style.width=pct+'%';t.textContent=`${pct}% · ${fsize(e.loaded)} de ${fsize(e.total)}`}};
  xhr.onload=()=>{delete UP[p.id];
   if(xhr.status>=200&&xhr.status<300){const old=p.video;p.video={url:sb.storage.from('media').getPublicUrl(path).data.publicUrl,path,name:f.name,size:f.size,type:f.type};
