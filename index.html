@@ -497,7 +497,11 @@ button.grp-h.linkish{background:none;border:0;color:inherit;font:inherit;cursor:
 button.grp-h.linkish svg{width:14px;height:14px}
 .todo-list{padding:4px 8px}
 .todo{display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px solid var(--line)}.todo:last-child{border-bottom:0}
-.todo-t{flex:1;min-width:0;border:0;background:transparent;color:var(--fg);font:inherit;font-size:14px;padding:4px 2px;border-radius:6px}
+.todo-t{flex:1;min-width:0;border:0;background:transparent;color:var(--fg);font:inherit;font-size:14px;padding:4px 2px;border-radius:6px;text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:1px}
+.todo-t:hover{background:var(--hover)}.todo-n{font-size:12px}
+.todo-people{display:inline-flex}.todo-people .av{margin-left:-6px;border:2px solid var(--surface)}
+.person-chip{display:inline-flex;align-items:center;gap:6px}.person-chip .av{width:18px;height:18px;font-size:9px}
+.chip.urg.on{background:var(--tb);color:var(--tf);border-color:transparent}
 .todo-t:focus{outline:none;background:var(--hover)}
 .todo.done .todo-t{text-decoration:line-through;color:var(--faint)}
 .tchk{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--line-2);background:transparent;display:grid;place-items:center;flex:none;cursor:pointer;padding:0;color:#fff}
@@ -885,15 +889,30 @@ function vAuto(){
  <div class="rule-list">${R.map(card).join('')||'<div class="empty">Nenhuma automação ainda.</div>'}</div>
  <div class="box" style="margin-top:18px;padding:14px 18px"><b>Automações de horário</b><div class="meta" style="margin-top:6px">Sempre ligadas: na hora agendada, o post em “Agendado” vira “Postado”. Dez minutos depois, ele sai da Gestão de publicação e vai para o Banco de posts.</div></div>`;
 }
-const myTodos=()=>(S.todos||[]).filter(t=>t.owner===(CLOUD?REAL():ME()).id);
+const meId=()=>(CLOUD?REAL():ME()).id;
+const myTodos=()=>(S.todos||[]).filter(t=>t.owner===meId()||(t.shared||[]).includes(meId()));
+const URG=[['baixa','Baixa','gray'],['media','Média','blue'],['alta','Alta','amber'],['urgente','Urgente','red']];
+const urgT=t=>URG.find(u=>u[0]===t.urg);
+function todoSheet(id){const t=S.todos.find(x=>x.id===id);if(!t)return;const own=t.owner===meId();const sh=t.shared||[];
+ const m=document.getElementById('modal');ui.modal='__todo';ui.todoOpen=id;
+ m.innerHTML=`<div class="backdrop" data-act="closeModal"></div><div class="sheet narrow" role="dialog" aria-modal="true" aria-label="Tarefa">
+  <div class="sheet-h"><button class="tchk ${t.done?'on':''}" data-act="todoDone" data-id="${t.id}" aria-label="Concluir">${t.done?ic('check'):''}</button><input class="title-in" value="${esc(t.title)}" data-chg="todoTitle" data-id="${t.id}" aria-label="Título"><button class="icon-btn" data-act="closeModal" aria-label="Fechar">${ic('x')}</button></div>
+  <div class="sheet-b one"><div class="form-grid">
+   <div class="field"><label for="td-due">Prazo</label><input class="in" type="date" id="td-due" value="${esc(t.due||'')}" data-chg="todoDue" data-id="${t.id}"></div>
+   <div class="field"><label>Urgência</label><div class="row wrap" style="gap:6px">${URG.map(u=>`<button class="chip urg ${t.urg===u[0]?'on':''} t-${u[2]}" data-act="todoUrg" data-id="${t.id}" data-v="${u[0]}">${u[1]}</button>`).join('')}</div></div>
+   <div class="field" style="grid-column:1/-1"><label>Pessoas na tarefa</label><div class="row wrap" style="gap:6px">${S.team.filter(u=>u.id!==t.owner).map(u=>`<button class="chip person-chip ${sh.includes(u.id)?'on':''}" style="--c:${ucolor(u.id)}" data-act="todoShare" data-id="${t.id}" data-v="${u.id}" ${own?'':'disabled'}>${av(u.id)}${esc(u.name)}</button>`).join('')||'<span class="meta">Só você na equipe.</span>'}</div><div class="meta" style="margin-top:4px">${own?'Quem você marcar também vê e pode editar esta tarefa.':`Criada por ${esc(user(t.owner).name)}. Só quem criou muda as pessoas.`}</div></div>
+   <div class="field" style="grid-column:1/-1"><label for="td-notes">Detalhes</label><textarea class="in" id="td-notes" rows="6" placeholder="Escreva os detalhes, links, o que precisa ser feito…" data-chg="todoNotes" data-id="${t.id}">${esc(t.notes||'')}</textarea></div>
+  </div></div>
+  <div class="sheet-f">${own?`<button class="btn danger" data-act="todoDel" data-id="${t.id}">Excluir</button>`:''}<span class="grow"></span><button class="btn pri" data-act="closeModal">Pronto</button></div></div>`;
+ m.hidden=false;document.body.classList.add('modal-open')}
 function vTarefas(){
  const L=myTodos(),open=L.filter(t=>!t.done),done=L.filter(t=>t.done).sort((a,b)=>(b.doneAt||'').localeCompare(a.doneAt||''));
  const grp=[['Atrasadas',open.filter(t=>t.due&&t.due<TODAY_ISO),'red'],['Hoje',open.filter(t=>t.due===TODAY_ISO),'accent'],['Próximas',open.filter(t=>t.due&&t.due>TODAY_ISO),'gray'],['Sem data',open.filter(t=>!t.due),'gray']];
  const item=t=>`<div class="todo ${t.done?'done':''}"><button class="tchk ${t.done?'on':''}" data-act="todoDone" data-id="${t.id}" aria-label="${t.done?'Desmarcar':'Concluir'}">${t.done?ic('check'):''}</button>
-  <input class="todo-t" value="${esc(t.title)}" data-chg="todoTitle" data-id="${t.id}" aria-label="Tarefa">${dpick(t.due,'todoDue',t.id,!t.done&&t.due&&t.due<TODAY_ISO,'Prazo')}<button class="icon-btn del-btn" data-act="todoDel" data-id="${t.id}" aria-label="Excluir">${ic('trash')}</button></div>`;
- return`<div class="page-head"><div><h1>Minhas tarefas</h1><div class="sub">Só você vê esta lista. Não entra no fluxo de conteúdo e não fica ligada a cliente.</div></div></div>
+  <button class="todo-t" data-act="todoOpen" data-id="${t.id}"><span class="ell">${esc(t.title)}</span>${t.notes?`<span class="meta todo-n ell">${esc(t.notes.split('\n')[0])}</span>`:''}</button>${urgT(t)?`<span class="pill t-${urgT(t)[2]}">${urgT(t)[1]}</span>`:''}${(t.shared||[]).length||t.owner!==meId()?`<span class="todo-people">${[t.owner,...(t.shared||[])].filter(x=>x!==meId()).slice(0,3).map(av).join('')}</span>`:''}${dpick(t.due,'todoDue',t.id,!t.done&&t.due&&t.due<TODAY_ISO,'Prazo')}${t.owner===meId()?`<button class="icon-btn del-btn" data-act="todoDel" data-id="${t.id}" aria-label="Excluir">${ic('trash')}</button>`:''}</div>`;
+ return`<div class="page-head"><div><h1>Minhas tarefas</h1><div class="sub">Suas tarefas internas e as que marcaram você. Não entram no fluxo de conteúdo nem ficam ligadas a cliente.</div></div></div>
  <form class="todo-add box" data-todo-form><input class="in" id="todoNew" placeholder="Adicionar tarefa… (ex.: responder orçamento)" autocomplete="off"><input class="in" type="date" id="todoNewDue" aria-label="Prazo"><button class="btn pri">${ic('plus')}Adicionar</button></form>
- ${grp.filter(g=>g[1].length).map(([t,l,tone])=>`<section class="todo-g"><div class="grp-h"><span class="pill up t-${tone}">${t}</span><span class="faint">${l.length}</span></div><div class="box todo-list">${l.sort((a,b)=>(a.due||'9').localeCompare(b.due||'9')).map(item).join('')}</div></section>`).join('')||(done.length?'':'<div class="empty">Nada por aqui. Escreva acima a primeira tarefa.</div>')}
+ ${grp.filter(g=>g[1].length).map(([t,l,tone])=>`<section class="todo-g"><div class="grp-h"><span class="pill up t-${tone}">${t}</span><span class="faint">${l.length}</span></div><div class="box todo-list">${l.sort((a,b)=>(URG.findIndex(u=>u[0]===b.urg))-(URG.findIndex(u=>u[0]===a.urg))||(a.due||'9').localeCompare(b.due||'9')).map(item).join('')}</div></section>`).join('')||(done.length?'':'<div class="empty">Nada por aqui. Escreva acima a primeira tarefa.</div>')}
  ${done.length?`<section class="todo-g"><button class="grp-h linkish" data-act="todoShowDone">${ic(ui.todoDone?'chevD':'chevR')}<span class="pill up t-green">Concluídas</span><span class="faint">${done.length}</span></button>${ui.todoDone?`<div class="box todo-list">${done.map(item).join('')}</div><button class="btn ghost sm" data-act="todoClear" style="margin-top:8px">Apagar concluídas</button>`:''}</section>`:''}`;
 }
 const VIEWS={tarefas:vTarefas,automacoes:vAuto,banco:vBanco,inicio:vInicio,producao:vTodas,calendario:vCalendario,portal:vPortal2,campanhas:vCampanhas,financeiro:vFinanceiro,clientes:vClientes,equipe:vEquipe};
@@ -1671,12 +1690,15 @@ const A={
  gConnect:()=>gConnect(),
  gDisconnect:async()=>{await gFn('disconnect');gTok=null;try{sessionStorage.removeItem('baseus-gtok')}catch(e){}ui.gState='none';toast('Google Drive desconectado.');profileSheet()},
  driveClear:()=>{const p=S.posts.find(x=>x.id===ui.modal);delete p.driveUrl;delete p.driveName;delete p.driveSize;save();renderModal();render()},
- todoDone:el=>{const t=S.todos.find(x=>x.id===el.dataset.id);t.done=!t.done;t.doneAt=t.done?new Date().toISOString():'';save();render()},
- todoDel:el=>{S.todos=S.todos.filter(x=>x.id!==el.dataset.id);save();render()},
+ todoDone:el=>{const t=S.todos.find(x=>x.id===el.dataset.id);t.done=!t.done;t.doneAt=t.done?new Date().toISOString():'';save();render();if(ui.modal==='__todo')todoSheet(t.id)},
+ todoOpen:el=>todoSheet(el.dataset.id),
+ todoUrg:el=>{const t=S.todos.find(x=>x.id===el.dataset.id);t.urg=t.urg===el.dataset.v?'':el.dataset.v;save();render();todoSheet(t.id)},
+ todoShare:el=>{const t=S.todos.find(x=>x.id===el.dataset.id);if(t.owner!==meId())return;const sh=t.shared=t.shared||[];const i=sh.indexOf(el.dataset.v);if(i>=0)sh.splice(i,1);else sh.push(el.dataset.v);save();render();todoSheet(t.id)},
+ todoDel:el=>{const t=S.todos.find(x=>x.id===el.dataset.id);if(!t||t.owner!==meId())return;S.todos=S.todos.filter(x=>x.id!==t.id);save();if(ui.modal==='__todo')closeModal();render()},
  todoFocus:()=>{const i=document.getElementById('todoNew');if(i){i.scrollIntoView({block:'center'});i.focus()}},
  finFocus:()=>{const i=document.getElementById('fin-desc');if(i){i.scrollIntoView({block:'center'});i.focus()}},
  todoShowDone:()=>{ui.todoDone=!ui.todoDone;render()},
- todoClear:()=>{const me=(CLOUD?REAL():ME()).id;S.todos=S.todos.filter(t=>!(t.owner===me&&t.done));save();render()},
+ todoClear:()=>{const me=meId();S.todos=S.todos.filter(t=>!(t.owner===me&&t.done));save();render()},
  stop:()=>{},
  rowDup:el=>{const p=S.posts.find(x=>x.id===el.dataset.id);if(!p)return;const q=JSON.parse(JSON.stringify(p));
   ['mediaUrl','mediaType','mediaName','mediaSize','postedAt','link'].forEach(k=>delete q[k]);
@@ -1792,8 +1814,9 @@ const C={
  rowStage:el=>{const p=S.posts.find(x=>x.id===el.dataset.id);if(!p||p.stage===el.value)return;move(p,el.value);save();render()},
  rowOwner:el=>{const p=S.posts.find(x=>x.id===el.dataset.id);if(!p)return;p.owner=el.value;hist(p,`Passou para ${user(el.value).name}`);render()},
  rowDate:el=>{const p=S.posts.find(x=>x.id===el.dataset.id);if(!p||!el.value)return;p.date=el.value;hist(p,`Mudou a data para ${fmtD(p.date)}`);render()},
- todoTitle:el=>{const t=S.todos.find(x=>x.id===el.dataset.id);const v=el.value.trim();if(!v){el.value=t.title;return}t.title=v;save()},
+ todoTitle:el=>{const t=S.todos.find(x=>x.id===el.dataset.id);const v=el.value.trim();if(!v){el.value=t.title;return}t.title=v;save();render()},
  todoDue:el=>{const t=S.todos.find(x=>x.id===el.dataset.id);t.due=el.value;save();render()},
+ todoNotes:el=>{const t=S.todos.find(x=>x.id===el.dataset.id);t.notes=el.value;save();render()},
  clientPhoto:el=>{const f=el.files&&el.files[0];if(!f||!f.type.startsWith('image/')){toast('Escolha uma imagem.');return}const img=new Image();img.onload=()=>{const c=document.createElement('canvas');c.width=c.height=200;const s2=Math.min(img.width,img.height);c.getContext('2d').drawImage(img,(img.width-s2)/2,(img.height-s2)/2,s2,s2,0,0,200,200);URL.revokeObjectURL(img.src);ui.kfPhoto=c.toDataURL('image/jpeg',.85);
   const keep={n:val('kf-name'),a:val('kf-area'),fe:val('kf-fee'),co:val('kf-color'),cp:val('kf-copy'),st:val('kf-status'),pr:val('kf-prod')};clientForm(ui.kfId,true);
   const set=(i,v)=>{const e=document.getElementById(i);if(e)e.value=v};set('kf-name',keep.n);set('kf-area',keep.a);set('kf-fee',keep.fe);set('kf-color',keep.co);set('kf-copy',keep.cp);set('kf-status',keep.st);set('kf-prod',keep.pr)};img.src=URL.createObjectURL(f)},
