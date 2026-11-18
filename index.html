@@ -574,6 +574,7 @@ const ymOf=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}`;
 const nowStamp=()=>{const d=new Date();return`${pad(d.getDate())}/${pad(d.getMonth()+1)} ${pad(d.getHours())}:${pad(d.getMinutes())}`};
 
 const IC={
+ download:'M12 4v12M7 11l5 5 5-5M4 20h16',
  bolt:'M13 2 4 14h7l-1 8 9-12h-7z',
  archive:'M4 7h16v13H4zM3 4h18v3H3zM10 11h4', star:'M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z',
  home:'M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z',
@@ -838,6 +839,20 @@ async function addImages(p,files){
  toast(fail?`${fail} imagem${fail>1?'ns':''} não subiu. Tente de novo.`:'Imagens enviadas.')}
 const fsize=b=>b>=1e9?(b/1e9).toFixed(1).replace('.',',')+' GB':b>=1e6?Math.round(b/1e6)+' MB':Math.max(1,Math.round(b/1e3))+' KB';
 const PART=10e6;
+function dlBtn(p){const n=(p.slides||[]).filter(x=>x.url).length;const has=n||p.mediaUrl||(p.driveUrl&&driveId(p.driveUrl));if(!has)return'';
+ return`<div class="row wrap" style="margin-top:10px"><button class="btn sm pri" data-act="download" data-id="${p.id}">${ic('download')}${n>1?`Baixar ${n} imagens`:n?'Baixar imagem':'Baixar vídeo'}</button></div>`}
+function slug(t){return String(t||'post').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^\w]+/g,'-').replace(/^-|-$/g,'').toLowerCase().slice(0,40)||'post'}
+async function downloadPost(p){
+ const sl=(p.slides||[]).filter(x=>x.url),base=slug(p.title);
+ const go=(url,name)=>{const a=document.createElement('a');a.href=url;a.download=name;a.rel='noopener';document.body.appendChild(a);a.click();a.remove()};
+ if(sl.length){toast(sl.length>1?`Baixando ${sl.length} imagens…`:'Baixando imagem…');
+  for(let i=0;i<sl.length;i++){const name=`${base}-${String(i+1).padStart(2,'0')}.jpg`;
+   try{const r=await fetch(sl[i].url);const b=await r.blob();const u=URL.createObjectURL(b);go(u,name);setTimeout(()=>URL.revokeObjectURL(u),4000)}catch(e){go(sl[i].url+(sl[i].url.includes('?')?'&':'?')+'download='+encodeURIComponent(name),name)}
+   await new Promise(r=>setTimeout(r,350))}
+  return}
+ if(p.mediaUrl){go(p.mediaUrl,p.mediaName||base+'.mp4');return}
+ const id=driveId(p.driveUrl);if(id){window.open(`https://drive.google.com/uc?export=download&id=${id}`,'_blank','noopener');toast('Abrindo o download no Google Drive.')}
+}
 function upHtml(p){
  const sl=p.slides||[];
  if(IMG_FMT.includes(p.format)){
@@ -1346,7 +1361,7 @@ function renderModal(){
  <div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(p.title)}">
   <div class="sheet-h">${cchip(p.client)}<input class="title-in" id="m-title" value="${esc(p.title)}" data-inp="pf" data-k="title" aria-label="Título"><button class="icon-btn" data-act="closeModal" aria-label="Fechar">${ic('x')}</button></div>
   <div class="sheet-b">
-   <div>${media(p)}${upHtml(p)}
+   <div>${media(p)}${dlBtn(p)}${upHtml(p)}
     ${p.mediaUrl||UP[p.id]?'':`<div class="drv"><label for="m-drive">ou cole o link do Google Drive</label><input class="in" id="m-drive" placeholder="https://drive.google.com/file/d/…" value="${esc(p.driveUrl||'')}" data-chg="drive"></div>`}
     <div class="note">No protótipo o envio é simulado e o arquivo some ao recarregar. Na versão de verdade ele vai direto para o armazenamento (Cloudflare R2), em partes, e fica salvo.</div></div>
    <div style="min-width:0">
@@ -1429,6 +1444,7 @@ let tt;function toast(t){const el=document.getElementById('toast');el.textConten
 /* ---------- ações ---------- */
 const A={
  profile:()=>profileSheet(),
+ download:el=>downloadPost(S.posts.find(x=>x.id===el.dataset.id)),
  slDel:el=>{const p=S.posts.find(x=>x.id===ui.modal);const [r]=p.slides.splice(Number(el.dataset.i),1);if(r&&r.path&&sb)sb.storage.from('media').remove([r.path]).catch(()=>{});save();renderModal();render()},
  slMove:el=>{const p=S.posts.find(x=>x.id===ui.modal);const i=Number(el.dataset.i),j=i+Number(el.dataset.d);if(j<0||j>=p.slides.length)return;[p.slides[i],p.slides[j]]=[p.slides[j],p.slides[i]];save();renderModal();render()},
  carNav:el=>{const t=el.closest('.car').querySelector('.car-t');t.scrollBy({left:Number(el.dataset.d)*t.clientWidth,behavior:'smooth'})},
