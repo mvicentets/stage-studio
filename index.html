@@ -483,6 +483,7 @@ select.csel option{background:var(--surface);color:var(--fg);font-weight:500}
 .fab{position:fixed;right:max(20px,env(safe-area-inset-right,0px));bottom:calc(20px + env(safe-area-inset-bottom,0px));z-index:55;display:flex;align-items:center;gap:8px;height:52px;padding:0 20px 0 16px;border:0;border-radius:99px;background:var(--accent);color:var(--on-accent);font:inherit;font-weight:650;font-size:14.5px;cursor:pointer;box-shadow:0 10px 28px color-mix(in srgb,var(--accent) 40%,transparent),0 2px 6px rgba(0,0,0,.18)}
 .fab svg{width:22px;height:22px;stroke:currentColor;stroke-width:2.4;fill:none;stroke-linecap:round}
 .fab:active{transform:scale(.97)}
+.modal:not([hidden]) ~ .fab,body.menu .fab{display:none}
 @media (max-width:860px){
  .fab{width:58px;height:58px;padding:0;justify-content:center}.fab span{display:none}.fab svg{width:26px;height:26px}
  input,select,textarea,.in,.sel{font-size:16px!important}
@@ -502,7 +503,7 @@ select.csel option{background:var(--surface);color:var(--fg);font-weight:500}
 }
 @media (max-width:760px){
  .tbl tr{padding:10px 6px 10px 12px;gap:6px 8px}
- .tbl td .meta{display:none}
+ .tbl td:nth-last-child(2) .meta{display:none}
  .tbl td.name .row{gap:6px;flex-wrap:wrap}
  .tbl td.name .ell{flex:1 1 auto;white-space:normal;overflow:visible}
  .tbl td:last-child{margin-left:auto;font-size:12px}
