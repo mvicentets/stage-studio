@@ -1,7 +1,7 @@
 <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap">
 <script>window.STAGE_CLOUD={"url": "https://bfpzjpwtzogtgwwklkjz.supabase.co", "key": "sb_publishable_S_0MZ2yopkPPBIOT3dERmw_IQPvdAzE"}</script>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Stage Studio</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -460,7 +460,7 @@ select.csel option{background:var(--surface);color:var(--fg);font-weight:500}
   .kpi .n{font-size:24px}
   .main{padding-block:20px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
   .sheet-b{grid-template-columns:minmax(0,1fr)}
-  .sheet-b .media{max-width:300px;margin:0 auto}
+  .sheet-b .media{max-width:220px;margin:0 auto}
   .p-item{grid-template-columns:minmax(0,1fr)}
   .p-item .media{max-width:280px}
   .search .in{width:160px}
@@ -480,6 +480,32 @@ select.csel option{background:var(--surface);color:var(--fg);font-weight:500}
 .auth-err{color:var(--red);font-size:13px}
 .syncdot{position:fixed;right:14px;bottom:14px;z-index:90;font-size:11.5px;color:var(--faint);background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:4px 10px;pointer-events:none}
 [hidden]{display:none!important}
+.fab{position:fixed;right:max(20px,env(safe-area-inset-right,0px));bottom:calc(20px + env(safe-area-inset-bottom,0px));z-index:55;display:flex;align-items:center;gap:8px;height:52px;padding:0 20px 0 16px;border:0;border-radius:99px;background:var(--accent);color:var(--on-accent);font:inherit;font-weight:650;font-size:14.5px;cursor:pointer;box-shadow:0 10px 28px color-mix(in srgb,var(--accent) 40%,transparent),0 2px 6px rgba(0,0,0,.18)}
+.fab svg{width:22px;height:22px;stroke:currentColor;stroke-width:2.4;fill:none;stroke-linecap:round}
+.fab:active{transform:scale(.97)}
+@media (max-width:860px){
+ .fab{width:58px;height:58px;padding:0;justify-content:center}.fab span{display:none}.fab svg{width:26px;height:26px}
+ input,select,textarea,.in,.sel{font-size:16px!important}
+ .mtop{padding-block:8px}
+ .banner{flex-direction:column;align-items:stretch;gap:8px}
+ .banner .sel,.banner .btn{width:100%;justify-content:center}
+ .p-head{gap:10px}
+ .pp-pop{padding:0;place-items:end stretch}
+ .pp-sheet{width:100%;max-height:92dvh;border-radius:18px 18px 0 0;padding:14px 14px 0}
+ .pp-sheet .media,.pp-grid .media{max-width:240px;margin:0 auto}
+ .pp-sheet textarea{width:100%;min-width:0;flex:1 1 100%}
+ .pp-sheet .row{flex-wrap:wrap;min-width:0}
+ .pp-sheet *{min-width:0}
+ .pp-foot{gap:6px}.pp-foot .btn{padding-inline:10px}
+ .main{padding-bottom:96px}
+}
+@media (max-width:760px){
+ .tbl tr{padding:10px 6px 10px 12px;gap:6px 8px}
+ .tbl td .meta{display:none}
+ .tbl td.name .row{gap:6px;flex-wrap:wrap}
+ .tbl td.name .ell{flex:1 1 auto;white-space:normal;overflow:visible}
+ .tbl td:last-child{margin-left:auto;font-size:12px}
+}
 body.client-mode .side,body.client-mode .mtop,body.client-mode .mback{display:none!important}
 body.client-mode .app{grid-template-columns:minmax(0,1fr)}
 .rule-list{display:flex;flex-direction:column;gap:14px}
@@ -552,6 +578,7 @@ button.me:hover{background:var(--hover)}
 </div>
 <div class="modal" id="modal" hidden></div>
 <div class="toast" id="toast" hidden></div>
+<button class="fab" id="fab" data-act="newPost" aria-label="Nova tarefa" title="Nova tarefa" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Nova tarefa</span></button>
 <div class="auth" id="auth" hidden></div>
 
 <script>
@@ -800,7 +827,8 @@ function vAuto(){
 }
 const VIEWS={automacoes:vAuto,banco:vBanco,inicio:vInicio,producao:vTodas,calendario:vCalendario,portal:vPortal2,campanhas:vCampanhas,financeiro:vFinanceiro,clientes:vClientes,equipe:vEquipe};
 const LABELS={banco:'Banco de posts',automacoes:'Automações',inicio:'Início',producao:'Todas as tarefas',calendario:'Calendário',portal:'Portal do cliente',campanhas:'Campanhas',financeiro:'Financeiro',clientes:'Clientes',equipe:'Equipe e aparência'};
-function render(){if(!can(ui.view)){ui.view=firstAllowed();try{history.replaceState(null,'','#'+ui.view)}catch(e){}}renderNav();document.getElementById('mtTitle').textContent=curStage()?ST[curStage()].name:LABELS[ui.view];document.getElementById('view').innerHTML=curStage()?vEtapa(curStage()):VIEWS[ui.view]();}
+function render(){try{const f=document.getElementById('fab');if(f)f.hidden=!!ui.clientMode||!allowedStages().length}catch(e){}
+if(!can(ui.view)){ui.view=firstAllowed();try{history.replaceState(null,'','#'+ui.view)}catch(e){}}renderNav();document.getElementById('mtTitle').textContent=curStage()?ST[curStage()].name:LABELS[ui.view];document.getElementById('view').innerHTML=curStage()?vEtapa(curStage()):VIEWS[ui.view]();}
 function agendaHtml(L,act){
  const by={};[...L].filter(p=>p.date).sort(sortDate).forEach(p=>{(by[p.date]=by[p.date]||[]).push(p)});
  const days=Object.keys(by);
