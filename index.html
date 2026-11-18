@@ -480,6 +480,9 @@ select.csel option{background:var(--surface);color:var(--fg);font-weight:500}
 .auth-err{color:var(--red);font-size:13px}
 .syncdot{position:fixed;right:14px;bottom:14px;z-index:90;font-size:11.5px;color:var(--faint);background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:4px 10px;pointer-events:none}
 [hidden]{display:none!important}
+input[type=date].in,input[type=time].in{-webkit-appearance:none;appearance:none;display:block;width:100%;min-width:0;max-width:100%;min-height:36px;line-height:1.3;text-align:left}
+input[type=date].in::-webkit-date-and-time-value,input[type=time].in::-webkit-date-and-time-value{text-align:left;margin:0}
+.field{min-width:0}
 .fab{position:fixed;right:max(20px,env(safe-area-inset-right,0px));bottom:calc(20px + env(safe-area-inset-bottom,0px));z-index:55;display:flex;align-items:center;gap:8px;height:52px;padding:0 20px 0 16px;border:0;border-radius:99px;background:var(--accent);color:var(--on-accent);font:inherit;font-weight:650;font-size:14.5px;cursor:pointer;box-shadow:0 10px 28px color-mix(in srgb,var(--accent) 40%,transparent),0 2px 6px rgba(0,0,0,.18)}
 .fab svg{width:22px;height:22px;stroke:currentColor;stroke-width:2.4;fill:none;stroke-linecap:round}
 .fab:active{transform:scale(.97)}
@@ -1387,6 +1390,7 @@ function renderModal(){
    <div style="margin-top:12px"><textarea class="in" id="m-cmt" style="min-height:80px" placeholder="Escreva um comentário para a equipe"></textarea><div class="row" style="margin-top:8px"><button class="btn sm pri" data-act="addCmt">Comentar</button></div></div>`;
  if(ui.mtab==='historico')body=[...p.history].reverse().map(h=>`<div class="hist"><time>${esc(h.t||'—')}</time><span><b>${esc(h.who)}</b> ${esc(h.txt)}</span></div>`).join('');
  const stOpts=st.statuses.map(s=>opt(s,s,p.status)).join('');
+ const SCR='.sheet,.sheet-b,.sheet-b>*';const keepScroll=m.getAttribute('data-pid')===p.id&&!m.hidden?[...m.querySelectorAll(SCR)].map(e=>e.scrollTop):null;m.setAttribute('data-pid',p.id);
  m.innerHTML=`<div class="backdrop" data-act="closeModal"></div>
  <div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(p.title)}">
   <div class="sheet-h">${cchip(p.client)}<input class="title-in" id="m-title" value="${esc(p.title)}" data-inp="pf" data-k="title" aria-label="Título"><button class="icon-btn" data-act="closeModal" aria-label="Fechar">${ic('x')}</button></div>
@@ -1422,6 +1426,7 @@ function renderModal(){
   </div>
  </div>`;
  m.hidden=false;
+ if(keepScroll)[...m.querySelectorAll(SCR)].forEach((e,k)=>{if(keepScroll[k])e.scrollTop=keepScroll[k]});
 }
 function openPost(id){ui.modal=id;ui.mtab=ui.mtab||'legenda';renderModal()}
 function closeModal(){ui.modal=null;renderModal();render()}
