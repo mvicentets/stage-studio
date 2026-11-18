@@ -485,6 +485,10 @@ select.csel option{background:var(--surface);color:var(--fg);font-weight:500}
 .auth-err{color:var(--red);font-size:13px}
 .syncdot{position:fixed;right:14px;bottom:14px;z-index:90;font-size:11.5px;color:var(--faint);background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:4px 10px;pointer-events:none}
 [hidden]{display:none!important}
+.cav.img{background-size:cover;background-position:center;color:transparent}
+.kf-photo{display:flex;align-items:center;gap:14px;margin-bottom:16px}.kf-photo .cav{width:64px;height:64px;font-size:20px;border-radius:16px}.kf-photo input{display:none}
+.prod-tag{background:color-mix(in srgb,var(--accent) 12%,var(--surface));color:var(--accent-ink);font-weight:600}
+.dup-btn:hover{color:var(--accent-ink);background:var(--accent-soft)}
 .todo-add{display:flex;gap:8px;padding:10px;margin-bottom:18px;flex-wrap:wrap}
 .todo-add #todoNew{flex:1 1 220px;min-width:0}.todo-add input[type=date]{flex:0 0 150px}
 .todo-g{margin-bottom:18px}.todo-g .grp-h{margin-bottom:8px}
@@ -509,7 +513,7 @@ button.grp-h.linkish svg{width:14px;height:14px}
 .idate{-webkit-appearance:none;appearance:none;border:1px solid transparent;background:transparent;color:var(--muted);font:inherit;font-size:12.5px;border-radius:6px;padding:2px 4px;cursor:pointer;min-width:0;max-width:130px}
 .idate:hover{border-color:var(--line)}.idate.late{color:var(--red)}
 .idate::-webkit-calendar-picker-indicator{opacity:.5;cursor:pointer}
-th.tdel,td.tdel{width:36px;text-align:right}
+th.tdel,td.tdel{width:68px;text-align:right}
 .tbl-wrap{scrollbar-width:none}.tbl-wrap::-webkit-scrollbar{display:none}
 @media (min-width:761px) and (max-width:1100px){.tbl.lite th,.tbl.lite td{padding-inline:6px}.isel{max-width:130px}.idate{max-width:118px}}
 .del-btn{width:28px;height:28px;color:var(--faint);opacity:.55}.del-btn svg{width:15px;height:15px}
@@ -542,7 +546,7 @@ input[type=date].in::-webkit-date-and-time-value,input[type=time].in::-webkit-da
 @media (max-width:760px){
  .tbl tr{position:relative;padding:9px 8px 9px 12px;gap:6px 6px;align-items:center}
  .tbl td,.tbl.lite td,.tbl.lite th{padding:0!important}
- .tbl td.name{padding:0 30px 2px 0!important}
+ .tbl td.name{padding:0 62px 2px 0!important}
  .tbl td.name .row{gap:6px}
  .tbl td.own .row{position:relative;gap:0}
  .tbl td.own .av{width:24px;height:24px;font-size:10.5px}
@@ -650,6 +654,7 @@ const ymOf=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}`;
 const nowStamp=()=>{const d=new Date();return`${pad(d.getDate())}/${pad(d.getMonth()+1)} ${pad(d.getHours())}:${pad(d.getMinutes())}`};
 
 const IC={
+ copy:'M9 9h11v11H9zM5 15H4V4h11v1',
  chevD:'M6 9l6 6 6-6',
  todo:'M9 6h11M9 12h11M9 18h11M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2',
  trash:'M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3',
@@ -906,6 +911,10 @@ window.addEventListener('hashchange',route);
 function go(v){if(location.hash.slice(1)===v)render();else location.hash=v}
 
 /* ---------- peças comuns ---------- */
+const cavH=c=>`<div class="cav${c.photo?' img':''}" style="--c:${c.color}${c.photo?`;background-image:url(${c.photo})`:''}">${initials(c.name)}</div>`;
+const CSTATUS=[['ativo','Ativo','green'],['onboarding','Em onboarding','blue'],['pausado','Pausado','amber'],['encerrado','Encerrado','gray']];
+const CPROD=['Só tráfego','Full service','Freela','Social media'];
+const cstat=c=>CSTATUS.find(x=>x[0]===(c.status||'ativo'))||CSTATUS[0];
 const cchip=id=>{const c=cl(id);return`<span class="cc" style="--c:${c.color}"><i></i><span class="ell">${esc(c.short||c.name)}</span></span>`};
 const BRAND={blue:'#1A3FF5',semi:'#3D8BFD',yellow:'#F6B23A',orange:'#F07C2A',red:'#EE4A2B',green:'#5FE88A'};
 const FMT_COLOR={reels:BRAND.semi,carrossel:BRAND.orange,estatico:BRAND.yellow,stories:BRAND.green};
@@ -919,6 +928,7 @@ const avImg=id=>{const a=(S.avatars||[]).find(x=>x.id===id);return a&&a.img||''}
 const av=id=>{const im=avImg(id);return`<span class="av uc${im?' img':''}" style="--c:${ucolor(id)}${im?`;background-image:url(${im})`:''}" title="${esc(user(id).name)}">${esc(initials(user(id).name))}</span>`};
 const driveId=u=>{const m=String(u||'').match(/\/d\/([\w-]{10,})|[?&]id=([\w-]{10,})/);return m?(m[1]||m[2]):''};
 const UP={},UPI={};
+const pathUsed=path=>S.posts.some(q=>(q.slides||[]).some(x=>x.path===path));
 function shrink(file){return new Promise((res,rej)=>{const img=new Image();img.onload=()=>{const M=1440,k=Math.min(1,M/Math.max(img.width,img.height));const c=document.createElement('canvas');c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);c.getContext('2d').drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(img.src);c.toBlob(b=>b?res(b):rej(new Error('img')),'image/jpeg',.86)};img.onerror=()=>rej(new Error('Imagem inválida'));img.src=URL.createObjectURL(file)})}
 async function addImages(p,files){
  files=[...files].filter(f=>f.type.startsWith('image/'));if(!files.length){toast('Escolha imagens (JPG ou PNG).');return}
@@ -997,6 +1007,7 @@ const rowStage=p=>`<select class="isel plain" data-act="stop" data-chg="rowStage
 const rowOwner=p=>`<select class="isel plain" data-act="stop" data-chg="rowOwner" data-id="${p.id}" aria-label="Responsável">${S.team.map(u=>opt(u.id,u.name,p.owner)).join('')}</select>`;
 const dpick=(val,chg,id,late,label)=>`<label class="dpick ${late?'late':''}" data-act="stop">${ic('cal')}<span>${val?fmtD(val):'Sem data'}</span><input type="date" value="${esc(val||'')}" data-chg="${chg}" data-id="${id}" aria-label="${label}"></label>`;
 const rowDate=p=>dpick(p.date,'rowDate',p.id,isLate(p),'Data de publicação');
+const rowDup=p=>`<button class="icon-btn del-btn dup-btn" data-act="rowDup" data-id="${p.id}" aria-label="Duplicar tarefa" title="Duplicar">${ic('copy')}</button>`;
 const rowDel=p=>`<button class="icon-btn del-btn" data-act="rowDel" data-id="${p.id}" aria-label="Excluir tarefa" title="Excluir">${ic('trash')}</button>`;
 function dateCell(p){return`<span class="meta ${isLate(p)?'late':''}">${fmtD(p.date)}</span>`}
 
@@ -1090,7 +1101,7 @@ function areaHtml(){
  const showClient=g!=='cliente',showStage=!sid&&g!=='etapa';
  return`<div class="groups">${groups.map(gr=>`<section class="grp"><div class="grp-h">${gr.head}<span class="faint">${gr.items.length}</span></div>
   <div class="tbl-wrap"><table class="tbl lite"><thead><tr><th>Nome</th>${showClient?'<th>Cliente</th>':''}${showStage?'<th>Etapa</th>':''}<th>Status</th><th>Responsável</th><th>Publicação</th><th class="tdel"></th></tr></thead><tbody>
-  ${gr.items.map(p=>`<tr class="click" style="--c:${cl(p.client).color}" data-act="open" data-id="${p.id}"><td class="name" style="--c:${cl(p.client).color}"><div class="row"><span class="sicon t-${tone(p)}"></span><span class="ell">${esc(p.title)}</span>${ftag(p.format)}${camptag(p)}</div></td>${showClient?`<td>${ctag(p.client)}</td>`:''}${showStage?`<td>${rowStage(p)}</td>`:''}<td>${rowStatus(p)}</td><td class="own"><div class="row">${av(p.owner)}${rowOwner(p)}</div></td><td>${rowDate(p)}</td><td class="tdel">${rowDel(p)}</td></tr>`).join('')}
+  ${gr.items.map(p=>`<tr class="click" style="--c:${cl(p.client).color}" data-act="open" data-id="${p.id}"><td class="name" style="--c:${cl(p.client).color}"><div class="row"><span class="sicon t-${tone(p)}"></span><span class="ell">${esc(p.title)}</span>${ftag(p.format)}${camptag(p)}</div></td>${showClient?`<td>${ctag(p.client)}</td>`:''}${showStage?`<td>${rowStage(p)}</td>`:''}<td>${rowStatus(p)}</td><td class="own"><div class="row">${av(p.owner)}${rowOwner(p)}</div></td><td>${rowDate(p)}</td><td class="tdel"><div class="row" style="gap:2px;justify-content:flex-end">${rowDup(p)}${rowDel(p)}</div></td></tr>`).join('')}
   </tbody></table></div></section>`).join('')}</div>`;
 }
 function board(cols){
@@ -1100,7 +1111,7 @@ function card(p){
  return`<div class="card" style="--c:${cl(p.client).color}" draggable="true" data-drag="${p.id}" data-act="open" data-id="${p.id}" tabindex="0">
   <div class="row between">${cchip(p.client)}${ftag(p.format)}</div>
   <div class="card-t">${esc(p.title)}</div>${camptag(p)?`<div>${camptag(p)}</div>`:''}
-  <div class="row between">${pill(p)}<div class="row">${dateCell(p)}${av(p.owner)}${rowDel(p)}</div></div></div>`;
+  <div class="row between">${pill(p)}<div class="row">${dateCell(p)}${av(p.owner)}${rowDup(p)}${rowDel(p)}</div></div></div>`;
 }
 
 /* ---------- CALENDÁRIO ---------- */
@@ -1139,7 +1150,7 @@ function feedView(){
  const ps=S.posts.filter(p=>p.client===ui.calClient&&p.format!=='stories').sort((a,b)=>b.date.localeCompare(a.date));
  const c=cl(ui.calClient);
  return`<div class="feed-wrap"><div class="feed">${ps.map(p=>`<button class="tile ${['postado','agendado','aprovado'].includes(phase(p))?'':'dim'}" data-act="open" data-id="${p.id}" title="${esc(p.title)}">${media(p,'sm')}${phase(p)!=='postado'?`<span class="pill t-${PH[phase(p)][1]}">${PH[phase(p)][0]}</span>`:''}</button>`).join('')}</div>
-  <div class="box" style="max-width:300px;padding:16px"><div class="row" style="gap:12px;margin-bottom:10px"><div class="cav" style="--c:${c.color}">${initials(c.name)}</div><div><b>${esc(c.name)}</b><div class="meta">${esc(c.area)}</div></div></div>
+  <div class="box" style="max-width:300px;padding:16px"><div class="row" style="gap:12px;margin-bottom:10px">${cavH(c)}<div><b>${esc(c.name)}</b><div class="meta">${esc(c.area)}</div></div></div>
   <p class="muted" style="margin:0">Prévia da grade com os posts mais recentes em cima. Os apagados ainda não foram aprovados.</p></div></div>`;
 }
 
@@ -1153,7 +1164,7 @@ function vPortal(){
  const list=ui.portalTab==='pendentes'?pend:ui.portalTab==='ajustes'?adj:done;
  return`<div class="portal">
  <div class="banner">${ic('check')}Você está vendo o portal como o cliente vê.<select class="sel" data-chg="portalClient" aria-label="Cliente">${S.clients.map(x=>opt(x.id,x.name,c.id)).join('')}</select></div>
- <div class="p-hello"><div class="cav" style="--c:${c.color}">${initials(c.name)}</div><div><h1>Olá, ${esc(c.name)}</h1><div class="sub">${pend.length?`Você tem ${pend.length} conteúdo${pend.length>1?'s':''} esperando sua aprovação.`:'Nada esperando sua aprovação agora.'}</div></div></div>
+ <div class="p-hello">${cavH(c)}<div><h1>Olá, ${esc(c.name)}</h1><div class="sub">${pend.length?`Você tem ${pend.length} conteúdo${pend.length>1?'s':''} esperando sua aprovação.`:'Nada esperando sua aprovação agora.'}</div></div></div>
  <div class="tabs"><button data-act="portalTab" data-v="pendentes" class="${ui.portalTab==='pendentes'?'on':''}">Para aprovar (${pend.length})</button><button data-act="portalTab" data-v="ajustes" class="${ui.portalTab==='ajustes'?'on':''}">Ajustes pedidos (${adj.length})</button><button data-act="portalTab" data-v="aprovados" class="${ui.portalTab==='aprovados'?'on':''}">Aprovados (${done.length})</button></div>
  ${list.length?list.map(p=>portalItem(p,ui.portalTab)).join(''):`<div class="empty">${ui.portalTab==='pendentes'?'Tudo aprovado por aqui.':'Nada nesta aba.'}</div>`}
  </div>`;
@@ -1184,7 +1195,7 @@ function vPortal2(){
  const c=cl(ui.portalClient);
  const open=S.posts.find(p=>p.id===ui.pPost&&p.client===c.id);
  const q=pQueueList();
- let h=pBanner(c)+`<div class="p-head"><div class="row" style="gap:14px"><div class="cav" style="--c:${c.color}">${initials(c.name)}</div><div><h1>${esc(c.name)}</h1><div class="sub">${esc(c.area)}</div></div></div>
+ let h=pBanner(c)+`<div class="p-head"><div class="row" style="gap:14px">${cavH(c)}<div><h1>${esc(c.name)}</h1><div class="sub">${esc(c.area)}</div></div></div>
   <button class="btn" data-act="pQueue">${ic('check')}Fila de aprovação<span class="pill t-amber">${q.length}</span></button></div>
   <div class="viewtabs"><button data-act="pTab" data-v="conteudo" class="${ui.pTab==='conteudo'?'on':''}">${ic('cal')}Conteúdo</button><button data-act="pTab" data-v="mensagens" class="${ui.pTab==='mensagens'?'on':''}">${ic('msg')}Mensagens</button></div>`;
  h+=ui.pTab==='mensagens'?pMsgs(c):pContent();
@@ -1325,10 +1336,10 @@ function vFinanceiro(){
 /* ---------- CLIENTES ---------- */
 function vClientes(){
  const ym=ymOf(TODAY);
- return`<div class="page-head"><div><h1>Clientes</h1><div class="sub">${S.clients.length} clientes ativos · ${brl(S.clients.reduce((a,c)=>a+Number(c.fee||0),0))} em mensalidades</div></div>
+ return`<div class="page-head"><div><h1>Clientes</h1><div class="sub">${S.clients.filter(c=>cstat(c)[0]==='ativo').length} clientes ativos · ${brl(S.clients.filter(c=>!['pausado','encerrado'].includes(cstat(c)[0])).reduce((a,c)=>a+Number(c.fee||0),0))} em mensalidades</div></div>
   <div class="actions"><button class="btn pri" data-act="editClient">${ic('plus')}Novo cliente</button></div></div>
   <div class="cgrid">${S.clients.map(c=>{const P=S.posts.filter(p=>p.client===c.id);const prod=P.filter(p=>phase(p)==='producao').length,ap=P.filter(p=>phase(p)==='aprovacao').length,po=P.filter(p=>phase(p)==='postado'&&p.date.slice(0,7)===ym).length;
-  return`<article class="box client"><div class="row" style="gap:12px"><div class="cav" style="--c:${c.color}">${initials(c.name)}</div><div class="grow"><h2 class="ell">${esc(c.name)}</h2><div class="meta">${esc(c.area)} · ${brl(c.fee)}/mês</div></div><button class="icon-btn" data-act="editClient" data-id="${c.id}" aria-label="Editar cliente">${ic('sliders')}</button></div>
+  return`<article class="box client"><div class="row" style="gap:12px">${cavH(c)}<div class="grow"><h2 class="ell">${esc(c.name)}</h2><div class="meta">${esc(c.area)} · ${brl(c.fee)}/mês</div><div class="row wrap" style="gap:6px;margin-top:6px"><span class="pill t-${cstat(c)[2]}">${cstat(c)[1]}</span>${c.product?`<span class="tag prod-tag">${esc(c.product)}</span>`:''}</div></div><button class="icon-btn" data-act="editClient" data-id="${c.id}" aria-label="Editar cliente">${ic('sliders')}</button></div>
    <div class="stats"><div class="stat"><div class="v">${prod}</div><div class="k">Em produção</div></div><div class="stat"><div class="v">${ap}</div><div class="k">Aguardando</div></div><div class="stat"><div class="v">${po}</div><div class="k">Postados no mês</div></div></div>
    <div class="row between"><span class="muted">Aprova a copy antes da arte</span><button class="sw ${c.approvesCopy?'on':''}" data-act="toggleCopy" data-id="${c.id}" role="switch" aria-checked="${c.approvesCopy}" aria-label="Aprova a copy"></button></div>
    <div class="row"><button class="btn sm" data-act="clientCal" data-id="${c.id}">${ic('cal')}Calendário</button><button class="btn sm" data-act="clientPortal" data-id="${c.id}">${ic('check')}Portal</button><button class="btn sm" data-act="clientBoard" data-id="${c.id}">${ic('board')}Produção</button></div>
@@ -1488,7 +1499,7 @@ function renderModal(){
    <button class="btn ghost" data-act="mNav" data-d="-1" ${i<=0?'disabled':''}>${ic('chevL')}Anterior</button>
    ${pill(p)}
    <span class="grow"></span>
-   <button class="btn danger" data-act="delPost">Excluir</button>
+   <button class="btn" data-act="rowDup" data-id="${p.id}">${ic('copy')}Duplicar</button><button class="btn danger" data-act="delPost">Excluir</button>
    ${ui.acts.map((a,j)=>`<button class="btn act-main ${a[1]?(a[2]==='sec'?'':'pri'):''}" data-act="doAct" data-i="${j}" ${a[1]?'':'disabled'}>${esc(a[0])}${a[1]&&a[2]!=='sec'?ic('arrowR'):''}</button>`).join('')}
    <button class="btn ghost" data-act="mNav" data-d="1" ${i<0||i>=ids.length-1?'disabled':''}>Próximo${ic('chevR')}</button>
   </div>
@@ -1542,13 +1553,17 @@ function campForm(id){
   <div class="sheet-f">${id?`<button class="btn danger" data-act="delCamp" data-id="${id}">Excluir</button>`:''}<span class="grow"></span><button class="btn ghost" data-act="closeModal">Cancelar</button><button class="btn pri" data-act="saveCamp" data-id="${id||''}">Salvar</button></div></div>`;
  m.hidden=false;
 }
-function clientForm(id){
- const c=S.clients.find(x=>x.id===id)||{id:'',name:'',area:'',fee:3000,color:'#3B78B8',approvesCopy:false};
+function clientForm(id,keepPhoto){
+ const c0=S.clients.find(x=>x.id===id)||{id:'',name:'',area:'',fee:3000,color:'#3B78B8',approvesCopy:false,status:'ativo',product:''};
+ if(!keepPhoto)ui.kfPhoto=undefined;ui.kfId=id||'';
+ const c=Object.assign({},c0,ui.kfPhoto!==undefined?{photo:ui.kfPhoto}:{});
  const m=document.getElementById('modal');
  m.innerHTML=`<div class="backdrop" data-act="closeModal"></div><div class="sheet narrow" role="dialog" aria-modal="true" aria-label="Cliente">
   <div class="sheet-h"><h2 class="grow">${id?'Editar cliente':'Novo cliente'}</h2><button class="icon-btn" data-act="closeModal" aria-label="Fechar">${ic('x')}</button></div>
-  <div class="sheet-b one"><div class="form-grid">
+  <div class="sheet-b one"><div class="kf-photo">${cavH(c)}<div class="row wrap"><label class="btn sm">${ic('upload')}${c.photo?'Trocar foto':'Foto de perfil'}<input type="file" accept="image/*" data-chg="clientPhoto"></label>${c.photo?'<button class="btn sm ghost" data-act="clientPhotoDel">Remover</button>':''}</div></div><div class="form-grid">
    <div class="field"><label for="kf-name">Nome</label><input class="in" id="kf-name" value="${esc(c.name)}" placeholder="Dra. Fulana de Tal"></div>
+   <div class="field"><label for="kf-status">Status do cliente</label><select class="in" id="kf-status">${CSTATUS.map(x=>opt(x[0],x[1],c.status||'ativo')).join('')}</select></div>
+   <div class="field"><label for="kf-prod">Produto contratado</label><select class="in" id="kf-prod">${opt('','—',c.product||'')}${CPROD.map(x=>opt(x,x,c.product||'')).join('')}</select></div>
    <div class="field"><label for="kf-area">Especialidade / área</label><input class="in" id="kf-area" value="${esc(c.area)}"></div>
    <div class="field"><label for="kf-fee">Mensalidade (R$)</label><input class="in" id="kf-fee" type="number" min="0" value="${c.fee}"></div>
    <div class="field"><label for="kf-color">Cor de identificação</label><input class="in" id="kf-color" type="color" value="${c.color}" style="height:36px;padding:2px"></div>
@@ -1572,10 +1587,16 @@ const A={
  todoShowDone:()=>{ui.todoDone=!ui.todoDone;render()},
  todoClear:()=>{const me=(CLOUD?REAL():ME()).id;S.todos=S.todos.filter(t=>!(t.owner===me&&t.done));save();render()},
  stop:()=>{},
+ rowDup:el=>{const p=S.posts.find(x=>x.id===el.dataset.id);if(!p)return;const q=JSON.parse(JSON.stringify(p));
+  ['mediaUrl','mediaType','mediaName','mediaSize','postedAt','link'].forEach(k=>delete q[k]);
+  Object.assign(q,{id:uid('p'),title:p.title+' (cópia)',status:ST[p.stage].statuses[0],archived:false,comments:[],history:[{t:nowStamp(),who:(CLOUD?REAL():ME()).name,txt:`Duplicou de “${p.title}”`}],m:{},rank:0});
+  if(q.stage==='pub'&&q.status!=='Para agendar')q.status='Para agendar';
+  S.posts.splice(S.posts.indexOf(p)+1,0,q);save();toast('Tarefa duplicada.');if(ui.modal===p.id){openPost(q.id)}render()},
+ clientPhotoDel:()=>{ui.kfPhoto='';clientForm(ui.kfId,true)},
  rowDel:el=>{if(!el.classList.contains('armed')){el.classList.add('armed');el.title='Clique de novo para excluir';toast('Toque de novo na lixeira para excluir.');setTimeout(()=>{if(el.isConnected)el.classList.remove('armed')},3000);return}
-  const p=S.posts.find(x=>x.id===el.dataset.id);if(!p)return;(p.slides||[]).forEach(x=>{if(x.path&&sb)sb.storage.from('media').remove([x.path]).catch(()=>{})});S.posts=S.posts.filter(x=>x.id!==p.id);save();toast('Tarefa excluída.');render()},
+  const p=S.posts.find(x=>x.id===el.dataset.id);if(!p)return;S.posts=S.posts.filter(x=>x.id!==p.id);(p.slides||[]).forEach(x=>{if(x.path&&sb&&!pathUsed(x.path))sb.storage.from('media').remove([x.path]).catch(()=>{})});save();toast('Tarefa excluída.');render()},
  download:el=>downloadPost(S.posts.find(x=>x.id===el.dataset.id)),
- slDel:el=>{const p=S.posts.find(x=>x.id===ui.modal);const [r]=p.slides.splice(Number(el.dataset.i),1);if(r&&r.path&&sb)sb.storage.from('media').remove([r.path]).catch(()=>{});save();renderModal();render()},
+ slDel:el=>{const p=S.posts.find(x=>x.id===ui.modal);const [r]=p.slides.splice(Number(el.dataset.i),1);if(r&&r.path&&sb&&!pathUsed(r.path))sb.storage.from('media').remove([r.path]).catch(()=>{});save();renderModal();render()},
  slMove:el=>{const p=S.posts.find(x=>x.id===ui.modal);const i=Number(el.dataset.i),j=i+Number(el.dataset.d);if(j<0||j>=p.slides.length)return;[p.slides[i],p.slides[j]]=[p.slides[j],p.slides[i]];save();renderModal();render()},
  carNav:el=>{const t=el.closest('.car').querySelector('.car-t');t.scrollBy({left:Number(el.dataset.d)*t.clientWidth,behavior:'smooth'})},
  copyPortal:async el=>{const c=S.clients.find(x=>x.id===el.dataset.id);if(!c)return;if(!c.token){const a=new Uint8Array(18);crypto.getRandomValues(a);c.token=[...a].map(b=>b.toString(36).padStart(2,'0')).join('').slice(0,28);save()}
@@ -1646,7 +1667,7 @@ const A={
   S.campaigns=S.campaigns.filter(k=>k.id!==el.dataset.id);S.posts.forEach(p=>{if(p.campaign===el.dataset.id)p.campaign=''});save();closeModal()},
  editClient:el=>clientForm(el.dataset.id),
  saveClient:el=>{const id=el.dataset.id;const name=val('kf-name').trim();if(!name){toast('Coloque o nome do cliente.');return}
-  const d={name,short:name.replace(/^(Dra?\.?|Clínica)\s+/i,'').split(' ')[0],area:val('kf-area'),fee:Number(val('kf-fee'))||0,color:val('kf-color'),approvesCopy:val('kf-copy')==='1'};
+  const d={name,short:name.replace(/^(Dra?\.?|Clínica)\s+/i,'').split(' ')[0],area:val('kf-area'),fee:Number(val('kf-fee'))||0,color:val('kf-color'),approvesCopy:val('kf-copy')==='1',status:val('kf-status'),product:val('kf-prod')};if(ui.kfPhoto!==undefined)d.photo=ui.kfPhoto;
   if(id)Object.assign(S.clients.find(c=>c.id===id),d);else S.clients.push({id:uid('c'),...d});save();toast('Cliente salvo.');closeModal()},
  toggleCopy:el=>{const c=S.clients.find(x=>x.id===el.dataset.id);c.approvesCopy=!c.approvesCopy;save();render()},
  clientCal:el=>{ui.calClient=el.dataset.id;saveUi();go('calendario')},
@@ -1682,6 +1703,9 @@ const C={
  rowDate:el=>{const p=S.posts.find(x=>x.id===el.dataset.id);if(!p||!el.value)return;p.date=el.value;hist(p,`Mudou a data para ${fmtD(p.date)}`);render()},
  todoTitle:el=>{const t=S.todos.find(x=>x.id===el.dataset.id);const v=el.value.trim();if(!v){el.value=t.title;return}t.title=v;save()},
  todoDue:el=>{const t=S.todos.find(x=>x.id===el.dataset.id);t.due=el.value;save();render()},
+ clientPhoto:el=>{const f=el.files&&el.files[0];if(!f||!f.type.startsWith('image/')){toast('Escolha uma imagem.');return}const img=new Image();img.onload=()=>{const c=document.createElement('canvas');c.width=c.height=200;const s2=Math.min(img.width,img.height);c.getContext('2d').drawImage(img,(img.width-s2)/2,(img.height-s2)/2,s2,s2,0,0,200,200);URL.revokeObjectURL(img.src);ui.kfPhoto=c.toDataURL('image/jpeg',.85);
+  const keep={n:val('kf-name'),a:val('kf-area'),fe:val('kf-fee'),co:val('kf-color'),cp:val('kf-copy'),st:val('kf-status'),pr:val('kf-prod')};clientForm(ui.kfId,true);
+  const set=(i,v)=>{const e=document.getElementById(i);if(e)e.value=v};set('kf-name',keep.n);set('kf-area',keep.a);set('kf-fee',keep.fe);set('kf-color',keep.co);set('kf-copy',keep.cp);set('kf-status',keep.st);set('kf-prod',keep.pr)};img.src=URL.createObjectURL(f)},
  bkSel:el=>{const p=S.posts.find(x=>x.id===el.dataset.id);p[el.dataset.k]=el.value;save()},
  bkF:el=>{ui.bk[el.dataset.k]=el.value;render()},
  drive:el=>{const p=S.posts.find(x=>x.id===ui.modal);const v=el.value.trim();if(v&&!driveId(v)){toast('Link do Drive não reconhecido.');return}p.driveUrl=v;if(v)hist(p,'Adicionou o link do Google Drive');save();renderModal();render()}
