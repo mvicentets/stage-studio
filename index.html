@@ -641,7 +641,9 @@ const CLOUD=window.STAGE_CLOUD||null;
 const KEY='stage-studio-v1';
 const pad=n=>String(n).padStart(2,'0');
 const iso=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
-const TODAY=new Date();TODAY.setHours(0,0,0,0);
+const TZ='America/Campo_Grande',TZ_OFF='-04:00';
+function msNow(){const o={};new Intl.DateTimeFormat('en-CA',{timeZone:TZ,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}).formatToParts(new Date()).forEach(p=>o[p.type]=p.value);return{y:+o.year,m:+o.month,d:+o.day,h:(+o.hour)%24,mi:+o.minute}}
+const TODAY=(()=>{const n=msNow();return new Date(n.y,n.m-1,n.d)})();
 const TODAY_ISO=iso(TODAY);
 const addDays=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
 const parse=s=>{const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)};
@@ -652,7 +654,7 @@ const brl=n=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL',maxi
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const opt=(v,l,sel)=>`<option value="${esc(v)}"${String(v)===String(sel)?' selected':''}>${esc(l)}</option>`;
 const ymOf=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}`;
-const nowStamp=()=>{const d=new Date();return`${pad(d.getDate())}/${pad(d.getMonth()+1)} ${pad(d.getHours())}:${pad(d.getMinutes())}`};
+const nowStamp=()=>{const n=msNow();return`${pad(n.d)}/${pad(n.m)} ${pad(n.h)}:${pad(n.mi)}`};
 
 const IC={
  copy:'M9 9h11v11H9zM5 15H4V4h11v1',
@@ -1101,7 +1103,7 @@ function dateCell(p){return`<span class="meta ${isLate(p)?'late':''}">${fmtD(p.d
 function vInicio(){
  const P=S.posts,cnt=ph=>P.filter(p=>phase(p)===ph).length;
  const ym=ymOf(TODAY);
- const h=new Date().getHours();const hi=h<12?'Bom dia':h<18?'Boa tarde':'Boa noite';
+ const h=msNow().h;const hi=h<12?'Bom dia':h<18?'Boa tarde':'Boa noite';
  const kp=[['Em produção',cnt('producao'),'producao','gray','na esteira da equipe'],['Aguardando cliente',cnt('aprovacao'),'aprovacao','amber','copy ou arte final'],['Ajustes pedidos',cnt('ajuste'),'ajuste','red','voltam para a produção'],['Aprovados',cnt('aprovado'),'aprovado','green','prontos para agendar'],['Postados no mês',P.filter(p=>phase(p)==='postado'&&p.date.slice(0,7)===ym).length,'postado','accent',MESES[TODAY.getMonth()]]];
  const att=P.filter(p=>['ajuste','aprovacao'].includes(phase(p))||isLate(p)).sort(sortDate).slice(0,7);
  const lim=iso(addDays(TODAY,7));
@@ -1532,7 +1534,7 @@ function autoFlow(p){
  if(p.stage==='pub'&&p.status==='Postado'&&!p.postedAt){p.postedAt=new Date().toISOString();save()}
  if(p.stage==='pub'&&p.status!=='Postado'&&p.postedAt){delete p.postedAt;p.archived=false;save()}
 }
-const schedTs=p=>p.date?new Date(p.date+'T'+(p.time||'09:00')+':00').getTime():null;
+const schedTs=p=>p.date?Date.parse(p.date+'T'+(p.time||'09:00')+':00'+TZ_OFF):null;
 function autoTick(){let ch=false;const now=Date.now();
  S.posts.forEach(p=>{if(p.stage!=='pub')return;
   if(p.status==='Agendado'){const t=schedTs(p);if(t&&t<=now){p.status='Postado';p.archived=false;p.postedAt=new Date(t).toISOString();hist(p,'Marcou como postado no horário agendado','Automação');ch=true}}
