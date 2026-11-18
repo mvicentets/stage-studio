@@ -1565,7 +1565,7 @@ function cloudSave(){if(!sb||!realId)return;clearTimeout(syncT);syncT=setTimeout
 async function push(){
  const ups=[],dels={},live=new Set();
  COLLS.forEach(c=>(S[c]||[]).forEach(x=>{if(!x.id)x.id=uid(c[0]);const k=c+'|'+x.id,j=ser(x);live.add(k);if(snap[k]!==j){ups.push({coll:c,id:x.id,data:JSON.parse(j),updated_at:new Date().toISOString()});snap[k]=j}}));
- const sj=ser(shared());live.add('settings|main');if(snap['settings|main']!==sj&&isAdmin(REAL())){ups.push({coll:'settings',id:'main',data:JSON.parse(sj)});snap['settings|main']=sj}
+ const sj=ser(shared());live.add('settings|main');if(snap['settings|main']!==sj&&isAdmin(REAL())){ups.push({coll:'settings',id:'main',data:JSON.parse(sj),updated_at:new Date().toISOString()});snap['settings|main']=sj}
  Object.keys(snap).forEach(k=>{if(!live.has(k)){const[c,id]=k.split('|');(dels[c]=dels[c]||[]).push(id);delete snap[k]}});
  if(!ups.length&&!Object.keys(dels).length)return;
  dot('Salvando…');
