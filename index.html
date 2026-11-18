@@ -480,13 +480,13 @@ select.csel option{background:var(--surface);color:var(--fg);font-weight:500}
 .auth-err{color:var(--red);font-size:13px}
 .syncdot{position:fixed;right:14px;bottom:14px;z-index:90;font-size:11.5px;color:var(--faint);background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:4px 10px;pointer-events:none}
 [hidden]{display:none!important}
-input[type=date].in,input[type=time].in{-webkit-appearance:none;appearance:none;display:block;width:100%;min-width:0;max-width:100%;height:36px;min-height:0;padding-block:0;line-height:34px;text-align:left}
+input[type=date].in,input[type=time].in{-webkit-appearance:none;appearance:none;display:block;width:100%;width:-webkit-fill-available;min-width:0;max-width:100%;height:36px;min-height:0;padding-block:0;line-height:34px;text-align:left}
 input[type=date].in::-webkit-date-and-time-value,input[type=time].in::-webkit-date-and-time-value{text-align:left;margin:0}
 .field{min-width:0}
 .fab{position:fixed;right:max(20px,env(safe-area-inset-right,0px));bottom:calc(20px + env(safe-area-inset-bottom,0px));z-index:55;display:flex;align-items:center;gap:8px;height:52px;padding:0 20px 0 16px;border:0;border-radius:99px;background:var(--accent);color:var(--on-accent);font:inherit;font-weight:650;font-size:14.5px;cursor:pointer;box-shadow:0 10px 28px color-mix(in srgb,var(--accent) 40%,transparent),0 2px 6px rgba(0,0,0,.18)}
 .fab svg{width:22px;height:22px;stroke:currentColor;stroke-width:2.4;fill:none;stroke-linecap:round}
 .fab:active{transform:scale(.97)}
-.modal:not([hidden]) ~ .fab,body.menu .fab{display:none}
+.modal:not([hidden]) ~ .fab,body.menu .fab,body.modal-open .fab{display:none!important}
 @media (max-width:860px){
  .fab{width:58px;height:58px;padding:0;justify-content:center}.fab span{display:none}.fab svg{width:26px;height:26px}
  input,select,textarea,.in,.sel{font-size:16px!important}
@@ -1379,7 +1379,8 @@ function hist(p,txt,who){p.history.push({t:nowStamp(),who:who||(CLOUD?REAL():ME(
 
 function renderModal(){
  const m=document.getElementById('modal');const p=S.posts.find(x=>x.id===ui.modal);
- if(!p){m.hidden=true;m.innerHTML='';return}
+ if(!p){m.hidden=true;m.innerHTML='';document.body.classList.remove('modal-open');return}
+ document.body.classList.add('modal-open');
  const st=ST[p.stage];ui.acts=actionsFor(p);
  const ids=navList().map(x=>x.id);const i=ids.indexOf(p.id);
  const tabs=[['legenda','Legenda'],['briefing','Briefing'],['comentarios',`Comentários (${p.comments.length})`],['historico','Histórico']];
