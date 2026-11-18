@@ -620,7 +620,7 @@ button.me:hover{background:var(--hover)}
   <header class="mtop">
     <button class="icon-btn" data-act="menu" aria-label="Abrir menu"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
     <svg class="logo" role="img" aria-label="Stage" viewBox="0 0 286 305" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M37.2292 203.226L41.0692 176.739C42.5092 167.349 41.5492 163.737 37.9492 159.403L21.1492 138.695C14.9092 130.989 12.2692 123.043 13.7092 112.93L17.7892 83.0723C19.9492 66.4578 31.7092 56.5855 48.7492 56.5855C66.2692 56.5855 76.8292 67.421 74.4292 85.2394L69.1492 123.043H48.9892L54.0292 86.9249C54.9892 79.7012 52.8292 75.3671 47.0692 75.3671C41.7892 75.3671 38.9092 78.9789 37.9492 85.9618L34.8292 108.355C33.6292 116.783 34.1092 120.635 37.9492 125.21L54.9892 146.4C62.4292 155.55 63.6292 162.774 62.1892 173.128L57.3892 206.597C54.9892 223.212 43.7092 233.325 26.1892 233.325C9.14917 233.325 -1.89083 222.971 0.269173 206.838L6.26917 163.978H26.4292L20.9092 203.467C19.9492 210.691 22.3492 214.543 28.1092 214.543C33.6292 214.543 36.0292 210.691 37.2292 203.226Z" fill="currentColor"/><path d="M140.616 47.1947H115.349L93.7492 201.3H73.1092L94.7092 47.1947H62.1892L66.6163 28.4131H145.861L140.616 47.1947Z" fill="currentColor"/><path d="M145.861 37.8039H172.021L167.941 210.691H148.261L149.941 167.83H130.741L94.9939 305H75.3139L145.861 37.8039ZM147.781 98.0013L135.061 149.771H150.661L152.581 98.0013L153.781 74.4039H153.301L147.781 98.0013Z" fill="currentColor"/><path d="M243.369 66.4579H223.209L228.249 30.3395C229.209 23.3566 227.049 18.7816 221.289 18.7816C215.529 18.7816 211.929 23.3566 210.969 30.3395L194.889 146.4C193.929 153.383 196.329 157.958 201.849 157.958C207.369 157.958 211.209 153.383 212.169 146.4L218.169 102.817H208.569L211.209 83.3131H240.969L228.249 174.813H210.249L211.449 166.867C208.569 172.646 202.089 176.739 194.169 176.739C181.449 176.739 171.369 166.386 173.769 149.771L190.809 26.9684C193.209 10.3539 205.929 0 223.209 0C240.249 0 251.289 10.3539 248.889 26.9684L243.369 66.4579Z" fill="currentColor"/><path d="M249.656 75.3671H286L283.36 94.1486H267.656L259.976 149.049H283.016L280.376 167.83H257.336L248.696 229.472H275.816L273.176 248.254H225.416L249.656 75.3671Z" fill="currentColor"/></svg><span class="t" id="mtTitle">Início</span>
-    <button class="icon-btn" data-act="newPost" aria-label="Novo conteúdo"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+    <button class="icon-btn" id="mtPlus" data-act="newPost" aria-label="Novo conteúdo"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
   </header>
   <div class="mback" data-act="menu"></div>
   <main class="main" id="view"></main>
@@ -890,7 +890,10 @@ function vTarefas(){
 }
 const VIEWS={tarefas:vTarefas,automacoes:vAuto,banco:vBanco,inicio:vInicio,producao:vTodas,calendario:vCalendario,portal:vPortal2,campanhas:vCampanhas,financeiro:vFinanceiro,clientes:vClientes,equipe:vEquipe};
 const LABELS={tarefas:'Minhas tarefas',banco:'Banco de posts',automacoes:'Automações',inicio:'Início',producao:'Todas as tarefas',calendario:'Calendário',portal:'Portal do cliente',campanhas:'Campanhas',financeiro:'Financeiro',clientes:'Clientes',equipe:'Equipe e aparência'};
-function render(){try{const f=document.getElementById('fab');if(f){const td=ui.view==='tarefas';f.hidden=!!ui.clientMode||(!td&&!allowedStages().length);f.dataset.act=td?'todoFocus':'newPost';f.title=td?'Nova tarefa pessoal':'Nova tarefa'}}catch(e){}
+const FAB={tarefas:['todoFocus','Nova tarefa pessoal'],campanhas:['editCamp','Nova campanha'],clientes:['editClient','Novo cliente'],equipe:['addUser','Adicionar pessoa'],automacoes:['ruleNew','Nova automação'],financeiro:['finFocus','Novo lançamento'],banco:null,portal:null};
+function fabSync(){const v=ui.view;const cfg=v in FAB?FAB[v]:(allowedStages().length?['newPost','Nova tarefa']:null);
+ [document.getElementById('fab'),document.getElementById('mtPlus')].forEach(b=>{if(!b)return;b.hidden=!!ui.clientMode||!cfg;if(cfg){b.dataset.act=cfg[0];b.title=cfg[1];b.setAttribute('aria-label',cfg[1]);const sp=b.querySelector('span');if(sp)sp.textContent=cfg[1]}})}
+function render(){try{fabSync()}catch(e){}
 if(!can(ui.view)){ui.view=firstAllowed();try{history.replaceState(null,'','#'+ui.view)}catch(e){}}renderNav();document.getElementById('mtTitle').textContent=curStage()?ST[curStage()].name:LABELS[ui.view];document.getElementById('view').innerHTML=curStage()?vEtapa(curStage()):VIEWS[ui.view]();}
 function agendaHtml(L,act){
  const by={};[...L].filter(p=>p.date).sort(sortDate).forEach(p=>{(by[p.date]=by[p.date]||[]).push(p)});
@@ -1565,6 +1568,7 @@ const A={
  todoDone:el=>{const t=S.todos.find(x=>x.id===el.dataset.id);t.done=!t.done;t.doneAt=t.done?new Date().toISOString():'';save();render()},
  todoDel:el=>{S.todos=S.todos.filter(x=>x.id!==el.dataset.id);save();render()},
  todoFocus:()=>{const i=document.getElementById('todoNew');if(i){i.scrollIntoView({block:'center'});i.focus()}},
+ finFocus:()=>{const i=document.getElementById('fin-desc');if(i){i.scrollIntoView({block:'center'});i.focus()}},
  todoShowDone:()=>{ui.todoDone=!ui.todoDone;render()},
  todoClear:()=>{const me=(CLOUD?REAL():ME()).id;S.todos=S.todos.filter(t=>!(t.owner===me&&t.done));save();render()},
  stop:()=>{},
