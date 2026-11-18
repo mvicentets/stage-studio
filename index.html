@@ -883,7 +883,7 @@ function vTarefas(){
 }
 const VIEWS={tarefas:vTarefas,automacoes:vAuto,banco:vBanco,inicio:vInicio,producao:vTodas,calendario:vCalendario,portal:vPortal2,campanhas:vCampanhas,financeiro:vFinanceiro,clientes:vClientes,equipe:vEquipe};
 const LABELS={tarefas:'Minhas tarefas',banco:'Banco de posts',automacoes:'Automações',inicio:'Início',producao:'Todas as tarefas',calendario:'Calendário',portal:'Portal do cliente',campanhas:'Campanhas',financeiro:'Financeiro',clientes:'Clientes',equipe:'Equipe e aparência'};
-function render(){try{const f=document.getElementById('fab');if(f)f.hidden=!!ui.clientMode||!allowedStages().length}catch(e){}
+function render(){try{const f=document.getElementById('fab');if(f){const td=ui.view==='tarefas';f.hidden=!!ui.clientMode||(!td&&!allowedStages().length);f.dataset.act=td?'todoFocus':'newPost';f.title=td?'Nova tarefa pessoal':'Nova tarefa'}}catch(e){}
 if(!can(ui.view)){ui.view=firstAllowed();try{history.replaceState(null,'','#'+ui.view)}catch(e){}}renderNav();document.getElementById('mtTitle').textContent=curStage()?ST[curStage()].name:LABELS[ui.view];document.getElementById('view').innerHTML=curStage()?vEtapa(curStage()):VIEWS[ui.view]();}
 function agendaHtml(L,act){
  const by={};[...L].filter(p=>p.date).sort(sortDate).forEach(p=>{(by[p.date]=by[p.date]||[]).push(p)});
@@ -1557,6 +1557,7 @@ const A={
  profile:()=>profileSheet(),
  todoDone:el=>{const t=S.todos.find(x=>x.id===el.dataset.id);t.done=!t.done;t.doneAt=t.done?new Date().toISOString():'';save();render()},
  todoDel:el=>{S.todos=S.todos.filter(x=>x.id!==el.dataset.id);save();render()},
+ todoFocus:()=>{const i=document.getElementById('todoNew');if(i){i.scrollIntoView({block:'center'});i.focus()}},
  todoShowDone:()=>{ui.todoDone=!ui.todoDone;render()},
  todoClear:()=>{const me=(CLOUD?REAL():ME()).id;S.todos=S.todos.filter(t=>!(t.owner===me&&t.done));save();render()},
  stop:()=>{},
