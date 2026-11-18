@@ -1229,7 +1229,8 @@ function renderModal(){
 }
 function openPost(id){ui.modal=id;ui.mtab=ui.mtab||'legenda';renderModal()}
 function closeModal(){ui.modal=null;renderModal();render()}
-function newPost(date){
+function needClient(){if(S.clients.length)return true;toast('Cadastre um cliente primeiro.');location.hash='#clientes';setTimeout(()=>clientForm(),60);return false}
+function newPost(date){if(!needClient())return;
  const p={id:uid('p'),client:ui.f.client!=='all'?ui.f.client:(ui.calClient!=='all'?ui.calClient:S.clients[0].id),title:'Novo conteúdo',format:curStage()==='design'?'carrossel':'reels',stage:curStage()||'ideia',status:ST[curStage()||'ideia'].statuses[0],
   date:date||iso(addDays(TODAY,7)),time:'11:00',owner:ME().id,caption:'',briefing:'',campaign:'',funnel:'Topo',link:'',comments:[],history:[{t:nowStamp(),who:ME().name,txt:'Criou o conteúdo'}]};
  S.posts.push(p);save();ui.mtab='briefing';openPost(p.id);
@@ -1238,6 +1239,7 @@ function newPost(date){
 
 /* ---------- formulários (campanha e cliente) ---------- */
 function campForm(id){
+ if(!id&&!needClient())return;
  const k=S.campaigns.find(x=>x.id===id)||{id:'',client:S.clients[0].id,name:'',objetivo:'',start:TODAY_ISO,end:iso(addDays(TODAY,30)),budget:1000,spent:0,leads:0,reach:0,status:'Planejada'};
  const f=(lab,key,type='text',extra='')=>`<div class="field"><label for="cf-${key}">${lab}</label><input class="in" id="cf-${key}" type="${type}" value="${esc(k[key])}" ${extra}></div>`;
  const m=document.getElementById('modal');
@@ -1305,7 +1307,7 @@ const A={
  clearFilters:()=>{ui.f={client:'all',format:'all',owner:'all',phase:'all',q:''};render()},
  calNav:el=>{ui.calMonth=new Date(ui.calMonth.getFullYear(),ui.calMonth.getMonth()+Number(el.dataset.d),1);render()},
  calToday:()=>{ui.calMonth=new Date(TODAY.getFullYear(),TODAY.getMonth(),1);render()},
- calMode:el=>{ui.calMode=el.dataset.v;if(ui.calMode==='feed'&&ui.calClient==='all'){ui.calClient=S.clients[0].id;saveUi()}render()},
+ calMode:el=>{ui.calMode=el.dataset.v;if(ui.calMode==='feed'&&ui.calClient==='all'&&S.clients[0]){ui.calClient=S.clients[0].id;saveUi()}render()},
  portalTab:el=>{ui.portalTab=el.dataset.v;ui.adjOpen=null;render()},
  adjOpen:el=>{ui.adjOpen=el.dataset.id;render();setTimeout(()=>{const t=document.getElementById('adj-'+el.dataset.id);t&&t.focus()},20)},
  adjCancel:()=>{ui.adjOpen=null;render()},
