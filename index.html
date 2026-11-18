@@ -4,7 +4,7 @@
 <meta name="application-name" content="Baseus | Stage">
 <meta name="theme-color" content="#1A3FF5">
 <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap">
-<script>window.STAGE_CLOUD={"url": "https://bfpzjpwtzogtgwwklkjz.supabase.co", "key": "sb_publishable_S_0MZ2yopkPPBIOT3dERmw_IQPvdAzE"}</script>
+<script>window.STAGE_CLOUD={"url": "https://bfpzjpwtzogtgwwklkjz.supabase.co", "key": "sb_publishable_S_0MZ2yopkPPBIOT3dERmw_IQPvdAzE", "gclient": "694342348907-p46qdnv9i3dup460ltpplpq610pj4mlf.apps.googleusercontent.com"}</script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <title>Baseus | Stage</title>
@@ -485,6 +485,7 @@ select.csel option{background:var(--surface);color:var(--fg);font-weight:500}
 .auth-err{color:var(--red);font-size:13px}
 .syncdot{position:fixed;right:14px;bottom:14px;z-index:90;font-size:11.5px;color:var(--faint);background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:4px 10px;pointer-events:none}
 [hidden]{display:none!important}
+.gdz{cursor:default}
 .cav.img{background-size:cover;background-position:center;color:transparent}
 .kf-photo{display:flex;align-items:center;gap:14px;margin-bottom:16px}.kf-photo .cav{width:64px;height:64px;font-size:20px;border-radius:16px}.kf-photo input{display:none}
 .prod-tag{background:color-mix(in srgb,var(--accent) 12%,var(--surface));color:var(--accent-ink);font-weight:600}
@@ -966,15 +967,67 @@ function upHtml(p){
   ${st?`<div class="upbox"><div class="nm">Enviando ${st.done} de ${st.total} imagens…</div><div class="upbar"><i style="width:${Math.round(st.done/st.total*100)}%"></i></div></div>`
    :`<label class="dz" data-filedrop>${ic('upload')}<b>${sl.length?'Adicionar mais imagens':'Arraste as imagens aqui'}</b><span>ou clique para escolher · pode selecionar várias</span><small>JPG ou PNG · a ordem é a do carrossel</small><input type="file" accept="image/*" multiple data-chg="media"></label>`}`}
  const u=UP[p.id];
+ if(GDRIVE&&!(u&&!u.done)&&!p.video&&!p.mediaUrl){
+  if(p.driveUrl&&driveId(p.driveUrl))return`<div class="upbox"><div class="nm">${esc(p.driveName||'Vídeo no Google Drive')}</div><div class="meta"><span class="upok">✓ No Google Drive</span><span>${p.driveSize?fsize(p.driveSize):''}</span></div><div class="upl" style="margin-top:0"><a class="btn sm" href="${esc(p.driveUrl)}" target="_blank" rel="noopener">${ic('link')}Abrir no Drive</a>${gOk()?`<label class="btn sm">${ic('upload')}Trocar vídeo<input type="file" accept="video/*" data-chg="media"></label>`:''}<button class="btn sm ghost" data-act="driveClear">Tirar da tarefa</button></div></div>`;
+  if(!gOk())return`<div class="dz gdz">${ic('upload')}<b>Enviar vídeo para o Google Drive</b><span>Primeiro conecte sua conta Google. Vale por 1 hora.</span><button class="btn pri sm" data-act="gConnect" style="margin-top:6px">Conectar Google Drive</button></div>`;
+  return`<label class="dz" data-filedrop>${ic('upload')}<b>Arraste o vídeo aqui</b><span>ou clique para escolher · vai direto para o seu Google Drive</span><small>Qualquer tamanho · MP4 ou MOV</small><input type="file" accept="video/*" data-chg="media"></label>`;
+ }
  if(u&&!u.done){const pct=Math.floor(u.loaded/u.size*100),parts=Math.max(1,Math.ceil(u.size/PART)),cur=Math.min(parts,Math.floor(u.loaded/PART)+1);
   return`<div class="upbox" id="upbox"><div class="nm">${esc(u.name)}</div><div class="upbar"><i id="upbar" style="width:${pct}%"></i></div>
   <div class="meta"><span id="uptxt">${pct}% · ${fsize(u.loaded)} de ${fsize(u.size)}</span><span id="uppart">${u.real?'':`parte ${cur} de ${parts}`}</span></div>
-  <div class="row between"><span class="meta">Pode fechar esta janela, o envio continua.</span><button class="btn sm ghost" data-act="cancelUp">Cancelar</button></div></div>`}
+  <div class="row between"><span class="meta">${u.drive?'Enviando para o Google Drive. Não feche esta aba.':'Pode fechar esta janela, o envio continua.'}</span><button class="btn sm ghost" data-act="cancelUp">Cancelar</button></div></div>`}
  if(p.video||p.mediaUrl)return`<div class="upbox"><div class="nm">${esc((p.video&&p.video.name)||p.mediaName||'Arquivo')}</div><div class="meta"><span class="upok">✓ Enviado</span><span>${fsize((p.video&&p.video.size)||p.mediaSize||0)}</span></div>
   <div class="upl" style="margin-top:0"><label class="btn sm">${ic('upload')}Trocar arquivo<input type="file" accept="video/*,image/*" data-chg="media"></label><button class="btn sm ghost" data-act="clearMedia">Remover</button></div></div>`;
  return`<label class="dz" data-filedrop>${ic('upload')}<b>Arraste o vídeo ou a arte aqui</b><span>ou clique para escolher</span><small>${CLOUD?'Vídeo MP4 ou MOV até 50 MB · maior que isso, use o link do Drive':'MP4, MOV, JPG ou PNG'}</small>${ui.bigVideo===p.id?'<div class="auth-err" style="margin-top:6px">Esse vídeo passou de 50 MB. Exporte em 1080p com menos qualidade ou cole o link do Google Drive abaixo.</div>':''}<input type="file" accept="video/*,image/*" data-chg="media"></label>`;
 }
 const VMAX=50*1024*1024;
+/* ---------- Google Drive: envio de vídeos ---------- */
+const GDRIVE=!!(CLOUD&&CLOUD.gclient);let gTok=null,gClient=null;
+try{const t=JSON.parse(sessionStorage.getItem('baseus-gtok')||'null');if(t&&t.exp>Date.now()+60000)gTok=t}catch(e){}
+const gOk=()=>gTok&&gTok.exp>Date.now()+60000;
+function gLoad(){return new Promise((res,rej)=>{if(window.google&&google.accounts&&google.accounts.oauth2)return res();const sc=document.createElement('script');sc.src='https://accounts.google.com/gsi/client';sc.async=true;sc.onload=()=>res();sc.onerror=()=>rej(new Error('Não carregou o Google'));document.head.appendChild(sc)})}
+if(GDRIVE)setTimeout(()=>gLoad().catch(()=>{}),1500);
+function gConnect(){
+ if(!(window.google&&google.accounts&&google.accounts.oauth2)){toast('Carregando o Google… toque de novo em 2 segundos.');gLoad().catch(()=>{});return}
+ if(!gClient)gClient=google.accounts.oauth2.initTokenClient({client_id:CLOUD.gclient,scope:'https://www.googleapis.com/auth/drive.file',callback:r=>{
+  if(r&&r.access_token){gTok={t:r.access_token,exp:Date.now()+(Number(r.expires_in)||3600)*1000};try{sessionStorage.setItem('baseus-gtok',JSON.stringify(gTok))}catch(e){}toast('Google Drive conectado.');if(ui.modal)renderModal()}
+  else toast('Não foi possível conectar ao Google Drive.')},error_callback:e=>{toast(e&&e.type==='popup_closed'?'Janela do Google fechada.':'Não foi possível abrir o Google. Libere pop-ups para este site.')}});
+ gClient.requestAccessToken({prompt:''});
+}
+async function gFetch(url,opt={}){const r=await fetch(url,{...opt,headers:{Authorization:'Bearer '+gTok.t,...(opt.headers||{})}});if(r.status===401){gTok=null;try{sessionStorage.removeItem('baseus-gtok')}catch(e){}throw new Error('Conexão com o Drive expirou. Conecte de novo.')}return r}
+async function gFolder(){
+ const k='baseus-gfolder';let id='';try{id=localStorage.getItem(k)||''}catch(e){}
+ if(id){const r=await gFetch(`https://www.googleapis.com/drive/v3/files/${id}?fields=id,trashed`);if(r.ok){const j=await r.json();if(!j.trashed)return id}}
+ const r=await gFetch('https://www.googleapis.com/drive/v3/files?fields=id',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'Baseus | Stage',mimeType:'application/vnd.google-apps.folder'})});
+ if(!r.ok)throw new Error('Não consegui criar a pasta no Drive');id=(await r.json()).id;try{localStorage.setItem(k,id)}catch(e){}return id}
+async function driveUpload(p,f){
+ if(!gOk()){toast('Conecte o Google Drive primeiro.');if(ui.modal===p.id)renderModal();return}
+ const u=UP[p.id]={name:f.name,size:f.size,loaded:0,real:true,drive:true};if(ui.modal===p.id)renderModal();
+ try{
+  const folder=await gFolder();const c=cl(p.client);
+  const ext=(f.name.split('.').pop()||'mp4').replace(/[^a-z0-9]/gi,'')||'mp4';
+  const name=`${c.name} - ${p.title} - ${p.date||''}.${ext}`.replace(/[\\/:*?"<>|]+/g,' ');
+  const init=await gFetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&fields=id,name,size',{method:'POST',headers:{'Content-Type':'application/json; charset=UTF-8','X-Upload-Content-Type':f.type||'video/mp4','X-Upload-Content-Length':String(f.size)},body:JSON.stringify({name,parents:[folder]})});
+  if(!init.ok)throw new Error('O Drive recusou o envio ('+init.status+')');
+  const loc=init.headers.get('Location');if(!loc)throw new Error('O Drive não devolveu o endereço de envio');
+  const CH=8*1024*1024;let off=0,done=null,fails=0;
+  const put=(start)=>new Promise((res,rej)=>{const end=Math.min(start+CH,f.size);const x=new XMLHttpRequest();u.xhr=x;x.open('PUT',loc);x.setRequestHeader('Content-Range',`bytes ${start}-${end-1}/${f.size}`);
+   x.upload.onprogress=e=>{u.loaded=start+e.loaded;const pct=Math.floor(u.loaded/f.size*100);const b=document.getElementById('upbar'),t=document.getElementById('uptxt');if(ui.modal===p.id&&b){b.style.width=pct+'%';t.textContent=`${pct}% · ${fsize(u.loaded)} de ${fsize(f.size)}`}};
+   x.onload=()=>{if(x.status===308){const rg=x.getResponseHeader('Range');res({next:rg?Number(rg.split('-')[1])+1:end})}else if(x.status===200||x.status===201){res({done:JSON.parse(x.responseText)})}else rej(new Error('Falha no envio ('+x.status+')'))};
+   x.onerror=()=>rej(new Error('rede'));x.onabort=()=>rej(new Error('cancelado'));x.send(f.slice(start,end))});
+  const status=()=>new Promise(res=>{const x=new XMLHttpRequest();x.open('PUT',loc);x.setRequestHeader('Content-Range',`bytes */${f.size}`);x.onload=()=>{if(x.status===308){const rg=x.getResponseHeader('Range');res(rg?Number(rg.split('-')[1])+1:0)}else if(x.status===200||x.status===201)res(-1);else res(off)};x.onerror=()=>res(off);x.send()});
+  while(!done){
+   try{const r=await put(off);if(r.done)done=r.done;else{off=r.next;fails=0}}
+   catch(e){if(e.message==='cancelado')throw e;if(++fails>6)throw new Error('A internet caiu várias vezes. Tente de novo.');await new Promise(r=>setTimeout(r,1500*fails));const o=await status();if(o===-1){done={id:null};break}off=o}
+  }
+  let id=done.id;
+  if(!id)throw new Error('Envio terminou sem resposta do Drive');
+  await gFetch(`https://www.googleapis.com/drive/v3/files/${id}/permissions`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({role:'reader',type:'anyone'})});
+  delete UP[p.id];p.driveUrl=`https://drive.google.com/file/d/${id}/view`;p.driveName=f.name;p.driveSize=f.size;ui.bigVideo=null;
+  hist(p,`Enviou o vídeo ${f.name} para o Google Drive`);save();toast('Vídeo no Drive. Pode levar alguns minutos para tocar.');
+ }catch(e){delete UP[p.id];if(e.message!=='cancelado')toast(e.message||'Não foi possível enviar para o Drive.')}
+ if(ui.modal===p.id)renderModal();render();
+}
 async function realUpload(p,f){
  if(!f.type.startsWith('video/')){addImages(p,[f]);return}
  if(f.size>VMAX){toast(`Vídeo de ${fsize(f.size)}: o limite é 50 MB. Exporte mais leve ou cole o link do Google Drive.`);ui.bigVideo=p.id;if(ui.modal===p.id)renderModal();return}
@@ -995,6 +1048,7 @@ async function realUpload(p,f){
  xhr.send(f);if(ui.modal===p.id)renderModal();
 }
 function startUpload(p,f){
+ if(GDRIVE&&f.type.startsWith('video/')){driveUpload(p,f);return}
  if(CLOUD&&sb){realUpload(p,f);return}
  if(!/^(video|image)\//.test(f.type)){toast('Envie um vídeo ou uma imagem.');return}
  if(f.size>2e9){toast('Arquivo acima de 2 GB.');return}
@@ -1498,7 +1552,7 @@ function renderModal(){
   <div class="sheet-h">${cchip(p.client)}<input class="title-in" id="m-title" value="${esc(p.title)}" data-inp="pf" data-k="title" aria-label="Título"><button class="icon-btn" data-act="closeModal" aria-label="Fechar">${ic('x')}</button></div>
   <div class="sheet-b">
    <div>${media(p)}${dlBtn(p)}${upHtml(p)}
-    ${p.mediaUrl||p.video||UP[p.id]?'':`<div class="drv"><label for="m-drive">ou cole o link do Google Drive</label><input class="in" id="m-drive" placeholder="https://drive.google.com/file/d/…" value="${esc(p.driveUrl||'')}" data-chg="drive"></div>`}
+    ${p.mediaUrl||p.video||UP[p.id]||(GDRIVE&&p.driveUrl)?'':`<div class="drv"><label for="m-drive">ou cole o link do Google Drive</label><input class="in" id="m-drive" placeholder="https://drive.google.com/file/d/…" value="${esc(p.driveUrl||'')}" data-chg="drive"></div>`}
     ${CLOUD?'':'<div class="note">Nesta prévia o envio é simulado e o arquivo some ao recarregar.</div>'}</div>
    <div style="min-width:0">
     ${stepsBar(p)}
@@ -1603,6 +1657,8 @@ let tt;function toast(t){const el=document.getElementById('toast');el.textConten
 /* ---------- ações ---------- */
 const A={
  profile:()=>profileSheet(),
+ gConnect:()=>gConnect(),
+ driveClear:()=>{const p=S.posts.find(x=>x.id===ui.modal);delete p.driveUrl;delete p.driveName;delete p.driveSize;save();renderModal();render()},
  todoDone:el=>{const t=S.todos.find(x=>x.id===el.dataset.id);t.done=!t.done;t.doneAt=t.done?new Date().toISOString():'';save();render()},
  todoDel:el=>{S.todos=S.todos.filter(x=>x.id!==el.dataset.id);save();render()},
  todoFocus:()=>{const i=document.getElementById('todoNew');if(i){i.scrollIntoView({block:'center'});i.focus()}},
