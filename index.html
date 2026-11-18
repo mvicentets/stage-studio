@@ -998,7 +998,8 @@ function gConnect(){
  if(!gClient)gClient=google.accounts.oauth2.initCodeClient({client_id:CLOUD.gclient,scope:'https://www.googleapis.com/auth/drive.file',ux_mode:'popup',select_account:true,callback:async r=>{
   if(!r||!r.code){toast('Não foi possível conectar ao Google Drive.');return}
   toast('Conectando…');const j=await gFn('exchange',{code:r.code});
-  if(j.access_token){gSet(j);toast(j.saved?'Google Drive conectado de vez. Não vai pedir de novo.':'Conectado, mas o Google não liberou a conexão permanente. Desconecte em myaccount.google.com/permissions e conecte de novo.');if(ui.modal)renderModal()}
+  if(j.access_token&&j.saved){gSet(j);toast('Google Drive conectado de vez. Não vai pedir de novo.');if(ui.modal)renderModal()}
+  else if(j.access_token){try{google.accounts.oauth2.revoke(j.access_token,()=>{})}catch(e){}ui.gState='none';ui.gRetry=true;toast('Quase lá: toque em “Conectar Google Drive” mais uma vez para deixar a conexão permanente.');if(ui.modal)renderModal()}
   else toast('Erro ao conectar: '+(j.error||'tente de novo'))},error_callback:e=>{toast(e&&e.type==='popup_closed'?'Janela do Google fechada.':'Não foi possível abrir o Google. Libere pop-ups para este site.')}});
  gClient.requestCode();
 }
