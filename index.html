@@ -485,6 +485,11 @@ select.csel option{background:var(--surface);color:var(--fg);font-weight:500}
 .auth-err{color:var(--red);font-size:13px}
 .syncdot{position:fixed;right:14px;bottom:14px;z-index:90;font-size:11.5px;color:var(--faint);background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:4px 10px;pointer-events:none}
 [hidden]{display:none!important}
+.code-tag{display:inline-flex;align-items:center;font-family:ui-monospace,Menlo,monospace;font-size:11px;font-weight:600;color:var(--muted);background:var(--hover);border-radius:6px;padding:1px 6px;white-space:nowrap;letter-spacing:.02em}
+.side-search{display:flex;align-items:center;gap:8px;width:100%;margin:0 0 10px;padding:7px 10px;border-radius:9px;border:1px solid var(--line);background:var(--surface);color:var(--faint);font:inherit;font-size:13px;cursor:pointer;text-align:left}
+.side-search span{flex:1}.side-search kbd{font-size:11px;border:1px solid var(--line-2);border-radius:5px;padding:0 5px}.side-search svg{width:15px;height:15px}
+.search-sheet .sheet-h .in{flex:1;font-size:15px}
+.srch-r{display:flex;align-items:center;gap:8px;width:100%;padding:10px 8px;border:0;border-bottom:1px solid var(--line);background:none;color:inherit;font:inherit;text-align:left;cursor:pointer;border-radius:8px}.srch-r:hover{background:var(--hover)}
 .rsel{width:16px;height:16px;accent-color:var(--accent);cursor:pointer;flex:none;margin:0}
 .bulk{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:70;display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center;max-width:calc(100vw - 24px);padding:10px 12px;border-radius:16px;background:var(--surface);border:1px solid var(--line-2);box-shadow:0 14px 40px rgba(0,0,0,.28)}
 .bulk b{font-size:13px;padding:0 4px}
@@ -637,6 +642,7 @@ button.me:hover{background:var(--hover)}
 <div class="app">
   <aside class="side">
     <div class="brand"><svg class="logo" role="img" aria-label="Stage" viewBox="0 0 286 305" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M37.2292 203.226L41.0692 176.739C42.5092 167.349 41.5492 163.737 37.9492 159.403L21.1492 138.695C14.9092 130.989 12.2692 123.043 13.7092 112.93L17.7892 83.0723C19.9492 66.4578 31.7092 56.5855 48.7492 56.5855C66.2692 56.5855 76.8292 67.421 74.4292 85.2394L69.1492 123.043H48.9892L54.0292 86.9249C54.9892 79.7012 52.8292 75.3671 47.0692 75.3671C41.7892 75.3671 38.9092 78.9789 37.9492 85.9618L34.8292 108.355C33.6292 116.783 34.1092 120.635 37.9492 125.21L54.9892 146.4C62.4292 155.55 63.6292 162.774 62.1892 173.128L57.3892 206.597C54.9892 223.212 43.7092 233.325 26.1892 233.325C9.14917 233.325 -1.89083 222.971 0.269173 206.838L6.26917 163.978H26.4292L20.9092 203.467C19.9492 210.691 22.3492 214.543 28.1092 214.543C33.6292 214.543 36.0292 210.691 37.2292 203.226Z" fill="currentColor"/><path d="M140.616 47.1947H115.349L93.7492 201.3H73.1092L94.7092 47.1947H62.1892L66.6163 28.4131H145.861L140.616 47.1947Z" fill="currentColor"/><path d="M145.861 37.8039H172.021L167.941 210.691H148.261L149.941 167.83H130.741L94.9939 305H75.3139L145.861 37.8039ZM147.781 98.0013L135.061 149.771H150.661L152.581 98.0013L153.781 74.4039H153.301L147.781 98.0013Z" fill="currentColor"/><path d="M243.369 66.4579H223.209L228.249 30.3395C229.209 23.3566 227.049 18.7816 221.289 18.7816C215.529 18.7816 211.929 23.3566 210.969 30.3395L194.889 146.4C193.929 153.383 196.329 157.958 201.849 157.958C207.369 157.958 211.209 153.383 212.169 146.4L218.169 102.817H208.569L211.209 83.3131H240.969L228.249 174.813H210.249L211.449 166.867C208.569 172.646 202.089 176.739 194.169 176.739C181.449 176.739 171.369 166.386 173.769 149.771L190.809 26.9684C193.209 10.3539 205.929 0 223.209 0C240.249 0 251.289 10.3539 248.889 26.9684L243.369 66.4579Z" fill="currentColor"/><path d="M249.656 75.3671H286L283.36 94.1486H267.656L259.976 149.049H283.016L280.376 167.83H257.336L248.696 229.472H275.816L273.176 248.254H225.416L249.656 75.3671Z" fill="currentColor"/></svg><div>Baseus<small>Gestão de conteúdo</small></div></div>
+    <button class="side-search" data-act="search"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM20 20l-4-4"/></svg><span>Buscar tarefa ou #código</span><kbd>/</kbd></button>
     <nav class="nav" id="nav"></nav>
     <div class="side-foot">
       <div class="seg full" id="themeSeg"></div>
@@ -646,7 +652,7 @@ button.me:hover{background:var(--hover)}
   </aside>
   <header class="mtop">
     <button class="icon-btn" data-act="menu" aria-label="Abrir menu"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
-    <svg class="logo" role="img" aria-label="Stage" viewBox="0 0 286 305" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M37.2292 203.226L41.0692 176.739C42.5092 167.349 41.5492 163.737 37.9492 159.403L21.1492 138.695C14.9092 130.989 12.2692 123.043 13.7092 112.93L17.7892 83.0723C19.9492 66.4578 31.7092 56.5855 48.7492 56.5855C66.2692 56.5855 76.8292 67.421 74.4292 85.2394L69.1492 123.043H48.9892L54.0292 86.9249C54.9892 79.7012 52.8292 75.3671 47.0692 75.3671C41.7892 75.3671 38.9092 78.9789 37.9492 85.9618L34.8292 108.355C33.6292 116.783 34.1092 120.635 37.9492 125.21L54.9892 146.4C62.4292 155.55 63.6292 162.774 62.1892 173.128L57.3892 206.597C54.9892 223.212 43.7092 233.325 26.1892 233.325C9.14917 233.325 -1.89083 222.971 0.269173 206.838L6.26917 163.978H26.4292L20.9092 203.467C19.9492 210.691 22.3492 214.543 28.1092 214.543C33.6292 214.543 36.0292 210.691 37.2292 203.226Z" fill="currentColor"/><path d="M140.616 47.1947H115.349L93.7492 201.3H73.1092L94.7092 47.1947H62.1892L66.6163 28.4131H145.861L140.616 47.1947Z" fill="currentColor"/><path d="M145.861 37.8039H172.021L167.941 210.691H148.261L149.941 167.83H130.741L94.9939 305H75.3139L145.861 37.8039ZM147.781 98.0013L135.061 149.771H150.661L152.581 98.0013L153.781 74.4039H153.301L147.781 98.0013Z" fill="currentColor"/><path d="M243.369 66.4579H223.209L228.249 30.3395C229.209 23.3566 227.049 18.7816 221.289 18.7816C215.529 18.7816 211.929 23.3566 210.969 30.3395L194.889 146.4C193.929 153.383 196.329 157.958 201.849 157.958C207.369 157.958 211.209 153.383 212.169 146.4L218.169 102.817H208.569L211.209 83.3131H240.969L228.249 174.813H210.249L211.449 166.867C208.569 172.646 202.089 176.739 194.169 176.739C181.449 176.739 171.369 166.386 173.769 149.771L190.809 26.9684C193.209 10.3539 205.929 0 223.209 0C240.249 0 251.289 10.3539 248.889 26.9684L243.369 66.4579Z" fill="currentColor"/><path d="M249.656 75.3671H286L283.36 94.1486H267.656L259.976 149.049H283.016L280.376 167.83H257.336L248.696 229.472H275.816L273.176 248.254H225.416L249.656 75.3671Z" fill="currentColor"/></svg><span class="t" id="mtTitle">Início</span>
+    <svg class="logo" role="img" aria-label="Stage" viewBox="0 0 286 305" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M37.2292 203.226L41.0692 176.739C42.5092 167.349 41.5492 163.737 37.9492 159.403L21.1492 138.695C14.9092 130.989 12.2692 123.043 13.7092 112.93L17.7892 83.0723C19.9492 66.4578 31.7092 56.5855 48.7492 56.5855C66.2692 56.5855 76.8292 67.421 74.4292 85.2394L69.1492 123.043H48.9892L54.0292 86.9249C54.9892 79.7012 52.8292 75.3671 47.0692 75.3671C41.7892 75.3671 38.9092 78.9789 37.9492 85.9618L34.8292 108.355C33.6292 116.783 34.1092 120.635 37.9492 125.21L54.9892 146.4C62.4292 155.55 63.6292 162.774 62.1892 173.128L57.3892 206.597C54.9892 223.212 43.7092 233.325 26.1892 233.325C9.14917 233.325 -1.89083 222.971 0.269173 206.838L6.26917 163.978H26.4292L20.9092 203.467C19.9492 210.691 22.3492 214.543 28.1092 214.543C33.6292 214.543 36.0292 210.691 37.2292 203.226Z" fill="currentColor"/><path d="M140.616 47.1947H115.349L93.7492 201.3H73.1092L94.7092 47.1947H62.1892L66.6163 28.4131H145.861L140.616 47.1947Z" fill="currentColor"/><path d="M145.861 37.8039H172.021L167.941 210.691H148.261L149.941 167.83H130.741L94.9939 305H75.3139L145.861 37.8039ZM147.781 98.0013L135.061 149.771H150.661L152.581 98.0013L153.781 74.4039H153.301L147.781 98.0013Z" fill="currentColor"/><path d="M243.369 66.4579H223.209L228.249 30.3395C229.209 23.3566 227.049 18.7816 221.289 18.7816C215.529 18.7816 211.929 23.3566 210.969 30.3395L194.889 146.4C193.929 153.383 196.329 157.958 201.849 157.958C207.369 157.958 211.209 153.383 212.169 146.4L218.169 102.817H208.569L211.209 83.3131H240.969L228.249 174.813H210.249L211.449 166.867C208.569 172.646 202.089 176.739 194.169 176.739C181.449 176.739 171.369 166.386 173.769 149.771L190.809 26.9684C193.209 10.3539 205.929 0 223.209 0C240.249 0 251.289 10.3539 248.889 26.9684L243.369 66.4579Z" fill="currentColor"/><path d="M249.656 75.3671H286L283.36 94.1486H267.656L259.976 149.049H283.016L280.376 167.83H257.336L248.696 229.472H275.816L273.176 248.254H225.416L249.656 75.3671Z" fill="currentColor"/></svg><span class="t" id="mtTitle">Início</span><button class="icon-btn" data-act="search" aria-label="Buscar"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM20 20l-4-4"/></svg></button>
     <button class="icon-btn" id="mtPlus" data-act="newPost" aria-label="Novo conteúdo"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
   </header>
   <div class="mback" data-act="menu"></div>
@@ -875,7 +881,7 @@ function vBanco(){
  const nf=n=>n.toLocaleString('pt-BR');
  const stars=p=>`<span class="stars" role="group" aria-label="Ranking">${[1,2,3,4,5].map(i=>`<button class="${(p.rank||0)>=i?'on':''}" data-act="bkStar" data-id="${p.id}" data-v="${i}" aria-label="${i} estrela${i>1?'s':''}">${ic('star')}</button>`).join('')}</span>`;
  const card=p=>`<article class="box bk">${media(p,'sm')}<div style="min-width:0">
-  <div class="bk-h"><div style="min-width:0"><a data-act="open" data-id="${p.id}">${esc(p.title)}</a><div class="row wrap meta" style="margin-top:4px">${cchip(p.client)}${ftag(p.format)}${camptag(p)}<span>${fmtD(p.date)}${p.time?' · '+p.time:''}</span></div></div>${stars(p)}</div>
+  <div class="bk-h"><div style="min-width:0"><a data-act="open" data-id="${p.id}">${esc(p.title)}</a> ${codeTag(p)}<div class="row wrap meta" style="margin-top:4px">${cchip(p.client)}${ftag(p.format)}${camptag(p)}<span>${fmtD(p.date)}${p.time?' · '+p.time:''}</span></div></div>${stars(p)}</div>
   <div class="bk-m">${MET.map(([k,l])=>`<label>${l}<input class="in" ${k==='tempo'?'placeholder="ex.: 0:45"':'type="number" min="0" inputmode="numeric"'} value="${esc((p.m||{})[k]??'')}" data-chg="bkMet" data-id="${p.id}" data-k="${k}"></label>`).join('')}
    <label>Etapa do funil<select class="in" data-chg="bkSel" data-id="${p.id}" data-k="funil">${opt('','—',p.funil||'')}${FUNIL.map(x=>opt(x,x,p.funil||'')).join('')}</select></label>
    <label>Objetivo<select class="in" data-chg="bkSel" data-id="${p.id}" data-k="objetivo">${opt('','—',p.objetivo||'')}${OBJ.map(x=>opt(x,x,p.objetivo||'')).join('')}</select></label></div>
@@ -907,6 +913,7 @@ function vAuto(){
   <div class="row" style="justify-content:flex-end"><button class="btn danger sm" data-act="ruleDel" data-id="${r.id}">Excluir</button></div></article>`;
  return`<div class="page-head"><div><h1>Automações</h1><div class="sub">Regras que movem os conteúdos sozinhas. Valem quando alguém muda o status, quando o cliente aprova no portal e ao abrir o app.</div></div><button class="btn pri" data-act="ruleNew">${ic('plus')}Nova automação</button></div>
  <div class="rule-list">${R.map(card).join('')||'<div class="empty">Nenhuma automação ainda.</div>'}</div>
+ <div class="box" style="margin-top:18px;padding:14px 18px"><b>Lembrete de métricas</b><div class="meta" style="margin:6px 0 10px">7 dias depois de um post entrar no Banco de posts, o app cria uma tarefa urgente em Minhas tarefas e avisa a pessoa escolhida para colher os dados e preencher o Banco de posts.</div><select class="in" style="max-width:260px" data-chg="metricsOwner">${opt('','Desligado',S.settings.metricsOwner||'')}${S.team.map(u=>opt(u.id,u.name,S.settings.metricsOwner||'')).join('')}</select></div>
  <div class="box" style="margin-top:18px;padding:14px 18px"><b>Automações de horário</b><div class="meta" style="margin-top:6px">Sempre ligadas: na hora agendada, o post em “Agendado” vira “Postado”. Dez minutos depois, ele sai da Gestão de publicação e vai para o Banco de posts.</div></div>`;
 }
 const meId=()=>(CLOUD?REAL():ME()).id;
@@ -1267,7 +1274,19 @@ function vEtapa(sid){
  ${stageToolbar([['status','Status'],['cliente','Cliente']])}<div id="boardArea">${areaHtml()}</div>`;
 }
 function navList(){const sid=curStage();const ok=allowedStages();let L=filtered().filter(p=>ok.includes(p.stage));if(sid)L=L.filter(p=>p.stage===sid);return L}
+const CODE_CH='ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+function newCode(){const used=new Set(S.posts.map(p=>p.code));for(let k=0;k<50;k++){let c='';const a=new Uint8Array(4);crypto.getRandomValues(a);a.forEach(x=>c+=CODE_CH[x%CODE_CH.length]);if(!used.has(c))return c}return Date.now().toString(36).slice(-4).toUpperCase()}
+const codeTag=p=>p.code?`<span class="code-tag" title="Código da tarefa">#${esc(p.code)}</span>`:'';
+function ensureCodes(){let ch=false;S.posts.forEach(p=>{if(!p.code){p.code=newCode();ch=true}});if(ch)save()}
 const SEL=new Set();
+function searchSheet(){const m=document.getElementById('modal');ui.modal='__search';
+ m.innerHTML=`<div class="backdrop" data-act="closeModal"></div><div class="sheet narrow search-sheet" role="dialog" aria-modal="true" aria-label="Buscar"><div class="sheet-h"><input class="in" id="srch" placeholder="Digite o #código (ex.: 3M34) ou parte do título" autocomplete="off" data-inp="srch"><button class="icon-btn" data-act="closeModal" aria-label="Fechar">${ic('x')}</button></div><div class="sheet-b one" id="srchRes">${searchRes('')}</div></div>`;
+ m.hidden=false;document.body.classList.add('modal-open');setTimeout(()=>{const i=document.getElementById('srch');if(i)i.focus()},40)}
+function searchRes(q){q=q.trim().replace(/^#/,'').toLowerCase();if(!q)return'<div class="meta">Cada tarefa tem um código, como #3M34. Ele aparece ao lado do título.</div>';
+ const L=S.posts.map(p=>{const code=(p.code||'').toLowerCase();const sc=code===q?100:code.startsWith(q)?60:(p.title.toLowerCase().includes(q)?30:0)+(cl(p.client).name.toLowerCase().includes(q)?10:0);return[sc,p]}).filter(x=>x[0]>0).sort((a,b)=>b[0]-a[0]).slice(0,20);
+ return L.map(([,p])=>`<button class="srch-r" data-act="srchOpen" data-id="${p.id}">${codeTag(p)}<span class="grow ell">${esc(p.title)}</span>${ctag(p.client)}<span class="meta">${p.archived?'Banco de posts':ST[p.stage].short}</span></button>`).join('')||'<div class="empty">Nada encontrado.</div>'}
+document.addEventListener('keydown',e=>{if(e.key==='/'&&!/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'')&&!ui.clientMode&&document.getElementById('auth').hidden){e.preventDefault();searchSheet()}
+ if(e.key==='Enter'&&e.target&&e.target.id==='srch'){const b=document.querySelector('#srchRes .srch-r');if(b)b.click()}});
 function bulkBar(){
  let b=document.getElementById('bulk');
  const ids=[...SEL].filter(id=>S.posts.some(p=>p.id===id));SEL.clear();ids.forEach(i=>SEL.add(i));
@@ -1296,7 +1315,7 @@ function areaHtml(){
  const showClient=g!=='cliente',showStage=!sid&&g!=='etapa';
  return`<div class="groups">${groups.map(gr=>`<section class="grp"><div class="grp-h"><input type="checkbox" class="rsel" data-chg="grpSel" data-ids="${gr.items.map(p=>p.id).join(',')}" ${gr.items.every(p=>SEL.has(p.id))?'checked':''} aria-label="Selecionar todas do grupo">${gr.head}<span class="faint">${gr.items.length}</span></div>
   <div class="tbl-wrap"><table class="tbl lite"><thead><tr><th>Nome</th>${showClient?'<th>Cliente</th>':''}${showStage?'<th>Etapa</th>':''}<th>Status</th><th>Responsável</th><th>Publicação</th><th class="tdel"></th></tr></thead><tbody>
-  ${gr.items.map(p=>`<tr class="click" style="--c:${cl(p.client).color}" data-act="open" data-id="${p.id}"><td class="name" style="--c:${cl(p.client).color}"><div class="row"><input type="checkbox" class="rsel" data-act="stop" data-chg="rowSel" data-id="${p.id}" ${SEL.has(p.id)?'checked':''} aria-label="Selecionar"><span class="sicon t-${tone(p)}"></span><span class="ell">${esc(p.title)}</span>${ftag(p.format)}${camptag(p)}</div></td>${showClient?`<td>${ctag(p.client)}</td>`:''}${showStage?`<td>${rowStage(p)}</td>`:''}<td>${rowStatus(p)}</td><td class="own"><div class="row">${av(p.owner)}${rowOwner(p)}</div></td><td>${rowDate(p)}</td><td class="tdel"><div class="row" style="gap:2px;justify-content:flex-end">${rowDup(p)}${rowDel(p)}</div></td></tr>`).join('')}
+  ${gr.items.map(p=>`<tr class="click" style="--c:${cl(p.client).color}" data-act="open" data-id="${p.id}"><td class="name" style="--c:${cl(p.client).color}"><div class="row"><input type="checkbox" class="rsel" data-act="stop" data-chg="rowSel" data-id="${p.id}" ${SEL.has(p.id)?'checked':''} aria-label="Selecionar"><span class="sicon t-${tone(p)}"></span><span class="ell">${esc(p.title)}</span>${codeTag(p)}${ftag(p.format)}${camptag(p)}</div></td>${showClient?`<td>${ctag(p.client)}</td>`:''}${showStage?`<td>${rowStage(p)}</td>`:''}<td>${rowStatus(p)}</td><td class="own"><div class="row">${av(p.owner)}${rowOwner(p)}</div></td><td>${rowDate(p)}</td><td class="tdel"><div class="row" style="gap:2px;justify-content:flex-end">${rowDup(p)}${rowDel(p)}</div></td></tr>`).join('')}
   </tbody></table></div></section>`).join('')}</div>`;
 }
 function board(cols){
@@ -1305,7 +1324,7 @@ function board(cols){
 function card(p){
  return`<div class="card" style="--c:${cl(p.client).color}" draggable="true" data-drag="${p.id}" data-act="open" data-id="${p.id}" tabindex="0">
   <div class="row between">${cchip(p.client)}${ftag(p.format)}</div>
-  <div class="card-t">${esc(p.title)}</div>${camptag(p)?`<div>${camptag(p)}</div>`:''}
+  <div class="card-t">${esc(p.title)} ${codeTag(p)}</div>${camptag(p)?`<div>${camptag(p)}</div>`:''}
   <div class="row between">${pill(p)}<div class="row">${dateCell(p)}${av(p.owner)}${rowDup(p)}${rowDel(p)}</div></div></div>`;
 }
 
@@ -1667,7 +1686,7 @@ function renderModal(){
  const SCR='.sheet,.sheet-b,.sheet-b>*';const keepScroll=m.getAttribute('data-pid')===p.id&&!m.hidden?[...m.querySelectorAll(SCR)].map(e=>e.scrollTop):null;m.setAttribute('data-pid',p.id);
  m.innerHTML=`<div class="backdrop" data-act="closeModal"></div>
  <div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(p.title)}">
-  <div class="sheet-h">${cchip(p.client)}<input class="title-in" id="m-title" value="${esc(p.title)}" data-inp="pf" data-k="title" aria-label="Título"><button class="icon-btn" data-act="closeModal" aria-label="Fechar">${ic('x')}</button></div>
+  <div class="sheet-h">${cchip(p.client)}${codeTag(p)}<input class="title-in" id="m-title" value="${esc(p.title)}" data-inp="pf" data-k="title" aria-label="Título"><button class="icon-btn" data-act="closeModal" aria-label="Fechar">${ic('x')}</button></div>
   <div class="sheet-b">
    <div>${media(p)}${dlBtn(p)}${upHtml(p)}
     ${p.mediaUrl||p.video||UP[p.id]||(GDRIVE&&p.driveUrl)?'':`<div class="drv"><label for="m-drive">ou cole o link do Google Drive</label><input class="in" id="m-drive" placeholder="https://drive.google.com/file/d/…" value="${esc(p.driveUrl||'')}" data-chg="drive"></div>`}
@@ -1725,7 +1744,7 @@ function newPost(date){if(!needClient())return;
 function createPost(){
  const v=id=>document.getElementById(id).value;const title=v('np-title').trim();if(!title){toast('Dê um título para a tarefa.');document.getElementById('np-title').focus();return}
  const stg=v('np-stage')||'ideia';
- const p={id:uid('p'),client:v('np-client'),title,format:v('np-format'),stage:stg,status:ST[stg].statuses[0],
+ const p={id:uid('p'),code:newCode(),client:v('np-client'),title,format:v('np-format'),stage:stg,status:ST[stg].statuses[0],
   date:v('np-date')||iso(addDays(TODAY,7)),time:v('np-time')||'11:00',owner:v('np-owner')||ME().id,caption:'',briefing:'',campaign:'',funnel:'Topo',link:'',comments:[],history:[{t:nowStamp(),who:ME().name,txt:'Criou o conteúdo'}]};
  S.posts.push(p);save();toast('Tarefa criada.');ui.mtab='briefing';openPost(p.id);render();
 }
@@ -1801,12 +1820,14 @@ const A={
  todoShowDone:()=>{ui.todoDone=!ui.todoDone;render()},
  todoClear:()=>{const me=meId();const today=TODAY_ISO;S.todos=S.todos.filter(t=>!(t.owner===me&&t.done&&t.doneAt&&new Date(t.doneAt).toLocaleDateString('en-CA',{timeZone:TZ})!==today));save();render()},
  stop:()=>{},
+ search:()=>{document.body.classList.remove('menu');searchSheet()},
+ srchOpen:el=>{const p=S.posts.find(x=>x.id===el.dataset.id);if(!p)return;ui.mtab='historico';openPost(p.id)},
  bulkClear:()=>{SEL.clear();render()},
  bulkDel:el=>{if(!el.classList.contains('armed')){el.classList.add('armed');el.lastChild.textContent='Confirmar exclusão';setTimeout(()=>{if(el.isConnected){el.classList.remove('armed');el.lastChild.textContent='Excluir'}},3000);return}
   const L=S.posts.filter(p=>SEL.has(p.id));S.posts=S.posts.filter(p=>!SEL.has(p.id));L.forEach(p=>[...(p.slides||[]),...(p.video?[p.video]:[])].forEach(x=>{if(x.path&&sb&&!pathUsed(x.path))sb.storage.from('media').remove([x.path]).catch(()=>{})}));SEL.clear();save();toast(`${L.length} tarefa${L.length>1?'s':''} excluída${L.length>1?'s':''}.`);render()},
  rowDup:el=>{const p=S.posts.find(x=>x.id===el.dataset.id);if(!p)return;const q=JSON.parse(JSON.stringify(p));
   ['mediaUrl','mediaType','mediaName','mediaSize','postedAt','link'].forEach(k=>delete q[k]);
-  Object.assign(q,{id:uid('p'),title:p.title+' (cópia)',status:ST[p.stage].statuses[0],archived:false,comments:[],history:[{t:nowStamp(),who:(CLOUD?REAL():ME()).name,txt:`Duplicou de “${p.title}”`}],m:{},rank:0});
+  Object.assign(q,{id:uid('p'),code:newCode(),title:p.title+' (cópia)',status:ST[p.stage].statuses[0],archived:false,comments:[],history:[{t:nowStamp(),who:(CLOUD?REAL():ME()).name,txt:`Duplicou de “${p.title}”`}],m:{},rank:0});
   if(q.stage==='pub'&&q.status!=='Para agendar')q.status='Para agendar';
   S.posts.splice(S.posts.indexOf(p)+1,0,q);save();toast('Tarefa duplicada.');if(ui.modal===p.id){openPost(q.id)}render()},
  clientPhotoDel:()=>{ui.kfPhoto='';clientForm(ui.kfId,true)},
@@ -1930,11 +1951,13 @@ const C={
  bulkStatus:el=>{if(!el.value)return;const[st,status]=el.value.split('|');bulkApply(p=>{if(p.stage!==st){p.stage=st;p.status=status;hist(p,`Moveu para ${ST[st].name} · ${status}`)}else setStatus(p,status);autoFlow(p)},`Status alterado em {n} tarefas.`)},
  bulkDate:el=>{if(!el.value)return;const d=el.value;bulkApply(p=>{p.date=d;hist(p,`Mudou a data para ${fmtD(d)}`)},`Data alterada em {n} tarefas.`)},
  bulkOwner:el=>{if(!el.value)return;const u=el.value;bulkApply(p=>{p.owner=u;hist(p,`Passou para ${user(u).name}`)},`Responsável alterado em {n} tarefas.`)},
+ metricsOwner:el=>{S.settings.metricsOwner=el.value;save();toast(el.value?`Lembrete de métricas vai para ${user(el.value).name}.`:'Lembrete de métricas desligado.')},
  bkSel:el=>{const p=S.posts.find(x=>x.id===el.dataset.id);p[el.dataset.k]=el.value;save()},
  bkF:el=>{ui.bk[el.dataset.k]=el.value;render()},
  drive:el=>{const p=S.posts.find(x=>x.id===ui.modal);const v=el.value.trim();if(v&&!driveId(v)){toast('Link do Drive não reconhecido.');return}p.driveUrl=v;if(v)hist(p,'Adicionou o link do Google Drive');save();renderModal();render()}
 };
 const I={
+ srch:el=>{const r=document.getElementById('srchRes');if(r)r.innerHTML=searchRes(el.value)},
  search:el=>{ui.f.q=el.value;document.getElementById('boardArea').innerHTML=areaHtml()},
  pf:el=>{const p=S.posts.find(x=>x.id===ui.modal);p[el.dataset.k]=el.value;save()},
  accent:el=>{S.settings.accent=el.value;save();applyTheme();const h=document.getElementById('accentHex');if(h)h.value=el.value},
@@ -2015,7 +2038,9 @@ async function enter(session){
  realId=me.id;ui.as=me.id;if(!S.clients.find(c=>c.id===ui.portalClient)&&S.clients[0])ui.portalClient=S.clients[0].id;
  snapshot();
  if(isAdmin(me)&&!S.rules.length&&!S.settings.rulesSeeded){S.rules=DEFAULT_RULES();S.settings.rulesSeeded=true;save()}
- S.posts.forEach(p=>applyRules(p,true));
+ if(isAdmin(me)&&S.settings.metricsOwner===undefined){const g=S.team.find(u=>/grazi/i.test(u.name));S.settings.metricsOwner=g?g.id:'';save()}
+ S.posts.forEach(p=>applyRules(p,true));ensureCodes();
+ setTimeout(()=>{try{const mid=realId;(S.todos||[]).filter(t=>t.auto&&!t.done&&t.owner===mid).slice(0,3).forEach(t=>notify({who:'Lembrete',text:t.title,sub:'Pendente em Minhas tarefas',todo:t.id}))}catch(e){}},1500);
  hideAuth();applyTheme();route();subscribe();
 }
 function cloudSave(){if(!sb||!realId)return;clearTimeout(syncT);syncT=setTimeout(push,400)}
@@ -2062,6 +2087,7 @@ function notifyChange(coll,prev,cur){
   if(cur.done&&!(prev&&prev.done)&&cur.doneBy&&cur.doneBy!==mid){const n=user(cur.doneBy).name;notify({who:n,av:av(cur.doneBy),text:'Concluiu a tarefa',sub:cur.title,todo:cur.id});return}
   const was=prev&&(prev.shared||[]).includes(mid);if(!was&&(cur.shared||[]).includes(mid)&&cur.owner!==mid){const n=user(cur.owner).name;notify({who:n,av:av(cur.owner),text:'Marcou você numa tarefa',sub:cur.title,todo:cur.id})}
  }
+ if(coll==='todos'&&!prev&&cur.auto&&cur.owner===mid){notify({who:'Lembrete',text:cur.title,sub:'Toque para abrir',todo:cur.id});return}
  if(coll==='msgs'&&!prev&&cur.fromClient)notify({who:cur.who,text:'Mensagem no portal: '+cur.txt});
 }
 let subbed=false;function subscribe(){if(subbed)return;subbed=true;
