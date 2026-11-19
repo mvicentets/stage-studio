@@ -485,6 +485,11 @@ select.csel option{background:var(--surface);color:var(--fg);font-weight:500}
 .auth-err{color:var(--red);font-size:13px}
 .syncdot{position:fixed;right:14px;bottom:14px;z-index:90;font-size:11.5px;color:var(--faint);background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:4px 10px;pointer-events:none}
 [hidden]{display:none!important}
+.sicon.ok{border:0;background:var(--green);color:#fff;display:grid;place-items:center;width:15px;height:15px}.sicon.ok svg{width:13px;height:13px}
+.tbl tr.row-ok td,.tbl.lite tr.row-ok td{background:color-mix(in srgb,var(--green) 10%,var(--surface))}
+.tbl tr.row-ok:hover td{background:color-mix(in srgb,var(--green) 15%,var(--surface))}
+@media (max-width:760px){.tbl tr.row-ok{background:color-mix(in srgb,var(--green) 10%,var(--surface))}.tbl tr.row-ok td{background:transparent!important}}
+.card.row-ok{background:color-mix(in srgb,var(--green) 10%,var(--surface))}
 .save-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.save-grid figure{margin:0;position:relative}.save-grid img{width:100%;border-radius:10px;display:block;-webkit-touch-callout:default}.save-grid figcaption{position:absolute;top:6px;left:6px;background:rgba(0,0,0,.55);color:#fff;font-size:11px;font-weight:700;border-radius:6px;padding:1px 6px}
 .clips{display:flex;flex-direction:column;gap:6px;margin-top:10px}
 .clip{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;min-width:0}.clip.fin{border-color:color-mix(in srgb,var(--green) 50%,var(--line))}
@@ -748,6 +753,7 @@ function phase(p){
  return'producao';
 }
 function tone(p){const ph=phase(p);if(ph==='producao'&&(p.status==='Pronto'||p.status==='Copy aprovada'))return'green';return PH[ph][1]}
+const isDoneP=p=>(p.stage==='pub'&&(p.status==='Agendado'||p.status==='Postado'))||(p.stage==='ads'&&p.status==='No ar');
 const pill=p=>`<span class="pill t-${tone(p)}">${esc(p.status)}</span>`;
 const isLate=p=>p.date&&p.date<TODAY_ISO&&!['postado','agendado'].includes(phase(p));
 
@@ -1389,14 +1395,14 @@ function areaHtml(){
  const showClient=g!=='cliente',showStage=!sid&&g!=='etapa';
  return`<div class="groups">${groups.map(gr=>`<section class="grp"><div class="grp-h"><input type="checkbox" class="rsel" data-chg="grpSel" data-ids="${gr.items.map(p=>p.id).join(',')}" ${gr.items.every(p=>SEL.has(p.id))?'checked':''} aria-label="Selecionar todas do grupo">${gr.head}<span class="faint">${gr.items.length}</span></div>
   <div class="tbl-wrap"><table class="tbl lite"><thead><tr><th>Nome</th>${showClient?'<th>Cliente</th>':''}${showStage?'<th>Etapa</th>':''}<th>Status</th><th>Responsável</th><th>Publicação</th><th class="tdel"></th></tr></thead><tbody>
-  ${gr.items.map(p=>`<tr class="click" style="--c:${cl(p.client).color}" data-act="open" data-id="${p.id}"><td class="name" style="--c:${cl(p.client).color}"><div class="row"><input type="checkbox" class="rsel" data-act="stop" data-chg="rowSel" data-id="${p.id}" ${SEL.has(p.id)?'checked':''} aria-label="Selecionar"><span class="sicon t-${tone(p)}"></span><span class="ell">${esc(p.title)}</span>${codeTag(p)}${ftag(p.format)}${camptag(p)}</div></td>${showClient?`<td>${ctag(p.client)}</td>`:''}${showStage?`<td>${rowStage(p)}</td>`:''}<td>${rowStatus(p)}</td><td class="own"><div class="row">${av(p.owner)}${rowOwner(p)}</div></td><td>${rowDate(p)}</td><td class="tdel"><div class="row" style="gap:2px;justify-content:flex-end">${rowDup(p)}${rowDel(p)}</div></td></tr>`).join('')}
+  ${gr.items.map(p=>`<tr class="click${isDoneP(p)?' row-ok':''}" style="--c:${cl(p.client).color}" data-act="open" data-id="${p.id}"><td class="name" style="--c:${cl(p.client).color}"><div class="row"><input type="checkbox" class="rsel" data-act="stop" data-chg="rowSel" data-id="${p.id}" ${SEL.has(p.id)?'checked':''} aria-label="Selecionar">${isDoneP(p)?`<span class="sicon ok">${ic('check')}</span>`:`<span class="sicon t-${tone(p)}"></span>`}<span class="ell">${esc(p.title)}</span>${codeTag(p)}${ftag(p.format)}${camptag(p)}</div></td>${showClient?`<td>${ctag(p.client)}</td>`:''}${showStage?`<td>${rowStage(p)}</td>`:''}<td>${rowStatus(p)}</td><td class="own"><div class="row">${av(p.owner)}${rowOwner(p)}</div></td><td>${rowDate(p)}</td><td class="tdel"><div class="row" style="gap:2px;justify-content:flex-end">${rowDup(p)}${rowDel(p)}</div></td></tr>`).join('')}
   </tbody></table></div></section>`).join('')}</div>`;
 }
 function board(cols){
  return`<div class="board">${cols.map(c=>`<div class="col" ${c.drop}><div class="col-h">${c.title}<span class="n">${c.items.length}</span></div><div class="cards">${c.items.map(card).join('')}</div></div>`).join('')}</div>`;
 }
 function card(p){
- return`<div class="card" style="--c:${cl(p.client).color}" draggable="true" data-drag="${p.id}" data-act="open" data-id="${p.id}" tabindex="0">
+ return`<div class="card${isDoneP(p)?' row-ok':''}" style="--c:${cl(p.client).color}" draggable="true" data-drag="${p.id}" data-act="open" data-id="${p.id}" tabindex="0">
   <div class="row between">${cchip(p.client)}${ftag(p.format)}</div>
   <div class="card-t">${esc(p.title)} ${codeTag(p)}</div>${camptag(p)?`<div>${camptag(p)}</div>`:''}
   <div class="row between">${pill(p)}<div class="row">${dateCell(p)}${av(p.owner)}${rowDup(p)}${rowDel(p)}</div></div></div>`;
