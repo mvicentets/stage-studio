@@ -491,9 +491,9 @@ select.csel option{background:var(--surface);color:var(--fg);font-weight:500}
 .clip-i{width:28px;height:28px;border-radius:8px;background:var(--hover);display:grid;place-items:center;flex:none}.clip-i svg{width:14px;height:14px}
 .dz-sm{padding:10px;margin-top:8px}
 .sub-h{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);margin-top:12px}
-.ad-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
-.ad-card{display:grid;grid-template-columns:92px minmax(0,1fr);gap:12px;padding:12px}.ad-card .media{width:92px}
-.ad-b{display:flex;flex-direction:column;gap:8px;min-width:0}.ad-t{font-weight:600;color:var(--fg);text-decoration:none;cursor:pointer}
+.cri-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.cri-card{display:grid;grid-template-columns:92px minmax(0,1fr);gap:12px;padding:12px}.cri-card .media{width:92px}
+.cri-b{display:flex;flex-direction:column;gap:8px;min-width:0}.cri-t{font-weight:600;color:var(--fg);text-decoration:none;cursor:pointer}
 .code-tag{display:inline-flex;align-items:center;font-family:ui-monospace,Menlo,monospace;font-size:11px;font-weight:600;color:var(--muted);background:var(--hover);border-radius:6px;padding:1px 6px;white-space:nowrap;letter-spacing:.02em}
 .side-search{display:flex;align-items:center;gap:8px;width:100%;margin:0 0 10px;padding:7px 10px;border-radius:9px;border:1px solid var(--line);background:var(--surface);color:var(--faint);font:inherit;font-size:13px;cursor:pointer;text-align:left}
 .side-search span{flex:1}.side-search kbd{font-size:11px;border:1px solid var(--line-2);border-radius:5px;padding:0 5px}.side-search svg{width:15px;height:15px}
@@ -1017,13 +1017,13 @@ function vAnuncios(){
  const L=S.posts.filter(p=>p.stage==='ads'&&(f.client==='all'||p.client===f.client)&&(f.camp==='all'||(p.campaign||'')===f.camp)&&(f.st==='todos'||(f.st==='ativos'?p.status!=='Encerrado':p.status===f.st))).sort(sortDate);
  const G={};L.forEach(p=>{(G[p.client]=G[p.client]||[]).push(p)});
  const tone2={'Pronto para subir':'amber','No ar':'green','Pausado':'gray','Encerrado':'gray'};
- const card=p=>`<article class="box ad-card">${media(p,'sm')}<div class="ad-b"><div class="row between" style="gap:6px;align-items:flex-start"><a class="ad-t" data-act="open" data-id="${p.id}">${esc(p.title)}</a>${codeTag(p)}</div>
+ const card=p=>`<article class="box cri-card">${media(p,'sm')}<div class="cri-b"><div class="row between" style="gap:6px;align-items:flex-start"><a class="cri-t" data-act="open" data-id="${p.id}">${esc(p.title)}</a>${codeTag(p)}</div>
   <div class="row wrap" style="gap:6px">${ftag(p.format)}${camptag(p)}</div>
   <div class="row wrap" style="gap:6px;margin-top:auto"><select class="isel t-${tone2[p.status]||'gray'}" data-chg="adStatus" data-id="${p.id}" aria-label="Status do anúncio">${AD_ST.map(x=>opt(x,x,p.status)).join('')}</select>${dlBtn(p).replace('class="row wrap" style="margin-top:10px"','class="row"')}</div></div></article>`;
  const nPend=S.posts.filter(p=>p.stage==='ads'&&p.status==='Pronto para subir').length;
  return`<div class="page-head"><div><h1>Anúncios</h1><div class="sub">Criativos de anúncio aprovados, separados por cliente. Não passam pela Gestão de publicação e não precisam de campanha.${nPend?` <b>${nPend} pronto${nPend>1?'s':''} para subir.</b>`:''}</div></div><div class="actions"><button class="btn pri" data-act="newAd">${ic('plus')}Novo anúncio</button></div></div>
  <div class="toolbar" style="margin-bottom:14px"><select class="sel" data-chg="adF" data-k="client">${opt('all','Todos os clientes',f.client)}${S.clients.map(c=>opt(c.id,c.name,f.client)).join('')}</select><select class="sel" data-chg="adF" data-k="camp">${opt('all','Campanha: todas',f.camp)}${opt('','Sem campanha',f.camp)}${S.campaigns.map(c=>opt(c.id,c.name,f.camp)).join('')}</select><select class="sel" data-chg="adF" data-k="st">${opt('ativos','Ativos (sem encerrados)',f.st)}${opt('todos','Todos',f.st)}${AD_ST.map(x=>opt(x,x,f.st)).join('')}</select></div>
- ${Object.keys(G).sort((a,b)=>cl(a).name.localeCompare(cl(b).name)).map(k=>`<section class="todo-g"><div class="grp-h"><span class="gtag lg" style="--c:${cl(k).color}">${esc(cl(k).name)}</span><span class="faint">${G[k].length}</span></div><div class="ad-grid">${G[k].map(card).join('')}</div></section>`).join('')||'<div class="empty">Nenhum anúncio aqui. Crie um anúncio pelo botão “Novo anúncio”: ele começa em Design gráfico e, quando for aprovado, aparece nesta tela.</div>'}`;
+ ${Object.keys(G).sort((a,b)=>cl(a).name.localeCompare(cl(b).name)).map(k=>`<section class="todo-g"><div class="grp-h"><span class="gtag lg" style="--c:${cl(k).color}">${esc(cl(k).name)}</span><span class="faint">${G[k].length}</span></div><div class="cri-grid">${G[k].map(card).join('')}</div></section>`).join('')||'<div class="empty">Nenhum anúncio aqui. Crie um anúncio pelo botão “Novo anúncio”: ele começa em Design gráfico e, quando for aprovado, aparece nesta tela.</div>'}`;
 }
 const VIEWS={anuncios:vAnuncios,senhas:vSenhas,tarefas:vTarefas,automacoes:vAuto,banco:vBanco,inicio:vInicio,producao:vTodas,calendario:vCalendario,portal:vPortal2,campanhas:vCampanhas,financeiro:vFinanceiro,clientes:vClientes,equipe:vEquipe};
 const LABELS={anuncios:'Anúncios',senhas:'Cofre de senhas',tarefas:'Minhas tarefas',banco:'Banco de posts',automacoes:'Automações',inicio:'Início',producao:'Todas as tarefas',calendario:'Calendário',portal:'Portal do cliente',campanhas:'Campanhas',financeiro:'Financeiro',clientes:'Clientes',equipe:'Equipe e aparência'};
