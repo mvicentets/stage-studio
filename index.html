@@ -485,6 +485,7 @@ select.csel option{background:var(--surface);color:var(--fg);font-weight:500}
 .auth-err{color:var(--red);font-size:13px}
 .syncdot{position:fixed;right:14px;bottom:14px;z-index:90;font-size:11.5px;color:var(--faint);background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:4px 10px;pointer-events:none}
 [hidden]{display:none!important}
+.save-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.save-grid figure{margin:0;position:relative}.save-grid img{width:100%;border-radius:10px;display:block;-webkit-touch-callout:default}.save-grid figcaption{position:absolute;top:6px;left:6px;background:rgba(0,0,0,.55);color:#fff;font-size:11px;font-weight:700;border-radius:6px;padding:1px 6px}
 .clips{display:flex;flex-direction:column;gap:6px;margin-top:10px}
 .clip{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;min-width:0}.clip.fin{border-color:color-mix(in srgb,var(--green) 50%,var(--line))}
 .clip-i{width:28px;height:28px;border-radius:8px;background:var(--hover);display:grid;place-items:center;flex:none}.clip-i svg{width:14px;height:14px}
@@ -1082,6 +1083,10 @@ function dlBtn(p){const n=(p.slides||[]).filter(x=>x.url).length;const vid=!!(p.
  const imgBtn=n?(r==='prep'?`<button class="btn sm pri" disabled>Preparando ${n} imagens…</button>`:Array.isArray(r)?`<button class="btn sm pri" data-act="dlShare" data-id="${p.id}">${ic('download')}Salvar ${n} imagens no celular</button>`:`<button class="btn sm pri" data-act="download" data-id="${p.id}" data-k="img">${ic('download')}${n>1?`Baixar ${n} imagens`:'Baixar imagem'}</button>`):'';
  const vidBtn=vid?`<button class="btn sm ${n?'':'pri'}" data-act="download" data-id="${p.id}" data-k="vid">${ic('download')}Baixar vídeo</button>`:'';
  return`<div class="row wrap" style="margin-top:10px">${imgBtn}${vidBtn}</div>`}
+function saveSheet(p){const sl=(p.slides||[]).filter(x=>x.url);const m=document.getElementById('modal');const back=ui.modal;ui.modal='__save';ui.saveBack=back;
+ m.innerHTML=`<div class="backdrop" data-act="saveBack"></div><div class="sheet narrow" role="dialog" aria-modal="true" aria-label="Salvar imagens"><div class="sheet-h"><b class="grow">Salvar ${sl.length} imagens</b><button class="icon-btn" data-act="saveBack" aria-label="Fechar">${ic('x')}</button></div>
+ <div class="sheet-b one"><div class="meta" style="margin-bottom:10px">Este navegador não deixa salvar todas de uma vez. <b>Toque e segure cada imagem → “Salvar na Fotos”</b>. Dica: abrindo o app pelo Safari (fora do WhatsApp/Instagram), aparece o botão de salvar todas juntas.</div>
+ <div class="save-grid">${sl.map((x,i)=>`<figure><img src="${esc(x.url)}" alt="Imagem ${i+1}"><figcaption>${i+1}</figcaption></figure>`).join('')}</div></div></div>`;m.hidden=false;document.body.classList.add('modal-open')}
 function loadZip(){return new Promise((res,rej)=>{if(window.JSZip)return res(window.JSZip);const sc=document.createElement('script');sc.src='https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';sc.onload=()=>res(window.JSZip);sc.onerror=()=>rej(new Error('zip'));document.head.appendChild(sc)})}
 async function slideFiles(p){const sl=(p.slides||[]).filter(x=>x.url),base=slug(p.title);const out=[];
  for(let i=0;i<sl.length;i++){const r=await fetch(sl[i].url);const b=await r.blob();out.push(new File([b],`${base}-${String(i+1).padStart(2,'0')}.jpg`,{type:b.type||'image/jpeg'}))}return out}
@@ -1093,6 +1098,7 @@ async function downloadPost(p,kind){
   if(canShareFiles()){DLR[p.id]='prep';if(ui.modal===p.id)renderModal();render();
    try{DLR[p.id]=await slideFiles(p);toast('Pronto: toque em “Salvar imagens no celular”.')}catch(e){delete DLR[p.id];toast('Não foi possível preparar as imagens.')}
    if(ui.modal===p.id)renderModal();render();return}
+  if(/iPhone|iPad|Android/i.test(navigator.userAgent)&&sl.length>1){saveSheet(p);return}
   toast(sl.length>1?`Juntando ${sl.length} imagens num arquivo .zip…`:'Baixando imagem…');
   try{const files=await slideFiles(p);
    if(files.length===1){const u=URL.createObjectURL(files[0]);go(u,files[0].name);setTimeout(()=>URL.revokeObjectURL(u),8000);return}
@@ -1896,6 +1902,7 @@ const A={
  rowDel:el=>{if(!el.classList.contains('armed')){el.classList.add('armed');el.title='Clique de novo para excluir';toast('Toque de novo na lixeira para excluir.');setTimeout(()=>{if(el.isConnected)el.classList.remove('armed')},3000);return}
   const p=S.posts.find(x=>x.id===el.dataset.id);if(!p)return;S.posts=S.posts.filter(x=>x.id!==p.id);[...(p.slides||[]),...(p.video?[p.video]:[])].forEach(x=>{if(x.path&&sb&&!pathUsed(x.path))sb.storage.from('media').remove([x.path]).catch(()=>{})});save();toast('Tarefa excluída.');render()},
  download:el=>downloadPost(S.posts.find(x=>x.id===el.dataset.id),el.dataset.k),
+ saveBack:()=>{const b=ui.saveBack;ui.saveBack=null;if(b&&S.posts.find(p=>p.id===b))openPost(b);else closeModal()},
  dlShare:async el=>{const files=DLR[el.dataset.id];if(!Array.isArray(files))return;try{await navigator.share({files,title:'Imagens do post'});delete DLR[el.dataset.id]}catch(e){if(e&&e.name!=='AbortError')toast('O celular não deixou salvar. Tente de novo.')}renderModal();render()},
  slDel:el=>{const p=S.posts.find(x=>x.id===ui.modal);const [r]=p.slides.splice(Number(el.dataset.i),1);if(r&&r.path&&sb&&!pathUsed(r.path))sb.storage.from('media').remove([r.path]).catch(()=>{});save();renderModal();render()},
  slMove:el=>{const p=S.posts.find(x=>x.id===ui.modal);const i=Number(el.dataset.i),j=i+Number(el.dataset.d);if(j<0||j>=p.slides.length)return;[p.slides[i],p.slides[j]]=[p.slides[j],p.slides[i]];save();renderModal();render()},
