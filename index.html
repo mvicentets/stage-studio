@@ -1,5 +1,5 @@
-<link rel="icon" type="image/svg+xml" href="icon.svg">
-<link rel="apple-touch-icon" href="icon.png">
+<link rel="icon" type="image/svg+xml" href="/icon.svg">
+<link rel="apple-touch-icon" href="/icon.png">
 <meta name="apple-mobile-web-app-title" content="Baseus">
 <meta name="application-name" content="Baseus | Stage">
 <meta name="theme-color" content="#1A3FF5">
@@ -485,6 +485,7 @@ select.csel option{background:var(--surface);color:var(--fg);font-weight:500}
 .auth-err{color:var(--red);font-size:13px}
 .syncdot{position:fixed;right:14px;bottom:14px;z-index:90;font-size:11.5px;color:var(--faint);background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:4px 10px;pointer-events:none}
 [hidden]{display:none!important}
+.slug-in{display:flex;align-items:center;border:1px solid var(--line);border-radius:8px;background:var(--surface);overflow:hidden}.slug-in span{padding:0 4px 0 9px;color:var(--faint);font-size:13px;white-space:nowrap}.slug-in .in{border:0;border-radius:0;padding-left:0;min-width:0}
 .sicon.ok{border:0;border-radius:0;background:none;color:var(--green);display:grid;place-items:center;width:16px;height:16px}.sicon.ok svg{width:16px;height:16px;stroke-width:3}
 .tbl tr.row-ok td,.tbl.lite tr.row-ok td{background:color-mix(in srgb,var(--green) 10%,var(--surface))}
 .tbl tr.row-ok:hover td{background:color-mix(in srgb,var(--green) 15%,var(--surface))}
@@ -1050,6 +1051,9 @@ window.addEventListener('hashchange',route);
 function go(v){if(location.hash.slice(1)===v)render();else location.hash=v}
 
 /* ---------- peças comuns ---------- */
+const slugify=t=>String(t||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40);
+const newTok=()=>{const a=new Uint8Array(18);crypto.getRandomValues(a);return[...a].map(b=>b.toString(36).padStart(2,'0')).join('').slice(0,28)};
+const portalUrl=c=>c.slug?`${location.origin}/conteudos/${c.slug}`:`${location.origin}/?portal=${c.token}`;
 const cavH=c=>`<div class="cav${c.photo?' img':''}" style="--c:${c.color}${c.photo?`;background-image:url(${c.photo})`:''}">${initials(c.name)}</div>`;
 const CSTATUS=[['ativo','Ativo','green'],['onboarding','Em onboarding','blue'],['pausado','Pausado','amber'],['encerrado','Encerrado','gray']];
 const CPROD=['Só tráfego','Full service','Freela','Social media'];
@@ -1633,7 +1637,7 @@ function vClientes(){
  return`<div class="page-head"><div><h1>Clientes</h1><div class="sub">${S.clients.filter(c=>cstat(c)[0]==='ativo').length} clientes ativos · ${brl(S.clients.filter(c=>!['pausado','encerrado'].includes(cstat(c)[0])).reduce((a,c)=>a+Number(c.fee||0),0))} em mensalidades</div></div>
   <div class="actions"><button class="btn pri" data-act="editClient">${ic('plus')}Novo cliente</button></div></div>
   <div class="cgrid">${S.clients.map(c=>{const P=S.posts.filter(p=>p.client===c.id);const prod=P.filter(p=>phase(p)==='producao').length,ap=P.filter(p=>phase(p)==='aprovacao').length,po=P.filter(p=>phase(p)==='postado'&&p.date.slice(0,7)===ym).length;
-  return`<article class="box client"><div class="row" style="gap:12px">${cavH(c)}<div class="grow"><h2 class="ell">${esc(c.name)}</h2><div class="meta">${esc(c.area)} · ${brl(c.fee)}/mês</div><div class="row wrap" style="gap:6px;margin-top:6px"><span class="pill t-${cstat(c)[2]}">${cstat(c)[1]}</span>${c.product?`<span class="tag prod-tag">${esc(c.product)}</span>`:''}</div></div><button class="icon-btn" data-act="editClient" data-id="${c.id}" aria-label="Editar cliente">${ic('sliders')}</button></div>
+  return`<article class="box client"><div class="row" style="gap:12px">${cavH(c)}<div class="grow"><h2 class="ell">${esc(c.name)}</h2><div class="meta">${esc(c.area)} · ${brl(c.fee)}/mês</div><div class="row wrap" style="gap:6px;margin-top:6px"><span class="pill t-${cstat(c)[2]}">${cstat(c)[1]}</span>${c.product?`<span class="tag prod-tag">${esc(c.product)}</span>`:''}</div>${CLOUD&&c.slug?`<div class="meta ell" style="margin-top:4px">${ic('link')} /conteudos/${esc(c.slug)}${c.portalPin?' · com senha':''}</div>`:''}</div><button class="icon-btn" data-act="editClient" data-id="${c.id}" aria-label="Editar cliente">${ic('sliders')}</button></div>
    <div class="stats"><div class="stat"><div class="v">${prod}</div><div class="k">Em produção</div></div><div class="stat"><div class="v">${ap}</div><div class="k">Aguardando</div></div><div class="stat"><div class="v">${po}</div><div class="k">Postados no mês</div></div></div>
    <div class="row between"><span class="muted">Aprova a copy antes da arte</span><button class="sw ${c.approvesCopy?'on':''}" data-act="toggleCopy" data-id="${c.id}" role="switch" aria-checked="${c.approvesCopy}" aria-label="Aprova a copy"></button></div>
    <div class="row"><button class="btn sm" data-act="clientCal" data-id="${c.id}">${ic('cal')}Calendário</button><button class="btn sm" data-act="clientPortal" data-id="${c.id}">${ic('check')}Portal</button><button class="btn sm" data-act="clientBoard" data-id="${c.id}">${ic('board')}Produção</button></div>
@@ -1861,6 +1865,8 @@ function clientForm(id,keepPhoto){
   <div class="sheet-b one"><div class="kf-photo">${cavH(c)}<div class="row wrap"><label class="btn sm">${ic('upload')}${c.photo?'Trocar foto':'Foto de perfil'}<input type="file" accept="image/*" data-chg="clientPhoto"></label>${c.photo?'<button class="btn sm ghost" data-act="clientPhotoDel">Remover</button>':''}</div></div><div class="form-grid">
    <div class="field"><label for="kf-name">Nome</label><input class="in" id="kf-name" value="${esc(c.name)}" placeholder="Dra. Fulana de Tal"></div>
    <div class="field"><label for="kf-status">Status do cliente</label><select class="in" id="kf-status">${CSTATUS.map(x=>opt(x[0],x[1],c.status||'ativo')).join('')}</select></div>
+   ${CLOUD?`<div class="field" style="grid-column:1/-1"><label for="kf-slug">Link do portal do cliente</label><div class="slug-in"><span>${esc(location.host)}/conteudos/</span><input class="in" id="kf-slug" value="${esc(c.slug||'')}" placeholder="${esc(slugify(c.short||c.name||'rafael'))}" autocomplete="off" data-inp="slugTyping"></div><div class="meta">Só letras minúsculas, números e hífen. Quem souber o link abre o portal, por isso vale usar a senha abaixo.</div></div>
+   <div class="field"><label for="kf-pin">Senha do portal (opcional)</label><input class="in" id="kf-pin" value="${esc(c.portalPin||'')}" placeholder="ex.: 6 números" autocomplete="off"></div>`:''}
    <div class="field"><label for="kf-prod">Produto contratado</label><select class="in" id="kf-prod">${opt('','—',c.product||'')}${CPROD.map(x=>opt(x,x,c.product||'')).join('')}</select></div>
    <div class="field"><label for="kf-area">Especialidade / área</label><input class="in" id="kf-area" value="${esc(c.area)}"></div>
    <div class="field"><label for="kf-fee">Mensalidade (R$)</label><input class="in" id="kf-fee" type="number" min="0" value="${c.fee}"></div>
@@ -1927,8 +1933,8 @@ const A={
  slDel:el=>{const p=S.posts.find(x=>x.id===ui.modal);const [r]=p.slides.splice(Number(el.dataset.i),1);if(r&&r.path&&sb&&!pathUsed(r.path))sb.storage.from('media').remove([r.path]).catch(()=>{});save();renderModal();render()},
  slMove:el=>{const p=S.posts.find(x=>x.id===ui.modal);const i=Number(el.dataset.i),j=i+Number(el.dataset.d);if(j<0||j>=p.slides.length)return;[p.slides[i],p.slides[j]]=[p.slides[j],p.slides[i]];save();renderModal();render()},
  carNav:el=>{const t=el.closest('.car').querySelector('.car-t');t.scrollBy({left:Number(el.dataset.d)*t.clientWidth,behavior:'smooth'})},
- copyPortal:async el=>{const c=S.clients.find(x=>x.id===el.dataset.id);if(!c)return;if(!c.token){const a=new Uint8Array(18);crypto.getRandomValues(a);c.token=[...a].map(b=>b.toString(36).padStart(2,'0')).join('').slice(0,28);save()}
-  const url=`${location.origin}${location.pathname}?portal=${c.token}`;
+ copyPortal:async el=>{const c=S.clients.find(x=>x.id===el.dataset.id);if(!c)return;if(!c.token){c.token=newTok();save()}
+  const url=portalUrl(c);
   try{await navigator.clipboard.writeText(url);toast('Link copiado. Mande para o cliente.')}catch(e){prompt('Copie o link do portal:',url)}},
  ruleNew:()=>{S.rules.push({id:uid('r'),name:'Nova automação',on:true,when:{stage:'copy',status:'Copy aprovada',formats:[],client:'all'},then:{stage:'design',status:'Para fazer',owner:''}});save();render()},
  ruleOn:el=>{const r=S.rules.find(x=>x.id===el.dataset.id);r.on=!r.on;save();render();if(r.on)S.posts.forEach(p=>applyRules(p,true));render()},
@@ -1996,6 +2002,7 @@ const A={
  editClient:el=>clientForm(el.dataset.id),
  saveClient:el=>{const id=el.dataset.id;const name=val('kf-name').trim();if(!name){toast('Coloque o nome do cliente.');return}
   const d={name,short:name.replace(/^(Dra?\.?|Clínica)\s+/i,'').split(' ')[0],area:val('kf-area'),fee:Number(val('kf-fee'))||0,color:val('kf-color'),approvesCopy:val('kf-copy')==='1',status:val('kf-status'),product:val('kf-prod')};if(ui.kfPhoto!==undefined)d.photo=ui.kfPhoto;
+  if(CLOUD&&document.getElementById('kf-slug')){const sl=slugify(val('kf-slug'));if(sl&&S.clients.some(c=>c.id!==id&&c.slug===sl)){toast('Esse link já é de outro cliente.');return}if(['admin','app','login','api','conteudo','conteudos'].includes(sl)){toast('Escolha outro nome para o link.');return}d.slug=sl;d.portalPin=val('kf-pin').trim();const cur=S.clients.find(c=>c.id===id);if(sl&&!(cur&&cur.token))d.token=newTok()}
   if(id)Object.assign(S.clients.find(c=>c.id===id),d);else S.clients.push({id:uid('c'),...d});save();toast('Cliente salvo.');closeModal()},
  toggleCopy:el=>{const c=S.clients.find(x=>x.id===el.dataset.id);c.approvesCopy=!c.approvesCopy;save();render()},
  clientCal:el=>{ui.calClient=el.dataset.id;saveUi();go('calendario')},
@@ -2049,6 +2056,7 @@ const C={
  drive:el=>{const p=S.posts.find(x=>x.id===ui.modal);const v=el.value.trim();if(v&&!driveId(v)){toast('Link do Drive não reconhecido.');return}p.driveUrl=v;if(v)hist(p,'Adicionou o link do Google Drive');save();renderModal();render()}
 };
 const I={
+ slugTyping:el=>{const v=slugify(el.value);if(v!==el.value&&!/-$/.test(el.value))el.value=v},
  srch:el=>{const r=document.getElementById('srchRes');if(r)r.innerHTML=searchRes(el.value)},
  search:el=>{ui.f.q=el.value;document.getElementById('boardArea').innerHTML=areaHtml()},
  pf:el=>{const p=S.posts.find(x=>x.id===ui.modal);p[el.dataset.k]=el.value;save()},
@@ -2097,6 +2105,7 @@ function authCard(mode,msg){
   esqueci:()=>`${head('Recuperar senha','Enviamos um link para você criar uma senha nova.')}<form data-auth="esqueci"><label>E-mail<input class="in" name="email" type="email" required></label>${err}<button class="btn pri" style="width:100%;margin-top:14px">Enviar link</button></form><div class="auth-links"><button data-amode="login">Voltar</button></div>`,
   enviado:()=>`${head('Link enviado','Abra seu e-mail e siga o link para criar a senha nova.')}<div class="auth-links"><button data-amode="login">Voltar para o login</button></div>`,
   nova:()=>`${head('Nova senha','')}<form data-auth="nova"><label>Nova senha (mínimo 8 caracteres)<input class="in" name="pass" type="password" minlength="8" autocomplete="new-password" required></label>${err}<button class="btn pri" style="width:100%;margin-top:14px">Salvar senha</button></form>`,
+  pin:()=>`${head('Portal de aprovação','Digite a senha que a agência te passou.')}<form data-auth="pin"><label>Senha<input class="in" name="pass" type="password" autocomplete="off" required></label>${err}<button class="btn pri" style="width:100%;margin-top:14px">Entrar</button></form>`,
   semacesso:()=>`${head('Sem acesso',`O e-mail ${esc(meEmail)} não está na equipe. Peça ao administrador para cadastrá-lo em Equipe e acessos.`)}<button class="btn" data-act="logout">Sair</button>`,
   erro:()=>`${head('Não foi possível conectar',msg||'Verifique sua internet e tente de novo.')}<button class="btn" onclick="location.reload()">Tentar de novo</button>`
  };
@@ -2109,6 +2118,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-amode]');i
 document.addEventListener('submit',async e=>{const f=e.target.closest('[data-auth]');if(!f)return;e.preventDefault();
  const m=f.dataset.auth,email=(f.email&&f.email.value.trim())||'',pass=f.pass&&f.pass.value;const btn=f.querySelector('button');btn.disabled=true;
  try{
+  if(m==='pin'){const r=await portalResolve(pass);if(r==='pin'||!r)throw new Error(r==='pin'?'Senha incorreta.':'Link não encontrado.');try{localStorage.setItem('baseus-pin-'+portalSlug,pass)}catch(e){}portalTok=r;if(!await portalLoad())return;hideAuth();applyTheme();ui.view='portal';render();return}
   if(m==='login'){const{data,error}=await sb.auth.signInWithPassword({email,password:pass});if(error)throw error;await enter(data.session)}
   if(m==='primeiro'){const{data,error}=await sb.auth.signUp({email,password:pass,options:{emailRedirectTo:redirect()}});if(error)throw error;if(data.session)await enter(data.session);else showAuth('confirme')}
   if(m==='esqueci'){const{error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:redirect()});if(error)throw error;showAuth('enviado')}
@@ -2198,7 +2208,8 @@ let subbed=false;function subscribe(){if(subbed)return;subbed=true;
 }
 function liveRender(modalToo){const a=document.activeElement;if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)&&!a.closest('#auth')){pendingRender=true;if(modalToo)pendingRender='modal';return}render();if(modalToo&&ui.modal)renderModal()}
 document.addEventListener('focusout',()=>setTimeout(()=>{if(!pendingRender)return;const a=document.activeElement;if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))return;const m=pendingRender==='modal';pendingRender=false;render();if(m&&ui.modal)renderModal()},50));
-let portalTok='';
+let portalTok='',portalSlug='';
+async function portalResolve(pin){const{data,error}=await sb.rpc('portal_resolve',{slug:portalSlug,pin:pin||''});if(error){if(/pin/.test(error.message))return'pin';return null}return data||null}
 async function portalLoad(){const{data,error}=await sb.rpc('portal_data',{tok:portalTok});
  if(error||!data){showAuth('erro',error?error.message:'Link inválido ou desativado. Peça um novo link para a equipe.');return false}
  S.clients=[data.client];S.posts=data.posts||[];S.msgs=data.msgs||[];S.team=[{id:'cli',name:data.client.name,email:'',role:'membro',perms:{portal:true,stages:[]}}];
@@ -2210,12 +2221,14 @@ async function clientBoot(){
  ui.clientMode=true;document.body.classList.add('client-mode');document.title='Portal de aprovação';showAuth('carregando');
  const sc=document.createElement('script');sc.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.min.js';
  sc.onload=async()=>{try{sb=window.supabase.createClient(CLOUD.url,CLOUD.key,{auth:{persistSession:false}});
+  if(portalSlug&&!portalTok){let pin='';try{pin=localStorage.getItem('baseus-pin-'+portalSlug)||''}catch(e){}
+   const r=await portalResolve(pin);if(r==='pin'){showAuth('pin');return}if(!r){showAuth('erro','Link não encontrado. Confira com a equipe da agência.');return}portalTok=r}
   if(!await portalLoad())return;hideAuth();applyTheme();ui.view='portal';render();
   setInterval(async()=>{if(document.hidden||document.activeElement&&/INPUT|TEXTAREA/.test(document.activeElement.tagName))return;if(await portalLoad())render()},60000);
  }catch(e){showAuth('erro',String(e.message||e))}};
  sc.onerror=()=>showAuth('erro');document.head.appendChild(sc)}
 function boot(){
- if(CLOUD){const q=new URLSearchParams(location.search).get('portal');if(q){portalTok=q;clientBoot();return}}
+ if(CLOUD){const q=new URLSearchParams(location.search).get('portal');if(q){portalTok=q;clientBoot();return}const mm=location.pathname.match(/^\/conteudos\/([a-z0-9-]+)\/?$/i);if(mm){portalSlug=mm[1].toLowerCase();clientBoot();return}}
  if(!CLOUD){applyTheme();route();autoTick();setInterval(autoTick,30000);return}
  showAuth('carregando');const isRec=/type=recovery/.test(location.hash);
  const sc=document.createElement('script');sc.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.min.js';
