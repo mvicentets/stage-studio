@@ -485,6 +485,13 @@ select.csel option{background:var(--surface);color:var(--fg);font-weight:500}
 .auth-err{color:var(--red);font-size:13px}
 .syncdot{position:fixed;right:14px;bottom:14px;z-index:90;font-size:11.5px;color:var(--faint);background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:4px 10px;pointer-events:none}
 [hidden]{display:none!important}
+.media.dposter{background:linear-gradient(160deg,#2a2a2e,#111114)}.media.dposter img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.vplay{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:64px;height:64px;border-radius:50%;border:0;background:rgba(0,0,0,.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:grid;place-items:center;cursor:pointer}
+.vplay svg{width:28px;height:28px;fill:#fff;margin-left:4px}.vplay:active{transform:translate(-50%,-50%) scale(.95)}
+.vbox{position:fixed;inset:0;z-index:400;background:#000;display:flex;align-items:center;justify-content:center}
+.vbox iframe{width:100%;height:100%;border:0}
+.vbox-x{position:absolute;top:calc(12px + env(safe-area-inset-top,0px));right:12px;z-index:2;width:42px;height:42px;border-radius:50%;border:0;background:rgba(255,255,255,.18);display:grid;place-items:center;cursor:pointer}
+.vbox-x svg{width:20px;height:20px;stroke:#fff;stroke-width:2.4;fill:none;stroke-linecap:round}
 .media.drive{aspect-ratio:4/5!important;width:100%!important;max-width:420px!important;margin-left:auto;margin-right:auto;background:#000}
 .media.drive iframe{position:absolute;inset:0;width:100%;height:100%}
 .ag-item.ag-agendado{background:#DDF5E4;border-color:#BFE8CC;border-left-color:#3DAA63}
@@ -1280,7 +1287,7 @@ function media(p,cls=''){
   return`<div class="media car" style="--ar:${AR[p.format]}"><div class="car-t">${sl.map(x=>`<img src="${esc(x.url)}" alt="" loading="lazy">`).join('')}</div><button class="car-b l" data-act="carNav" data-d="-1" aria-label="Imagem anterior">${ic('chevL')}</button><button class="car-b r" data-act="carNav" data-d="1" aria-label="Próxima imagem">${ic('chevR')}</button><span class="car-n">1/${sl.length}</span></div>`}
  if(p.video&&p.video.url)return`<div class="media ${cls}" style="--ar:${AR[p.format]}">${cls?`<video src="${esc(p.video.url)}#t=0.5" muted playsinline preload="metadata"></video>`:`<video src="${esc(p.video.url)}" controls playsinline preload="metadata"></video>`}<span class="m-fmt">${FMT[p.format]}</span></div>`;
  if(p.mediaUrl)return`<div class="media ${cls}" style="--ar:${AR[p.format]}">${p.mediaType&&p.mediaType.startsWith('video')?`<video src="${p.mediaUrl}" controls playsinline></video>`:`<img src="${p.mediaUrl}" alt="">`}<span class="m-fmt">${FMT[p.format]}</span></div>`;
- if(p.driveUrl&&driveId(p.driveUrl)&&!cls)return`<div class="media drive"><iframe src="https://drive.google.com/file/d/${driveId(p.driveUrl)}/preview" allow="autoplay" allowfullscreen title="Vídeo do Google Drive"></iframe></div>`;
+ if(p.driveUrl&&driveId(p.driveUrl)){const id=driveId(p.driveUrl);return`<div class="media dposter ${cls}" style="--ar:${AR[p.format]}"><img src="https://drive.google.com/thumbnail?id=${id}&sz=w900" alt="" loading="lazy" onerror="this.remove()">${cls?'':`<button class="vplay" data-act="vplay" data-id="${id}" aria-label="Assistir o vídeo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></button>`}<span class="m-fmt">${FMT[p.format]}</span></div>`}
  return`<div class="media ph ${cls}" style="--c:${c.color};--ar:${AR[p.format]}"><span class="m-fmt">${FMT[p.format]}</span><span class="m-title">${esc(topic(p))}</span><span class="m-client">${esc(c.name)}</span></div>`;
 }
 function sortDate(a,b){return(a.date||'9999').localeCompare(b.date||'9999')}
@@ -1927,6 +1934,9 @@ const A={
  todoShowDone:()=>{ui.todoDone=!ui.todoDone;render()},
  todoClear:()=>{const me=meId();const today=TODAY_ISO;S.todos=S.todos.filter(t=>!(t.owner===me&&t.done&&t.doneAt&&new Date(t.doneAt).toLocaleDateString('en-CA',{timeZone:TZ})!==today));save();render()},
  stop:()=>{},
+ vplay:el=>{const id=el.dataset.id;let b=document.getElementById('vbox');if(b)b.remove();b=document.createElement('div');b.id='vbox';b.className='vbox';
+  b.innerHTML=`<button class="vbox-x" aria-label="Fechar vídeo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button><iframe src="https://drive.google.com/file/d/${id}/preview?autoplay=1" allow="autoplay; fullscreen" allowfullscreen title="Vídeo"></iframe>`;
+  b.querySelector('.vbox-x').onclick=()=>b.remove();document.body.appendChild(b)},
  discard:el=>{const p=S.posts.find(x=>x.id===el.dataset.id);p.discarded=!p.discarded;hist(p,p.discarded?'Descartou o conteúdo':'Restaurou o conteúdo');save();renderModal();render();toast(p.discarded?'Conteúdo descartado.':'Conteúdo restaurado.')},
  newAd:()=>{ui.newFmt='anuncio';newPost();ui.newFmt=null},
  search:()=>{document.body.classList.remove('menu');searchSheet()},
@@ -2084,6 +2094,7 @@ document.addEventListener('click',e=>{const el=e.target.closest('[data-act]');if
 document.addEventListener('change',e=>{const el=e.target.closest('[data-chg]');if(el&&C[el.dataset.chg])C[el.dataset.chg](el,e)});
 document.addEventListener('input',e=>{const el=e.target.closest('[data-inp]');if(el&&I[el.dataset.inp])I[el.dataset.inp](el,e)});
 document.addEventListener('keydown',e=>{
+ if(e.key==='Escape'&&document.getElementById('vbox')){document.getElementById('vbox').remove();return}
  if(e.key==='Escape'&&!document.getElementById('modal').hidden)closeModal();
  if(e.key==='Enter'&&e.target.matches('.card'))openPost(e.target.dataset.id);
 });
