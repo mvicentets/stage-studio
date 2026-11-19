@@ -1112,7 +1112,9 @@ async function downloadPost(p,kind){
  const name=`${base}.${((p.driveName||'').split('.').pop()||'mp4').toLowerCase()}`;
  let blob=null;
  if(GDRIVE&&sb){try{if(mobile&&canShareFiles()){DLR[p.id+':v']='prep';if(ui.modal===p.id)renderModal()}
-   if(await gEnsure()){const r=await gFetch(`https://www.googleapis.com/drive/v3/files/${id}?alt=media`);if(r.ok)blob=await r.blob()}}catch(e){}}
+   if(await gEnsure()){const r=await gFetch(`https://www.googleapis.com/drive/v3/files/${id}?alt=media`);if(r.ok)blob=await r.blob()}}catch(e){}
+  if(!blob){try{const owner=((p.clips||[]).find(c=>c.id===id)||{}).by||'';const j=await gFn('filetoken',{fileId:id,owner});
+    if(j.access_token){const r=await fetch(`https://www.googleapis.com/drive/v3/files/${id}?alt=media`,{headers:{Authorization:'Bearer '+j.access_token}});if(r.ok)blob=await r.blob()}}catch(e){}}}
  if(blob){
   if(mobile&&canShareFiles()){DLR[p.id+':v']=new File([blob],name,{type:blob.type||'video/mp4'});toast('Pronto: toque em “Salvar vídeo no celular”.');if(ui.modal===p.id)renderModal();return}
   const u=URL.createObjectURL(blob);go(u,name);setTimeout(()=>URL.revokeObjectURL(u),30000);toast('Vídeo baixado.');return}
@@ -1206,7 +1208,7 @@ async function driveUpload(p,f){
   let id=done.id;
   if(!id)throw new Error('Envio terminou sem resposta do Drive');
   await gFetch(`https://www.googleapis.com/drive/v3/files/${id}/permissions`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({role:'reader',type:'anyone'})});
-  delete UP[p.id];p.clips=clipsOf(p);p.clips.push({id,name:f.name,size:f.size,at:new Date().toISOString()});if(!(p.driveUrl&&driveId(p.driveUrl))){p.driveUrl=`https://drive.google.com/file/d/${id}/view`;p.driveName=f.name;p.driveSize=f.size}ui.bigVideo=null;
+  delete UP[p.id];p.clips=clipsOf(p);p.clips.push({id,name:f.name,size:f.size,at:new Date().toISOString(),by:window.myUid||''});if(!(p.driveUrl&&driveId(p.driveUrl))){p.driveUrl=`https://drive.google.com/file/d/${id}/view`;p.driveName=f.name;p.driveSize=f.size}ui.bigVideo=null;
   hist(p,`Enviou o vídeo ${f.name} para o Google Drive`);save();toast('Vídeo no Drive. Pode levar alguns minutos para tocar.');
  }catch(e){delete UP[p.id];if(e.message!=='cancelado')toast(e.message||'Não foi possível enviar para o Drive.')}
  if(ui.modal===p.id)renderModal();render();
@@ -1279,7 +1281,7 @@ function vInicio(){
  const kp=[['Em produção',cnt('producao'),'producao','gray','na esteira da equipe'],['Aguardando cliente',cnt('aprovacao'),'aprovacao','amber','copy ou arte final'],['Ajustes pedidos',cnt('ajuste'),'ajuste','red','voltam para a produção'],['Aprovados',cnt('aprovado'),'aprovado','green','prontos para agendar'],['Postados no mês',P.filter(p=>phase(p)==='postado'&&p.date.slice(0,7)===ym).length,'postado','accent',MESES[TODAY.getMonth()]]];
  const att=P.filter(p=>['ajuste','aprovacao'].includes(phase(p))||isLate(p)).sort(sortDate).slice(0,7);
  const lim=iso(addDays(TODAY,7));
- const up=P.filter(p=>p.date>=TODAY_ISO&&p.date<=lim&&phase(p)!=='postado').sort(sortDate).slice(0,7);
+ const up=P.filter(p=>p.format!=='anuncio'&&p.date>=TODAY_ISO&&p.date<=lim&&phase(p)!=='postado').sort(sortDate).slice(0,7);
  const byStage=STAGES.map(s=>[s,P.filter(p=>p.stage===s.id&&phase(p)!=='postado').length]);const mx=Math.max(1,...byStage.map(x=>x[1]));
  const F=S.fin.filter(e=>e.due.slice(0,7)===ym);const sum=(arr)=>arr.reduce((a,e)=>a+Number(e.value||0),0);
  const rec=sum(F.filter(e=>e.type==='in'&&e.paid)),prev=sum(F.filter(e=>e.type==='in')),desp=sum(F.filter(e=>e.type==='out'));
@@ -1403,7 +1405,7 @@ function card(p){
 /* ---------- CALENDÁRIO ---------- */
 function vCalendario(){
  const m=ui.calMonth,y=m.getFullYear(),mo=m.getMonth();
- const inMonth=S.posts.filter(p=>p.date&&p.date.slice(0,7)===`${y}-${pad(mo+1)}`&&(ui.calClient==='all'||p.client===ui.calClient));
+ const inMonth=S.posts.filter(p=>p.format!=='anuncio'&&p.date&&p.date.slice(0,7)===`${y}-${pad(mo+1)}`&&(ui.calClient==='all'||p.client===ui.calClient));
  const counts=Object.keys(PH).map(k=>[k,inMonth.filter(p=>phase(p)===k).length]);
  const head=`<div class="page-head"><div><h1>Calendário</h1><div class="sub">Datas de postagem preenchidas pela equipe. Arraste um post para outro dia para mudar a data.</div></div>
   <div class="actions"><button class="btn pri" data-act="newPost">${ic('plus')}Novo conteúdo</button></div></div>
@@ -1421,7 +1423,7 @@ function vCalendario(){
  const last=new Date(y,mo+1,0);const end=addDays(last,6-last.getDay());
  let cells='';for(let d=new Date(start);d<=end;d=addDays(d,1)){
   const di=iso(d),key=`${pad(d.getMonth()+1)}-${pad(d.getDate())}`,h=HOL[key];
-  const ps=S.posts.filter(p=>p.date===di&&(ui.calClient==='all'||p.client===ui.calClient)).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+  const ps=S.posts.filter(p=>p.format!=='anuncio'&&p.date===di&&(ui.calClient==='all'||p.client===ui.calClient)).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
   cells+=`<div class="day ${d.getMonth()!==mo?'out':''} ${di===TODAY_ISO?'today':''}" data-dropdate="${di}">
    <div class="day-n"><b>${d.getDate()}</b><button class="add" data-act="newOn" data-date="${di}" aria-label="Novo conteúdo em ${fmtD(di)}">${ic('plus')}</button></div>
    ${h?`<div class="hol ${h.endsWith('|s')?'saude':''}" title="${esc(h.replace('|s',''))}">${esc(h.replace('|s',''))}</div>`:''}
@@ -1433,7 +1435,7 @@ function vCalendario(){
 }
 function feedView(){
  if(ui.calClient==='all')return`<div class="empty">Escolha um cliente para ver a prévia do feed dele.</div>`;
- const ps=S.posts.filter(p=>p.client===ui.calClient&&p.format!=='stories').sort((a,b)=>b.date.localeCompare(a.date));
+ const ps=S.posts.filter(p=>p.client===ui.calClient&&p.format!=='stories'&&p.format!=='anuncio').sort((a,b)=>b.date.localeCompare(a.date));
  const c=cl(ui.calClient);
  return`<div class="feed-wrap"><div class="feed">${ps.map(p=>`<button class="tile ${['postado','agendado','aprovado'].includes(phase(p))?'':'dim'}" data-act="open" data-id="${p.id}" title="${esc(p.title)}">${media(p,'sm')}${phase(p)!=='postado'?`<span class="pill t-${PH[phase(p)][1]}">${PH[phase(p)][0]}</span>`:''}</button>`).join('')}</div>
   <div class="box" style="max-width:300px;padding:16px"><div class="row" style="gap:12px;margin-bottom:10px">${cavH(c)}<div><b>${esc(c.name)}</b><div class="meta">${esc(c.area)}</div></div></div>
@@ -1474,7 +1476,7 @@ function portalItem(p,tab){
 /* ---------- PORTAL DO CLIENTE (formato calendário + fila) ---------- */
 Object.assign(ui,{pMode:'mes',pMonth:new Date(TODAY.getFullYear(),TODAY.getMonth(),1),pWeek:addDays(TODAY,-TODAY.getDay()),pQueue:false,pPost:null,pTab:'conteudo',pFmt:'all',pPh:'all'});
 const PCL={producao:'Em produção',aprovacao:'Em aprovação',ajuste:'Ajuste',aprovado:'Aprovado',agendado:'Agendado',postado:'Publicado'};
-function pPosts(){return S.posts.filter(p=>p.client===ui.portalClient&&(ui.pFmt==='all'||p.format===ui.pFmt)&&(ui.pPh==='all'||phase(p)===ui.pPh))}
+function pPosts(){return S.posts.filter(p=>p.format!=='anuncio'&&p.client===ui.portalClient&&(ui.pFmt==='all'||p.format===ui.pFmt)&&(ui.pPh==='all'||phase(p)===ui.pPh))}
 function pQueueList(){return S.posts.filter(p=>p.client===ui.portalClient&&phase(p)==='aprovacao').sort(sortDate)}
 function pBanner(c){if(ui.clientMode)return'';return`<div class="banner">${ic('check')}Prévia: é assim que o cliente vê o portal.<select class="sel" data-chg="portalClient" aria-label="Cliente">${S.clients.map(x=>opt(x.id,x.name,c.id)).join('')}</select>${CLOUD?`<button class="btn sm" data-act="copyPortal" data-id="${c.id}">${ic('link')}Copiar link do cliente</button>`:''}</div>`}
 function vPortal2(){
@@ -2110,7 +2112,7 @@ document.addEventListener('submit',async e=>{const f=e.target.closest('[data-aut
 function snapshot(){snap={};COLLS.forEach(c=>(S[c]||[]).forEach(x=>{snap[c+'|'+x.id]=ser(x)}));snap['settings|main']=ser(shared())}
 async function enter(session){
  if(!session){showAuth('login');return}
- meEmail=(session.user.email||'').toLowerCase();showAuth('carregando');
+ meEmail=(session.user.email||'').toLowerCase();window.myUid=session.user.id;showAuth('carregando');
  const{data,error}=await sb.from('items').select('coll,id,data').order('created_at',{ascending:true});
  if(error){showAuth('erro',error.message);return}
  const N={clients:[],team:[],posts:[],campaigns:[],fin:[],msgs:[],avatars:[],rules:[],todos:[]};let st=null;
