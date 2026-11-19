@@ -485,6 +485,14 @@ select.csel option{background:var(--surface);color:var(--fg);font-weight:500}
 .auth-err{color:var(--red);font-size:13px}
 .syncdot{position:fixed;right:14px;bottom:14px;z-index:90;font-size:11.5px;color:var(--faint);background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:4px 10px;pointer-events:none}
 [hidden]{display:none!important}
+.clips{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.clip{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;min-width:0}.clip.fin{border-color:color-mix(in srgb,var(--green) 50%,var(--line))}
+.clip-i{width:28px;height:28px;border-radius:8px;background:var(--hover);display:grid;place-items:center;flex:none}.clip-i svg{width:14px;height:14px}
+.dz-sm{padding:10px;margin-top:8px}
+.sub-h{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);margin-top:12px}
+.ad-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.ad-card{display:grid;grid-template-columns:92px minmax(0,1fr);gap:12px;padding:12px}.ad-card .media{width:92px}
+.ad-b{display:flex;flex-direction:column;gap:8px;min-width:0}.ad-t{font-weight:600;color:var(--fg);text-decoration:none;cursor:pointer}
 .code-tag{display:inline-flex;align-items:center;font-family:ui-monospace,Menlo,monospace;font-size:11px;font-weight:600;color:var(--muted);background:var(--hover);border-radius:6px;padding:1px 6px;white-space:nowrap;letter-spacing:.02em}
 .side-search{display:flex;align-items:center;gap:8px;width:100%;margin:0 0 10px;padding:7px 10px;border-radius:9px;border:1px solid var(--line);background:var(--surface);color:var(--faint);font:inherit;font-size:13px;cursor:pointer;text-align:left}
 .side-search span{flex:1}.side-search kbd{font-size:11px;border:1px solid var(--line-2);border-radius:5px;padding:0 5px}.side-search svg{width:15px;height:15px}
@@ -686,6 +694,8 @@ const ymOf=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}`;
 const nowStamp=()=>{const n=msNow();return`${pad(n.d)}/${pad(n.m)} ${pad(n.h)}:${pad(n.mi)}`};
 
 const IC={
+ play:'M8 5v14l11-7z',
+ target:'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM12 12h.01',
  lock:'M6 11h12v9H6zM8 11V8a4 4 0 0 1 8 0v3', eye:'M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6', bell:'M6 16V11a6 6 0 0 1 12 0v5l2 2H4zM10 20h4',
  copy:'M9 9h11v11H9zM5 15H4V4h11v1',
  chevD:'M6 9l6 6 6-6',
@@ -723,11 +733,14 @@ const STAGES=[
  {id:'pub',name:'Gestão de publicação',short:'Publicação',statuses:['Para agendar','Agendado','Postado'],hint:'A social media agenda na rede'}
 ];
 const ST=Object.fromEntries(STAGES.map(s=>[s.id,s]));
-const FMT={reels:'Reels',carrossel:'Carrossel',estatico:'Estático',stories:'Stories'};
-const AR={reels:'9/16',carrossel:'4/5',estatico:'4/5',stories:'9/16'};
+ST.ads={id:'ads',name:'Anúncios',short:'Anúncio',statuses:['Pronto para subir','No ar','Pausado','Encerrado'],hint:'Anúncios aprovados prontos para o gestor de tráfego'};
+const AD_ST=ST.ads.statuses;
+const FMT={reels:'Reels',carrossel:'Carrossel',estatico:'Estático',stories:'Stories',anuncio:'Anúncio'};
+const AR={reels:'9/16',carrossel:'4/5',estatico:'4/5',stories:'9/16',anuncio:'4/5'};
 const PH={producao:['Em produção','gray'],aprovacao:['Em aprovação','amber'],ajuste:['Ajuste','red'],aprovado:['Aprovado','green'],agendado:['Agendado','blue'],postado:['Postado','accent']};
 const prodStage=p=>p.format==='reels'?'edicao':'design';
 function phase(p){
+ if(p.stage==='ads')return p.status==='Encerrado'?'postado':p.status==='No ar'?'agendado':'aprovado';
  if(p.stage==='pub')return p.status==='Postado'?'postado':p.status==='Agendado'?'agendado':'aprovado';
  if(p.stage==='aprov')return p.status==='Ajuste'?'ajuste':p.status==='Aprovado'?'aprovado':'aprovacao';
  if(p.stage==='copy'){if(p.status==='Aprovação do cliente')return'aprovacao';if(p.status==='Ajuste de copy')return'ajuste'}
@@ -824,11 +837,11 @@ const cl=id=>S.clients.find(c=>c.id===id)||{name:'—',short:'—',color:'#888',
 const user=id=>S.team.find(u=>u.id===id)||{name:'—'};
 const initials=s=>s.replace(/^(Dra?\.|Clínica)\s*/,'').split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase();
 const ME=()=>S.team.find(u=>u.id===ui.as)||S.team[0];
-const PERMS=[['inicio','Início'],['calendario','Calendário'],['portal','Portal do cliente'],['campanhas','Campanhas'],['financeiro','Financeiro'],['clientes','Clientes'],['banco','Banco de posts'],['senhas','Cofre de senhas']];
+const PERMS=[['inicio','Início'],['calendario','Calendário'],['portal','Portal do cliente'],['campanhas','Campanhas'],['financeiro','Financeiro'],['clientes','Clientes'],['banco','Banco de posts'],['senhas','Cofre de senhas'],['anuncios','Anúncios']];
 const isAdmin=u=>u.role==='admin';
 function allowedStages(){const u=ME();return isAdmin(u)?STAGES.map(s=>s.id):((u.perms&&u.perms.stages)||[])}
 function can(view){if(view==='tarefas')return true;const u=ME();if(isAdmin(u))return true;if(view==='equipe'||view==='automacoes')return false;if(view==='producao')return allowedStages().length>0;if(view.startsWith('etapa-'))return allowedStages().includes(view.slice(6));return!!(u.perms&&u.perms[view])}
-function firstAllowed(){return['inicio','producao',...STAGES.map(s=>'etapa-'+s.id),'calendario','portal','banco','campanhas','financeiro','clientes'].find(can)||'equipe'}
+function firstAllowed(){return['inicio','producao',...STAGES.map(s=>'etapa-'+s.id),'calendario','portal','banco','campanhas','anuncios','financeiro','clientes'].find(can)||'equipe'}
 
 /* ---------- estado da interface ---------- */
 const ui={view:'inicio',f:{client:'all',format:'all',owner:'all',phase:'all',q:''},boardMode:'quadro',
@@ -853,8 +866,9 @@ const themeSeg=()=>[['system','monitor','Auto'],['light','sun','Claro'],['dark',
 
 /* ---------- navegação ---------- */
 const NAV_TOP=[['inicio','home','Início'],['tarefas','todo','Minhas tarefas'],['calendario','cal','Calendário'],['portal','check','Portal do cliente']];
-const NAV_GES=[['senhas','lock','Cofre de senhas'],['automacoes','bolt','Automações'],['campanhas','mega','Campanhas'],['financeiro','wallet','Financeiro'],['clientes','users','Clientes'],['equipe','sliders','Equipe e aparência']];
-const STAGE_DOT={ideia:'gray',copy:'blue',criacao:'amber',design:'accent',edicao:'red',aprov:'amber',pub:'green'};
+const NAV_ADS=[['campanhas','mega','Campanhas'],['anuncios','target','Anúncios']];
+const NAV_GES=[['senhas','lock','Cofre de senhas'],['automacoes','bolt','Automações'],['financeiro','wallet','Financeiro'],['clientes','users','Clientes'],['equipe','sliders','Equipe e aparência']];
+const STAGE_DOT={ideia:'gray',copy:'blue',criacao:'amber',design:'accent',edicao:'red',aprov:'amber',pub:'green',ads:'accent'};
 const curStage=()=>ui.view.startsWith('etapa-')?ui.view.slice(6):null;
 function renderNav(){
  const pend=S.posts.filter(p=>phase(p)==='aprovacao').length;
@@ -867,6 +881,8 @@ function renderNav(){
   +a('producao',ic('list'),'Todas as tarefas',n(S.posts.filter(p=>allowedStages().includes(p.stage)&&phase(p)!=='postado').length))
   +STAGES.filter(s=>allowedStages().includes(s.id)).map(s=>a('etapa-'+s.id,`<span class="sdot t-${STAGE_DOT[s.id]}"></span>`,s.name,n(active(s.id)))).join(''):'')
   +(can('banco')?a('banco',ic('archive'),'Banco de posts',n(S.posts.filter(p=>p.archived).length)):'')
+  +(NAV_ADS.some(x=>can(x[0]))?'<div class="nav-h">Tráfego pago</div>':'')
+  +NAV_ADS.filter(x=>can(x[0])).map(x=>a(x[0],ic(x[1]),x[2],x[0]==='anuncios'?n(S.posts.filter(p=>p.stage==='ads'&&p.status!=='Encerrado').length):'')).join('')
   +(NAV_GES.some(x=>can(x[0]))?'<div class="nav-h">Gestão</div>':'')
   +NAV_GES.filter(x=>can(x[0])).map(x=>a(x[0],ic(x[1]),x[2]==='Equipe e aparência'?'Equipe e acessos':x[2])).join('');
 }
@@ -995,9 +1011,22 @@ document.addEventListener('submit',async e=>{const f=e.target.closest('[data-vau
   if(error){btn.disabled=false;VAULT.err=/rate|many/i.test(error.message)?'Muitas tentativas. Espere alguns minutos.':'Senha incorreta.';render();return}
   try{await vaultLoad()}catch(err){btn.disabled=false}return}
  if(e.target.closest('[data-cred-form]')){e.preventDefault();credSave(document.querySelector('[data-act=credSave]').dataset.id)}},true);
-const VIEWS={senhas:vSenhas,tarefas:vTarefas,automacoes:vAuto,banco:vBanco,inicio:vInicio,producao:vTodas,calendario:vCalendario,portal:vPortal2,campanhas:vCampanhas,financeiro:vFinanceiro,clientes:vClientes,equipe:vEquipe};
-const LABELS={senhas:'Cofre de senhas',tarefas:'Minhas tarefas',banco:'Banco de posts',automacoes:'Automações',inicio:'Início',producao:'Todas as tarefas',calendario:'Calendário',portal:'Portal do cliente',campanhas:'Campanhas',financeiro:'Financeiro',clientes:'Clientes',equipe:'Equipe e aparência'};
-const FAB={senhas:['credNew','Nova senha'],tarefas:['todoFocus','Nova tarefa pessoal'],campanhas:['editCamp','Nova campanha'],clientes:['editClient','Novo cliente'],equipe:['addUser','Adicionar pessoa'],automacoes:['ruleNew','Nova automação'],financeiro:['finFocus','Novo lançamento'],banco:null,portal:null};
+function vAnuncios(){
+ ui.ad=ui.ad||{client:'all',camp:'all',st:'ativos'};const f=ui.ad;
+ const L=S.posts.filter(p=>p.stage==='ads'&&(f.client==='all'||p.client===f.client)&&(f.camp==='all'||(p.campaign||'')===f.camp)&&(f.st==='todos'||(f.st==='ativos'?p.status!=='Encerrado':p.status===f.st))).sort(sortDate);
+ const G={};L.forEach(p=>{const k=p.campaign&&S.campaigns.find(c=>c.id===p.campaign)?p.campaign:'_';(G[k]=G[k]||[]).push(p)});
+ const tone2={'Pronto para subir':'amber','No ar':'green','Pausado':'gray','Encerrado':'gray'};
+ const card=p=>`<article class="box ad-card">${media(p,'sm')}<div class="ad-b"><div class="row between" style="gap:6px;align-items:flex-start"><a class="ad-t" data-act="open" data-id="${p.id}">${esc(p.title)}</a>${codeTag(p)}</div>
+  <div class="row wrap" style="gap:6px">${ctag(p.client)}${ftag(p.format)}</div>
+  <div class="row wrap" style="gap:6px;margin-top:auto"><select class="isel t-${tone2[p.status]||'gray'}" data-chg="adStatus" data-id="${p.id}" aria-label="Status do anúncio">${AD_ST.map(x=>opt(x,x,p.status)).join('')}</select>${dlBtn(p).replace('class="row wrap" style="margin-top:10px"','class="row"')}</div></div></article>`;
+ const nPend=S.posts.filter(p=>p.stage==='ads'&&p.status==='Pronto para subir').length;
+ return`<div class="page-head"><div><h1>Anúncios</h1><div class="sub">Criativos de anúncio aprovados pelo cliente. Não passam pela Gestão de publicação: vêm direto para cá, para o gestor de tráfego subir.${nPend?` <b>${nPend} pronto${nPend>1?'s':''} para subir.</b>`:''}</div></div><div class="actions"><button class="btn pri" data-act="newAd">${ic('plus')}Novo anúncio</button></div></div>
+ <div class="toolbar" style="margin-bottom:14px"><select class="sel" data-chg="adF" data-k="client">${opt('all','Todos os clientes',f.client)}${S.clients.map(c=>opt(c.id,c.name,f.client)).join('')}</select><select class="sel" data-chg="adF" data-k="camp">${opt('all','Todas as campanhas',f.camp)}${opt('','Sem campanha',f.camp)}${S.campaigns.map(c=>opt(c.id,c.name,f.camp)).join('')}</select><select class="sel" data-chg="adF" data-k="st">${opt('ativos','Ativos (sem encerrados)',f.st)}${opt('todos','Todos',f.st)}${AD_ST.map(x=>opt(x,x,f.st)).join('')}</select></div>
+ ${Object.keys(G).sort((a,b)=>a==='_'?1:b==='_'?-1:0).map(k=>`<section class="todo-g"><div class="grp-h">${k==='_'?'<span class="pill up t-gray">Sem campanha</span>':`<span class="tag camp-tag">${ic('mega')}${esc(S.campaigns.find(c=>c.id===k).name)}</span>`}<span class="faint">${G[k].length}</span></div><div class="ad-grid">${G[k].map(card).join('')}</div></section>`).join('')||'<div class="empty">Nenhum anúncio aqui. Crie uma tarefa no formato <b>Anúncio</b>: depois da aprovação do cliente ela aparece nesta tela.</div>'}`;
+}
+const VIEWS={anuncios:vAnuncios,senhas:vSenhas,tarefas:vTarefas,automacoes:vAuto,banco:vBanco,inicio:vInicio,producao:vTodas,calendario:vCalendario,portal:vPortal2,campanhas:vCampanhas,financeiro:vFinanceiro,clientes:vClientes,equipe:vEquipe};
+const LABELS={anuncios:'Anúncios',senhas:'Cofre de senhas',tarefas:'Minhas tarefas',banco:'Banco de posts',automacoes:'Automações',inicio:'Início',producao:'Todas as tarefas',calendario:'Calendário',portal:'Portal do cliente',campanhas:'Campanhas',financeiro:'Financeiro',clientes:'Clientes',equipe:'Equipe e aparência'};
+const FAB={anuncios:['newAd','Novo anúncio'],senhas:['credNew','Nova senha'],tarefas:['todoFocus','Nova tarefa pessoal'],campanhas:['editCamp','Nova campanha'],clientes:['editClient','Novo cliente'],equipe:['addUser','Adicionar pessoa'],automacoes:['ruleNew','Nova automação'],financeiro:['finFocus','Novo lançamento'],banco:null,portal:null};
 function fabSync(){const v=ui.view;const cfg=v in FAB?FAB[v]:(allowedStages().length?['newPost','Nova tarefa']:null);
  [document.getElementById('fab'),document.getElementById('mtPlus')].forEach(b=>{if(!b)return;b.hidden=!!ui.clientMode||!cfg;if(cfg){b.dataset.act=cfg[0];b.title=cfg[1];b.setAttribute('aria-label',cfg[1]);const sp=b.querySelector('span');if(sp)sp.textContent=cfg[1]}})}
 function render(){try{fabSync()}catch(e){}
@@ -1020,7 +1049,7 @@ const CPROD=['Só tráfego','Full service','Freela','Social media'];
 const cstat=c=>CSTATUS.find(x=>x[0]===(c.status||'ativo'))||CSTATUS[0];
 const cchip=id=>{const c=cl(id);return`<span class="cc" style="--c:${c.color}"><i></i><span class="ell">${esc(c.short||c.name)}</span></span>`};
 const BRAND={blue:'#1A3FF5',semi:'#3D8BFD',yellow:'#F6B23A',orange:'#F07C2A',red:'#EE4A2B',green:'#5FE88A'};
-const FMT_COLOR={reels:BRAND.semi,carrossel:BRAND.orange,estatico:BRAND.yellow,stories:BRAND.green};
+const FMT_COLOR={reels:BRAND.semi,carrossel:BRAND.orange,estatico:BRAND.yellow,stories:BRAND.green,anuncio:'#D6409F'};
 const TEAM_COLOR={u1:'#1A3FF5',u2:'#F07C2A',u3:'#EE4A2B'};
 const FUN_TONE={Topo:'blue',Meio:'amber',Fundo:'green'};
 const ftag=f=>`<span class="tag ftag" style="--c:${FMT_COLOR[f]||'#888'}"><i></i>${FMT[f]}</span>`;
@@ -1046,22 +1075,37 @@ async function addImages(p,files){
  toast(fail?`${fail} imagem${fail>1?'ns':''} não subiu. Tente de novo.`:'Imagens enviadas.')}
 const fsize=b=>b>=1e9?(b/1e9).toFixed(1).replace('.',',')+' GB':b>=1e6?Math.round(b/1e6)+' MB':Math.max(1,Math.round(b/1e3))+' KB';
 const PART=10e6;
-function dlBtn(p){const n=(p.slides||[]).filter(x=>x.url).length;const has=n||p.video||p.mediaUrl||(p.driveUrl&&driveId(p.driveUrl));if(!has)return'';
- return`<div class="row wrap" style="margin-top:10px"><button class="btn sm pri" data-act="download" data-id="${p.id}">${ic('download')}${n>1?`Baixar ${n} imagens`:n?'Baixar imagem':'Baixar vídeo'}</button></div>`}
+const DLR={};
+const canShareFiles=()=>{try{return !!(navigator.canShare&&navigator.share&&navigator.canShare({files:[new File([''],'x.jpg',{type:'image/jpeg'})]}))&&/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)}catch(e){return false}};
+function dlBtn(p){const n=(p.slides||[]).filter(x=>x.url).length;const vid=!!(p.video||p.mediaUrl||(p.driveUrl&&driveId(p.driveUrl)));if(!n&&!vid)return'';
+ const r=DLR[p.id];
+ const imgBtn=n?(r==='prep'?`<button class="btn sm pri" disabled>Preparando ${n} imagens…</button>`:Array.isArray(r)?`<button class="btn sm pri" data-act="dlShare" data-id="${p.id}">${ic('download')}Salvar ${n} imagens no celular</button>`:`<button class="btn sm pri" data-act="download" data-id="${p.id}" data-k="img">${ic('download')}${n>1?`Baixar ${n} imagens`:'Baixar imagem'}</button>`):'';
+ const vidBtn=vid?`<button class="btn sm ${n?'':'pri'}" data-act="download" data-id="${p.id}" data-k="vid">${ic('download')}Baixar vídeo</button>`:'';
+ return`<div class="row wrap" style="margin-top:10px">${imgBtn}${vidBtn}</div>`}
+function loadZip(){return new Promise((res,rej)=>{if(window.JSZip)return res(window.JSZip);const sc=document.createElement('script');sc.src='https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';sc.onload=()=>res(window.JSZip);sc.onerror=()=>rej(new Error('zip'));document.head.appendChild(sc)})}
+async function slideFiles(p){const sl=(p.slides||[]).filter(x=>x.url),base=slug(p.title);const out=[];
+ for(let i=0;i<sl.length;i++){const r=await fetch(sl[i].url);const b=await r.blob();out.push(new File([b],`${base}-${String(i+1).padStart(2,'0')}.jpg`,{type:b.type||'image/jpeg'}))}return out}
 function slug(t){return String(t||'post').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^\w]+/g,'-').replace(/^-|-$/g,'').toLowerCase().slice(0,40)||'post'}
-async function downloadPost(p){
+async function downloadPost(p,kind){
  const sl=(p.slides||[]).filter(x=>x.url),base=slug(p.title);
  const go=(url,name)=>{const a=document.createElement('a');a.href=url;a.download=name;a.rel='noopener';document.body.appendChild(a);a.click();a.remove()};
- if(sl.length){toast(sl.length>1?`Baixando ${sl.length} imagens…`:'Baixando imagem…');
-  for(let i=0;i<sl.length;i++){const name=`${base}-${String(i+1).padStart(2,'0')}.jpg`;
-   try{const r=await fetch(sl[i].url);const b=await r.blob();const u=URL.createObjectURL(b);go(u,name);setTimeout(()=>URL.revokeObjectURL(u),4000)}catch(e){go(sl[i].url+(sl[i].url.includes('?')?'&':'?')+'download='+encodeURIComponent(name),name)}
-   await new Promise(r=>setTimeout(r,350))}
+ if(sl.length&&kind!=='vid'){
+  if(canShareFiles()){DLR[p.id]='prep';if(ui.modal===p.id)renderModal();render();
+   try{DLR[p.id]=await slideFiles(p);toast('Pronto: toque em “Salvar imagens no celular”.')}catch(e){delete DLR[p.id];toast('Não foi possível preparar as imagens.')}
+   if(ui.modal===p.id)renderModal();render();return}
+  toast(sl.length>1?`Juntando ${sl.length} imagens num arquivo .zip…`:'Baixando imagem…');
+  try{const files=await slideFiles(p);
+   if(files.length===1){const u=URL.createObjectURL(files[0]);go(u,files[0].name);setTimeout(()=>URL.revokeObjectURL(u),8000);return}
+   const JSZip=await loadZip();const z=new JSZip();files.forEach(f=>z.file(f.name,f));const blob=await z.generateAsync({type:'blob'});const u=URL.createObjectURL(blob);go(u,`${base}.zip`);setTimeout(()=>URL.revokeObjectURL(u),15000);toast(`${files.length} imagens baixadas em ${base}.zip.`)}
+  catch(e){toast('Não foi possível baixar as imagens.')}
   return}
  if(p.video&&p.video.url){toast('Baixando vídeo…');const ext=(p.video.name||'').split('.').pop()||'mp4';try{const r=await fetch(p.video.url);const b=await r.blob();const u=URL.createObjectURL(b);go(u,`${base}.${ext}`);setTimeout(()=>URL.revokeObjectURL(u),8000)}catch(e){go(p.video.url+'?download='+encodeURIComponent(base+'.'+ext),base+'.'+ext)}return}
  if(p.mediaUrl){go(p.mediaUrl,p.mediaName||base+'.mp4');return}
  const id=driveId(p.driveUrl);if(id){window.open(`https://drive.google.com/uc?export=download&id=${id}`,'_blank','noopener');toast('Abrindo o download no Google Drive.')}
 }
+function clipsOf(p){const c=(p.clips||[]).slice();if(p.driveUrl&&driveId(p.driveUrl)&&!c.some(x=>x.id===driveId(p.driveUrl)))c.unshift({id:driveId(p.driveUrl),name:p.driveName||'Vídeo no Google Drive',size:p.driveSize||0});return c}
 function upHtml(p){
+ if(p.format==='anuncio'&&!p.__sub)return`<div class="sub-h">Imagens</div>${upHtml({...p,format:'estatico',__sub:1})}<div class="sub-h" style="margin-top:14px">Vídeos</div>${upHtml({...p,format:'reels',__sub:1})}`;
  const sl=p.slides||[];
  if(IMG_FMT.includes(p.format)){
   const st=UPI[p.id];
@@ -1070,9 +1114,14 @@ function upHtml(p){
    :`<label class="dz" data-filedrop>${ic('upload')}<b>${sl.length?'Adicionar mais imagens':'Arraste as imagens aqui'}</b><span>ou clique para escolher · pode selecionar várias</span><small>JPG ou PNG · a ordem é a do carrossel</small><input type="file" accept="image/*" multiple data-chg="media"></label>`}`}
  const u=UP[p.id];
  if(GDRIVE&&!(u&&!u.done)&&!p.video&&!p.mediaUrl){
-  if(p.driveUrl&&driveId(p.driveUrl))return`<div class="upbox"><div class="nm">${esc(p.driveName||'Vídeo no Google Drive')}</div><div class="meta"><span class="upok">✓ No Google Drive</span><span>${p.driveSize?fsize(p.driveSize):''}</span></div><div class="upl" style="margin-top:0"><a class="btn sm" href="${esc(p.driveUrl)}" target="_blank" rel="noopener">${ic('link')}Abrir no Drive</a>${gOk()||ui.gState==='connected'?`<label class="btn sm">${ic('upload')}Trocar vídeo<input type="file" accept="video/*" data-chg="media"></label>`:''}<button class="btn sm ghost" data-act="driveClear">Tirar da tarefa</button></div></div>`;
+  const cl2=clipsOf(p),fin=p.driveUrl&&driveId(p.driveUrl),q=DQ[p.id];
+  const list=cl2.length?`<div class="clips">${cl2.map(c=>`<div class="clip ${c.id===fin?'fin':''}"><span class="clip-i">${ic('play')}</span><div class="grow" style="min-width:0"><div class="ell" style="font-weight:600;font-size:13px">${esc(c.name)}</div><div class="meta">${c.size?fsize(c.size)+' · ':''}${c.id===fin?'<span class="upok">★ Versão que o cliente vê</span>':'Arquivo para edição'}</div></div>${c.id===fin?'':`<button class="btn sm" data-act="clipFinal" data-v="${c.id}" title="Mostrar este vídeo para o cliente">★ Usar como final</button>`}<a class="icon-btn sm" href="https://drive.google.com/file/d/${c.id}/view" target="_blank" rel="noopener" title="Abrir no Drive">${ic('link')}</a><button class="icon-btn sm del-btn" data-act="clipDel" data-v="${c.id}" title="Tirar da tarefa">${ic('x')}</button></div>`).join('')}</div>`:'';
+  if(q)return list+`<div class="meta" style="margin-top:8px">Na fila: ${q.length} vídeo${q.length>1?'s':''} esperando para subir.</div>`;
+  if(cl2.length&&(gOk()||ui.gState==='connected'))return list+`<label class="dz dz-sm" data-filedrop>${ic('upload')}<b>Adicionar mais vídeos</b><span>pode selecionar vários · vão para o seu Google Drive</span><input type="file" accept="video/*" multiple data-chg="media"></label>`;
+  if(false&&p.driveUrl&&driveId(p.driveUrl))return`<div class="upbox"><div class="nm">${esc(p.driveName||'Vídeo no Google Drive')}</div><div class="meta"><span class="upok">✓ No Google Drive</span><span>${p.driveSize?fsize(p.driveSize):''}</span></div><div class="upl" style="margin-top:0"><a class="btn sm" href="${esc(p.driveUrl)}" target="_blank" rel="noopener">${ic('link')}Abrir no Drive</a>${gOk()||ui.gState==='connected'?`<label class="btn sm">${ic('upload')}Trocar vídeo<input type="file" accept="video/*" data-chg="media"></label>`:''}<button class="btn sm ghost" data-act="driveClear">Tirar da tarefa</button></div></div>`;
   if(!gOk()&&ui.gState!=='connected')return ui.gState===undefined?`<div class="dz gdz"><span>Verificando conexão com o Google Drive…</span></div>`:`<div class="dz gdz">${ic('upload')}<b>Enviar vídeo para o Google Drive</b><span>Conecte sua conta Google uma vez só. Depois não pede de novo.</span><button class="btn pri sm" data-act="gConnect" style="margin-top:6px">Conectar Google Drive</button></div>`;
-  return`<label class="dz" data-filedrop>${ic('upload')}<b>Arraste o vídeo aqui</b><span>ou clique para escolher · vai direto para o seu Google Drive</span><small>Qualquer tamanho · MP4 ou MOV</small><input type="file" accept="video/*" data-chg="media"></label>`;
+  if(cl2.length)return list;
+  return`<label class="dz" data-filedrop>${ic('upload')}<b>Arraste os vídeos aqui</b><span>ou clique para escolher · pode selecionar vários · vão direto para o seu Google Drive</span><small>Qualquer tamanho · MP4 ou MOV</small><input type="file" accept="video/*" multiple data-chg="media"></label>`;
  }
  if(u&&!u.done){const pct=Math.floor(u.loaded/u.size*100),parts=Math.max(1,Math.ceil(u.size/PART)),cur=Math.min(parts,Math.floor(u.loaded/PART)+1);
   return`<div class="upbox" id="upbox"><div class="nm">${esc(u.name)}</div><div class="upbar"><i id="upbar" style="width:${pct}%"></i></div>
@@ -1111,6 +1160,12 @@ async function gFolder(){
  if(id){const r=await gFetch(`https://www.googleapis.com/drive/v3/files/${id}?fields=id,trashed`);if(r.ok){const j=await r.json();if(!j.trashed)return id}}
  const r=await gFetch('https://www.googleapis.com/drive/v3/files?fields=id',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'Baseus | Stage',mimeType:'application/vnd.google-apps.folder'})});
  if(!r.ok)throw new Error('Não consegui criar a pasta no Drive');id=(await r.json()).id;try{localStorage.setItem(k,id)}catch(e){}return id}
+const DQ={};
+async function driveQueue(p,files){files=[...files].filter(f=>f.type.startsWith('video/'));if(!files.length){toast('Escolha arquivos de vídeo.');return}
+ if(DQ[p.id]){DQ[p.id].push(...files);toast(`${files.length} vídeo(s) entraram na fila.`);if(ui.modal===p.id)renderModal();return}
+ DQ[p.id]=files.slice(1);await driveUpload(p,files[0]);
+ while(DQ[p.id]&&DQ[p.id].length){const nx=DQ[p.id].shift();await driveUpload(p,nx)}
+ delete DQ[p.id];if(ui.modal===p.id)renderModal();if(files.length>1)toast('Todos os vídeos foram para o Drive.')}
 async function driveUpload(p,f){
  if(!(await gEnsure())){toast('Conecte o Google Drive primeiro.');if(ui.modal===p.id)renderModal();return}
  const u=UP[p.id]={name:f.name,size:f.size,loaded:0,real:true,drive:true};if(ui.modal===p.id)renderModal();
@@ -1134,7 +1189,7 @@ async function driveUpload(p,f){
   let id=done.id;
   if(!id)throw new Error('Envio terminou sem resposta do Drive');
   await gFetch(`https://www.googleapis.com/drive/v3/files/${id}/permissions`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({role:'reader',type:'anyone'})});
-  delete UP[p.id];p.driveUrl=`https://drive.google.com/file/d/${id}/view`;p.driveName=f.name;p.driveSize=f.size;ui.bigVideo=null;
+  delete UP[p.id];p.clips=clipsOf(p);p.clips.push({id,name:f.name,size:f.size,at:new Date().toISOString()});if(!(p.driveUrl&&driveId(p.driveUrl))){p.driveUrl=`https://drive.google.com/file/d/${id}/view`;p.driveName=f.name;p.driveSize=f.size}ui.bigVideo=null;
   hist(p,`Enviou o vídeo ${f.name} para o Google Drive`);save();toast('Vídeo no Drive. Pode levar alguns minutos para tocar.');
  }catch(e){delete UP[p.id];if(e.message!=='cancelado')toast(e.message||'Não foi possível enviar para o Drive.')}
  if(ui.modal===p.id)renderModal();render();
@@ -1159,7 +1214,7 @@ async function realUpload(p,f){
  xhr.send(f);if(ui.modal===p.id)renderModal();
 }
 function startUpload(p,f){
- if(GDRIVE&&f.type.startsWith('video/')){driveUpload(p,f);return}
+ if(GDRIVE&&f.type.startsWith('video/')){driveQueue(p,[f]);return}
  if(CLOUD&&sb){realUpload(p,f);return}
  if(!/^(video|image)\//.test(f.type)){toast('Envie um vídeo ou uma imagem.');return}
  if(f.size>2e9){toast('Arquivo acima de 2 GB.');return}
@@ -1635,18 +1690,22 @@ function actionsFor(p){
   case'aprov':
    if(p.status==='Em aprovação')A.push(['Aguardando o cliente',null]);
    else if(p.status==='Ajuste'){const t=prodStage(p);A.push([`Voltar para ${ST[t].name}`,()=>move(p,t,ST[t].statuses[1])])}
-   else A.push(['Mover para Gestão de publicação',()=>move(p,'pub','Para agendar')]);break;
+   else A.push([p.format==='anuncio'?'Mover para Anúncios':'Mover para Gestão de publicação',()=>move(p,'pub','Para agendar')]);break;
+  case'ads':
+   if(p.status==='Pronto para subir')A.push(['Marcar como no ar',()=>setStatus(p,'No ar','Subiu o anúncio')]);
+   else if(p.status==='No ar')A.push(['Pausar',()=>setStatus(p,'Pausado','Pausou o anúncio'),'sec'],['Encerrar',()=>setStatus(p,'Encerrado','Encerrou o anúncio')]);
+   else if(p.status==='Pausado')A.push(['Voltar ao ar',()=>setStatus(p,'No ar','Voltou o anúncio ao ar')]);break;
   case'pub':
    if(p.status==='Para agendar')A.push(['Marcar como agendado',()=>setStatus(p,'Agendado','Agendou na rede social')]);
    else if(p.status==='Agendado')A.push(['Marcar como postado',()=>setStatus(p,'Postado','Marcou como postado')]);break;
  }
  return A;
 }
-function move(p,stage,status){p.stage=stage;p.status=status||ST[stage].statuses[0];hist(p,`Moveu para ${ST[stage].name}`);}
+function move(p,stage,status){if(stage==='pub'&&p.format==='anuncio'){stage='ads';status='Pronto para subir'}p.stage=stage;p.status=status||ST[stage].statuses[0];hist(p,`Moveu para ${ST[stage].name}`);}
 function setStatus(p,s,txt){p.status=s;hist(p,txt||`Mudou o status para ${s}`);autoFlow(p)}
 const IMG_FMT=['carrossel','estatico','stories'];
 function DEFAULT_RULES(){return[
- {id:'r1',name:'Copy aprovada de imagem vai para Design',on:true,when:{stage:'copy',status:'Copy aprovada',formats:['carrossel','estatico','stories'],client:'all'},then:{stage:'design',status:'Para fazer',owner:''}},
+ {id:'r1',name:'Copy aprovada de imagem vai para Design',on:true,when:{stage:'copy',status:'Copy aprovada',formats:['carrossel','estatico','stories','anuncio'],client:'all'},then:{stage:'design',status:'Para fazer',owner:''}},
  {id:'r2',name:'Copy aprovada de vídeo vai para Criação',on:true,when:{stage:'copy',status:'Copy aprovada',formats:['reels'],client:'all'},then:{stage:'criacao',status:'Para fazer',owner:''}}]}
 const ruleHits=(r,p)=>r.on&&r.when&&p.stage===r.when.stage&&(!r.when.status||p.status===r.when.status)&&(!(r.when.formats||[]).length||r.when.formats.includes(p.format))&&(!r.when.client||r.when.client==='all'||p.client===r.when.client);
 function applyRules(p,quiet){let moved=false;
@@ -1732,7 +1791,7 @@ function newPost(date){if(!needClient())return;
   <form class="sheet-b one" data-newpost><div class="form-grid">
    <div class="field" style="grid-column:1/-1"><label for="np-title">Título</label><input class="in" id="np-title" required placeholder="Ex.: 3 sinais de artrite" autocomplete="off"></div>
    <div class="field"><label for="np-client">Cliente</label><select class="in" id="np-client">${S.clients.map(c=>opt(c.id,c.name,cli)).join('')}</select></div>
-   <div class="field"><label for="np-format">Formato</label><select class="in" id="np-format">${Object.keys(FMT).map(k=>opt(k,FMT[k],stg==='design'?'carrossel':'reels')).join('')}</select></div>
+   <div class="field"><label for="np-format">Formato</label><select class="in" id="np-format">${Object.keys(FMT).map(k=>opt(k,FMT[k],ui.newFmt||(stg==='design'?'carrossel':'reels'))).join('')}</select></div>
    <div class="field"><label for="np-stage">Etapa</label><select class="in" id="np-stage">${STAGES.filter(x=>allowedStages().includes(x.id)).map(x=>opt(x.id,x.name,stg)).join('')}</select></div>
    <div class="field"><label for="np-owner">Responsável</label><select class="in" id="np-owner">${S.team.map(u=>opt(u.id,u.name,ME().id)).join('')}</select></div>
    <div class="field"><label for="np-date">Data de publicação</label><input class="in" type="date" id="np-date" value="${date||iso(addDays(TODAY,7))}"></div>
@@ -1809,6 +1868,8 @@ const A={
   m.innerHTML=`<div class="backdrop" data-act="closeModal"></div><div class="sheet narrow" role="dialog" aria-modal="true" aria-label="Histórico do cofre"><div class="sheet-h"><h2 class="grow">Histórico do cofre</h2><button class="icon-btn" data-act="closeModal" aria-label="Fechar">${ic('x')}</button></div><div class="sheet-b one">${(L||[]).map(x=>`<div class="hist"><time>${new Date(x.at).toLocaleString('pt-BR',{timeZone:TZ,day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</time><span><b>${esc((S.team.find(u=>(u.email||'').toLowerCase()===(x.who||'').toLowerCase())||{}).name||x.who||'—')}</b> ${lab[x.action]||x.action} · ${esc(x.service||'(excluída)')}${x.client?' · '+esc(cl(x.client).name):''}</span></div>`).join('')||'<div class="empty">Sem registros.</div>'}</div></div>`;m.hidden=false;document.body.classList.add('modal-open')}catch(e){}},
  gConnect:()=>gConnect(),
  gDisconnect:async()=>{await gFn('disconnect');gTok=null;try{sessionStorage.removeItem('baseus-gtok')}catch(e){}ui.gState='none';toast('Google Drive desconectado.');profileSheet()},
+ clipFinal:el=>{const p=S.posts.find(x=>x.id===ui.modal);const c=clipsOf(p).find(x=>x.id===el.dataset.v);if(!c)return;p.clips=clipsOf(p);p.driveUrl=`https://drive.google.com/file/d/${c.id}/view`;p.driveName=c.name;p.driveSize=c.size;hist(p,`Definiu ${c.name} como versão final`);save();renderModal();render()},
+ clipDel:el=>{const p=S.posts.find(x=>x.id===ui.modal);p.clips=clipsOf(p).filter(x=>x.id!==el.dataset.v);if(driveId(p.driveUrl)===el.dataset.v){const nx=p.clips[0];if(nx){p.driveUrl=`https://drive.google.com/file/d/${nx.id}/view`;p.driveName=nx.name;p.driveSize=nx.size}else{delete p.driveUrl;delete p.driveName;delete p.driveSize}}save();renderModal();render()},
  driveClear:()=>{const p=S.posts.find(x=>x.id===ui.modal);delete p.driveUrl;delete p.driveName;delete p.driveSize;save();renderModal();render()},
  todoDone:el=>{const t=S.todos.find(x=>x.id===el.dataset.id);t.done=!t.done;t.doneAt=t.done?new Date().toISOString():'';t.doneBy=t.done?meId():'';save();render();if(ui.modal==='__todo')todoSheet(t.id)},
  todoOpen:el=>todoSheet(el.dataset.id),
@@ -1820,6 +1881,7 @@ const A={
  todoShowDone:()=>{ui.todoDone=!ui.todoDone;render()},
  todoClear:()=>{const me=meId();const today=TODAY_ISO;S.todos=S.todos.filter(t=>!(t.owner===me&&t.done&&t.doneAt&&new Date(t.doneAt).toLocaleDateString('en-CA',{timeZone:TZ})!==today));save();render()},
  stop:()=>{},
+ newAd:()=>{ui.newFmt='anuncio';newPost();ui.newFmt=null},
  search:()=>{document.body.classList.remove('menu');searchSheet()},
  srchOpen:el=>{const p=S.posts.find(x=>x.id===el.dataset.id);if(!p)return;ui.mtab='historico';openPost(p.id)},
  bulkClear:()=>{SEL.clear();render()},
@@ -1833,7 +1895,8 @@ const A={
  clientPhotoDel:()=>{ui.kfPhoto='';clientForm(ui.kfId,true)},
  rowDel:el=>{if(!el.classList.contains('armed')){el.classList.add('armed');el.title='Clique de novo para excluir';toast('Toque de novo na lixeira para excluir.');setTimeout(()=>{if(el.isConnected)el.classList.remove('armed')},3000);return}
   const p=S.posts.find(x=>x.id===el.dataset.id);if(!p)return;S.posts=S.posts.filter(x=>x.id!==p.id);[...(p.slides||[]),...(p.video?[p.video]:[])].forEach(x=>{if(x.path&&sb&&!pathUsed(x.path))sb.storage.from('media').remove([x.path]).catch(()=>{})});save();toast('Tarefa excluída.');render()},
- download:el=>downloadPost(S.posts.find(x=>x.id===el.dataset.id)),
+ download:el=>downloadPost(S.posts.find(x=>x.id===el.dataset.id),el.dataset.k),
+ dlShare:async el=>{const files=DLR[el.dataset.id];if(!Array.isArray(files))return;try{await navigator.share({files,title:'Imagens do post'});delete DLR[el.dataset.id]}catch(e){if(e&&e.name!=='AbortError')toast('O celular não deixou salvar. Tente de novo.')}renderModal();render()},
  slDel:el=>{const p=S.posts.find(x=>x.id===ui.modal);const [r]=p.slides.splice(Number(el.dataset.i),1);if(r&&r.path&&sb&&!pathUsed(r.path))sb.storage.from('media').remove([r.path]).catch(()=>{});save();renderModal();render()},
  slMove:el=>{const p=S.posts.find(x=>x.id===ui.modal);const i=Number(el.dataset.i),j=i+Number(el.dataset.d);if(j<0||j>=p.slides.length)return;[p.slides[i],p.slides[j]]=[p.slides[j],p.slides[i]];save();renderModal();render()},
  carNav:el=>{const t=el.closest('.car').querySelector('.car-t');t.scrollBy({left:Number(el.dataset.d)*t.clientWidth,behavior:'smooth'})},
@@ -1882,7 +1945,7 @@ const A={
  adjOpen:el=>{ui.adjOpen=el.dataset.id;render();setTimeout(()=>{const t=document.getElementById('adj-'+el.dataset.id);t&&t.focus()},20)},
  adjCancel:()=>{ui.adjOpen=null;render()},
  approve:el=>{if(ui.clientMode)return portalAct(el.dataset.id,'approve','','Aprovado. A equipe já foi avisada no painel.');const p=S.posts.find(x=>x.id===el.dataset.id),c=cl(p.client);
-  if(p.stage==='copy'){p.status='Copy aprovada';hist(p,'Aprovou a copy',c.name);autoFlow(p)}else{p.stage='pub';p.status='Para agendar';hist(p,'Aprovou a arte e a legenda',c.name)}
+  if(p.stage==='copy'){p.status='Copy aprovada';hist(p,'Aprovou a copy',c.name);autoFlow(p)}else{if(p.format==='anuncio'){p.stage='ads';p.status='Pronto para subir'}else{p.stage='pub';p.status='Para agendar'}hist(p,'Aprovou a arte e a legenda',c.name)}
   toast('Aprovado. A equipe já vê no painel.');render()},
  sendAdj:el=>{const p=S.posts.find(x=>x.id===el.dataset.id),c=cl(p.client);const t=document.getElementById('adj-'+p.id).value.trim();
   if(!t){toast('Escreva o que precisa mudar.');return}
@@ -1931,7 +1994,7 @@ const C={
  pf:el=>{const p=S.posts.find(x=>x.id===ui.modal);const k=el.dataset.k;p[k]=el.value;if(k==='client')p.campaign='';save();renderModal();render()},
  stage:el=>{const p=S.posts.find(x=>x.id===ui.modal);move(p,el.value);renderModal();render()},
  status:el=>{const p=S.posts.find(x=>x.id===ui.modal);setStatus(p,el.value);renderModal();render()},
- media:el=>{const p=S.posts.find(x=>x.id===ui.modal);const fs=el.files;if(!fs||!fs.length)return;if(IMG_FMT.includes(p.format)||[...fs].every(f=>f.type.startsWith('image/'))&&fs.length>1){addImages(p,fs);return}startUpload(p,fs[0])},
+ media:el=>{const p=S.posts.find(x=>x.id===ui.modal);const fs=[...(el.files||[])];if(!fs.length)return;const imgs=fs.filter(f=>f.type.startsWith('image/')),vids=fs.filter(f=>f.type.startsWith('video/'));if(imgs.length&&(IMG_FMT.includes(p.format)||p.format==='anuncio'||imgs.length>1)){addImages(p,imgs)}if(vids.length){if(GDRIVE)driveQueue(p,vids);else startUpload(p,vids[0])}else if(!imgs.length)toast('Escolha imagens ou vídeos.')},
  avatar:el=>{const f=el.files&&el.files[0];if(!f)return;if(!f.type.startsWith('image/')){toast('Escolha uma imagem.');return}const img=new Image();img.onload=()=>{const c=document.createElement('canvas');c.width=c.height=160;const g=c.getContext('2d');const s=Math.min(img.width,img.height);g.drawImage(img,(img.width-s)/2,(img.height-s)/2,s,s,0,0,160,160);const url=c.toDataURL('image/jpeg',.82);URL.revokeObjectURL(img.src);S.avatars=S.avatars.filter(a=>a.id!==ME().id);S.avatars.push({id:ME().id,img:url});save();applyTheme();render();profileSheet();toast('Foto atualizada.')};img.src=URL.createObjectURL(f)},
  bkMet:el=>{const p=S.posts.find(x=>x.id===el.dataset.id);p.m=p.m||{};const v=el.value.trim();if(v==='')delete p.m[el.dataset.k];else p.m[el.dataset.k]=el.dataset.k==='tempo'?v:Number(v);save();render()},
  rule:el=>{const r=S.rules.find(x=>x.id===el.dataset.id);const k=el.dataset.k;if(k==='name'){r.name=el.value;save();return}const [g,f2]=k.split('.');r[g][f2]=el.value;if(f2==='stage')r[g].status=g==='when'?'':ST[el.value].statuses[0];save();render()},
@@ -1952,6 +2015,8 @@ const C={
  bulkDate:el=>{if(!el.value)return;const d=el.value;bulkApply(p=>{p.date=d;hist(p,`Mudou a data para ${fmtD(d)}`)},`Data alterada em {n} tarefas.`)},
  bulkOwner:el=>{if(!el.value)return;const u=el.value;bulkApply(p=>{p.owner=u;hist(p,`Passou para ${user(u).name}`)},`Responsável alterado em {n} tarefas.`)},
  metricsOwner:el=>{S.settings.metricsOwner=el.value;save();toast(el.value?`Lembrete de métricas vai para ${user(el.value).name}.`:'Lembrete de métricas desligado.')},
+ adStatus:el=>{const p=S.posts.find(x=>x.id===el.dataset.id);if(!p||p.status===el.value)return;setStatus(p,el.value);save();render()},
+ adF:el=>{ui.ad[el.dataset.k]=el.value;render()},
  bkSel:el=>{const p=S.posts.find(x=>x.id===el.dataset.id);p[el.dataset.k]=el.value;save()},
  bkF:el=>{ui.bk[el.dataset.k]=el.value;render()},
  drive:el=>{const p=S.posts.find(x=>x.id===ui.modal);const v=el.value.trim();if(v&&!driveId(v)){toast('Link do Drive não reconhecido.');return}p.driveUrl=v;if(v)hist(p,'Adicionou o link do Google Drive');save();renderModal();render()}
@@ -1979,7 +2044,7 @@ document.addEventListener('submit',e=>{if(e.target.closest('[data-newpost]')){e.
 document.addEventListener('scroll',e=>{const t=e.target;if(!t.classList||!t.classList.contains('car-t'))return;const n=t.closest('.car').querySelector('.car-n');if(n)n.textContent=`${Math.round(t.scrollLeft/t.clientWidth)+1}/${t.children.length}`},true);
 document.addEventListener('dragover',e=>{const z=e.target.closest('[data-filedrop]');if(z&&[...(e.dataTransfer.types||[])].includes('Files')){e.preventDefault();z.classList.add('over')}},true);
 document.addEventListener('dragleave',e=>{const z=e.target.closest&&e.target.closest('[data-filedrop]');if(z&&!z.contains(e.relatedTarget))z.classList.remove('over')});
-document.addEventListener('drop',e=>{const z=e.target.closest('[data-filedrop]');if(!z)return;e.preventDefault();e.stopPropagation();z.classList.remove('over');const fs=e.dataTransfer.files;if(!fs||!fs.length||!ui.modal)return;const p=S.posts.find(x=>x.id===ui.modal);if(!p)return;if(IMG_FMT.includes(p.format)){addImages(p,fs);return}startUpload(p,fs[0])},true);
+document.addEventListener('drop',e=>{const z=e.target.closest('[data-filedrop]');if(!z)return;e.preventDefault();e.stopPropagation();z.classList.remove('over');const fs=e.dataTransfer.files;if(!fs||!fs.length||!ui.modal)return;const p=S.posts.find(x=>x.id===ui.modal);if(!p)return;const arr=[...fs],imgs=arr.filter(f=>f.type.startsWith('image/')),vids=arr.filter(f=>f.type.startsWith('video/'));if(imgs.length&&(IMG_FMT.includes(p.format)||p.format==='anuncio'))addImages(p,imgs);if(vids.length){if(GDRIVE)driveQueue(p,vids);else startUpload(p,vids[0])}},true);
 document.addEventListener('dragover',e=>{const t=e.target.closest('[data-drop],[data-dropdate],[data-dropstatus]');if(!t)return;e.preventDefault();document.querySelectorAll('.over').forEach(x=>x!==t&&x.classList.remove('over'));t.classList.add('over')});
 document.addEventListener('drop',e=>{const t=e.target.closest('[data-drop],[data-dropdate],[data-dropstatus]');if(!t)return;e.preventDefault();const p=S.posts.find(x=>x.id===e.dataTransfer.getData('text/plain'));if(!p)return;
  if(t.dataset.dropstatus){if(p.status!==t.dataset.dropstatus){setStatus(p,t.dataset.dropstatus);toast(`Status: ${p.status}`)}}
@@ -2038,6 +2103,7 @@ async function enter(session){
  realId=me.id;ui.as=me.id;if(!S.clients.find(c=>c.id===ui.portalClient)&&S.clients[0])ui.portalClient=S.clients[0].id;
  snapshot();
  if(isAdmin(me)&&!S.rules.length&&!S.settings.rulesSeeded){S.rules=DEFAULT_RULES();S.settings.rulesSeeded=true;save()}
+ if(isAdmin(me)&&!S.settings.adsRuleMig){const r=S.rules.find(x=>x.when&&x.when.stage==='copy'&&(x.when.formats||[]).includes('carrossel'));if(r&&!r.when.formats.includes('anuncio'))r.when.formats.push('anuncio');S.settings.adsRuleMig=true;save()}
  if(isAdmin(me)&&S.settings.metricsOwner===undefined){const g=S.team.find(u=>/grazi/i.test(u.name));S.settings.metricsOwner=g?g.id:'';save()}
  S.posts.forEach(p=>applyRules(p,true));ensureCodes();
  setTimeout(()=>{try{const mid=realId;(S.todos||[]).filter(t=>t.auto&&!t.done&&t.owner===mid).slice(0,3).forEach(t=>notify({who:'Lembrete',text:t.title,sub:'Pendente em Minhas tarefas',todo:t.id}))}catch(e){}},1500);
