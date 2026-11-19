@@ -1081,7 +1081,7 @@ const canShareFiles=()=>{try{return !!(navigator.canShare&&navigator.share&&navi
 function dlBtn(p){const n=(p.slides||[]).filter(x=>x.url).length;const vid=!!(p.video||p.mediaUrl||(p.driveUrl&&driveId(p.driveUrl)));if(!n&&!vid)return'';
  const r=DLR[p.id];
  const imgBtn=n?(r==='prep'?`<button class="btn sm pri" disabled>Preparando ${n} imagens…</button>`:Array.isArray(r)?`<button class="btn sm pri" data-act="dlShare" data-id="${p.id}">${ic('download')}Salvar ${n} imagens no celular</button>`:`<button class="btn sm pri" data-act="download" data-id="${p.id}" data-k="img">${ic('download')}${n>1?`Baixar ${n} imagens`:'Baixar imagem'}</button>`):'';
- const vidBtn=vid?`<button class="btn sm ${n?'':'pri'}" data-act="download" data-id="${p.id}" data-k="vid">${ic('download')}Baixar vídeo</button>`:'';
+ const rv=DLR[p.id+':v'];const vidBtn=vid?(rv==='prep'?`<button class="btn sm ${n?'':'pri'}" disabled>Preparando o vídeo…</button>`:rv instanceof File?`<button class="btn sm ${n?'':'pri'}" data-act="dlShareV" data-id="${p.id}">${ic('download')}Salvar vídeo no celular</button>`:`<button class="btn sm ${n?'':'pri'}" data-act="download" data-id="${p.id}" data-k="vid">${ic('download')}Baixar vídeo</button>`):'';
  return`<div class="row wrap" style="margin-top:10px">${imgBtn}${vidBtn}</div>`}
 function saveSheet(p){const sl=(p.slides||[]).filter(x=>x.url);const m=document.getElementById('modal');const back=ui.modal;ui.modal='__save';ui.saveBack=back;
  m.innerHTML=`<div class="backdrop" data-act="saveBack"></div><div class="sheet narrow" role="dialog" aria-modal="true" aria-label="Salvar imagens"><div class="sheet-h"><b class="grow">Salvar ${sl.length} imagens</b><button class="icon-btn" data-act="saveBack" aria-label="Fechar">${ic('x')}</button></div>
@@ -1107,7 +1107,18 @@ async function downloadPost(p,kind){
   return}
  if(p.video&&p.video.url){toast('Baixando vídeo…');const ext=(p.video.name||'').split('.').pop()||'mp4';try{const r=await fetch(p.video.url);const b=await r.blob();const u=URL.createObjectURL(b);go(u,`${base}.${ext}`);setTimeout(()=>URL.revokeObjectURL(u),8000)}catch(e){go(p.video.url+'?download='+encodeURIComponent(base+'.'+ext),base+'.'+ext)}return}
  if(p.mediaUrl){go(p.mediaUrl,p.mediaName||base+'.mp4');return}
- const id=driveId(p.driveUrl);if(id){window.open(`https://drive.google.com/uc?export=download&id=${id}`,'_blank','noopener');toast('Abrindo o download no Google Drive.')}
+ const id=driveId(p.driveUrl);if(!id)return;
+ const mobile=/iPhone|iPad|Android/i.test(navigator.userAgent);
+ const name=`${base}.${((p.driveName||'').split('.').pop()||'mp4').toLowerCase()}`;
+ let blob=null;
+ if(GDRIVE&&sb){try{if(mobile&&canShareFiles()){DLR[p.id+':v']='prep';if(ui.modal===p.id)renderModal()}
+   if(await gEnsure()){const r=await gFetch(`https://www.googleapis.com/drive/v3/files/${id}?alt=media`);if(r.ok)blob=await r.blob()}}catch(e){}}
+ if(blob){
+  if(mobile&&canShareFiles()){DLR[p.id+':v']=new File([blob],name,{type:blob.type||'video/mp4'});toast('Pronto: toque em “Salvar vídeo no celular”.');if(ui.modal===p.id)renderModal();return}
+  const u=URL.createObjectURL(blob);go(u,name);setTimeout(()=>URL.revokeObjectURL(u),30000);toast('Vídeo baixado.');return}
+ delete DLR[p.id+':v'];if(ui.modal===p.id)renderModal();
+ if(mobile){window.open(`https://drive.google.com/file/d/${id}/view`,'_blank','noopener');toast('Abrindo no Google Drive: toque em ⋮ → Fazer download (ou Enviar cópia → Salvar vídeo).')}
+ else{window.open(`https://drive.google.com/uc?export=download&id=${id}`,'_blank','noopener');toast('Abrindo o download no Google Drive.')}
 }
 function clipsOf(p){const c=(p.clips||[]).slice();if(p.driveUrl&&driveId(p.driveUrl)&&!c.some(x=>x.id===driveId(p.driveUrl)))c.unshift({id:driveId(p.driveUrl),name:p.driveName||'Vídeo no Google Drive',size:p.driveSize||0});return c}
 function upHtml(p){
@@ -1903,6 +1914,7 @@ const A={
   const p=S.posts.find(x=>x.id===el.dataset.id);if(!p)return;S.posts=S.posts.filter(x=>x.id!==p.id);[...(p.slides||[]),...(p.video?[p.video]:[])].forEach(x=>{if(x.path&&sb&&!pathUsed(x.path))sb.storage.from('media').remove([x.path]).catch(()=>{})});save();toast('Tarefa excluída.');render()},
  download:el=>downloadPost(S.posts.find(x=>x.id===el.dataset.id),el.dataset.k),
  saveBack:()=>{const b=ui.saveBack;ui.saveBack=null;if(b&&S.posts.find(p=>p.id===b))openPost(b);else closeModal()},
+ dlShareV:async el=>{const k=el.dataset.id+':v';const f=DLR[k];if(!(f instanceof File))return;try{await navigator.share({files:[f],title:'Vídeo do post'});delete DLR[k]}catch(e){if(e&&e.name!=='AbortError')toast('O celular não deixou salvar. Tente de novo.')}renderModal()},
  dlShare:async el=>{const files=DLR[el.dataset.id];if(!Array.isArray(files))return;try{await navigator.share({files,title:'Imagens do post'});delete DLR[el.dataset.id]}catch(e){if(e&&e.name!=='AbortError')toast('O celular não deixou salvar. Tente de novo.')}renderModal();render()},
  slDel:el=>{const p=S.posts.find(x=>x.id===ui.modal);const [r]=p.slides.splice(Number(el.dataset.i),1);if(r&&r.path&&sb&&!pathUsed(r.path))sb.storage.from('media').remove([r.path]).catch(()=>{});save();renderModal();render()},
  slMove:el=>{const p=S.posts.find(x=>x.id===ui.modal);const i=Number(el.dataset.i),j=i+Number(el.dataset.d);if(j<0||j>=p.slides.length)return;[p.slides[i],p.slides[j]]=[p.slides[j],p.slides[i]];save();renderModal();render()},
