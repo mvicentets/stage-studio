@@ -1015,15 +1015,15 @@ document.addEventListener('submit',async e=>{const f=e.target.closest('[data-vau
 function vAnuncios(){
  ui.ad=ui.ad||{client:'all',camp:'all',st:'ativos'};const f=ui.ad;
  const L=S.posts.filter(p=>p.stage==='ads'&&(f.client==='all'||p.client===f.client)&&(f.camp==='all'||(p.campaign||'')===f.camp)&&(f.st==='todos'||(f.st==='ativos'?p.status!=='Encerrado':p.status===f.st))).sort(sortDate);
- const G={};L.forEach(p=>{const k=p.campaign&&S.campaigns.find(c=>c.id===p.campaign)?p.campaign:'_';(G[k]=G[k]||[]).push(p)});
+ const G={};L.forEach(p=>{(G[p.client]=G[p.client]||[]).push(p)});
  const tone2={'Pronto para subir':'amber','No ar':'green','Pausado':'gray','Encerrado':'gray'};
  const card=p=>`<article class="box ad-card">${media(p,'sm')}<div class="ad-b"><div class="row between" style="gap:6px;align-items:flex-start"><a class="ad-t" data-act="open" data-id="${p.id}">${esc(p.title)}</a>${codeTag(p)}</div>
-  <div class="row wrap" style="gap:6px">${ctag(p.client)}${ftag(p.format)}</div>
+  <div class="row wrap" style="gap:6px">${ftag(p.format)}${camptag(p)}</div>
   <div class="row wrap" style="gap:6px;margin-top:auto"><select class="isel t-${tone2[p.status]||'gray'}" data-chg="adStatus" data-id="${p.id}" aria-label="Status do anúncio">${AD_ST.map(x=>opt(x,x,p.status)).join('')}</select>${dlBtn(p).replace('class="row wrap" style="margin-top:10px"','class="row"')}</div></div></article>`;
  const nPend=S.posts.filter(p=>p.stage==='ads'&&p.status==='Pronto para subir').length;
- return`<div class="page-head"><div><h1>Anúncios</h1><div class="sub">Criativos de anúncio aprovados pelo cliente. Não passam pela Gestão de publicação: vêm direto para cá, para o gestor de tráfego subir.${nPend?` <b>${nPend} pronto${nPend>1?'s':''} para subir.</b>`:''}</div></div><div class="actions"><button class="btn pri" data-act="newAd">${ic('plus')}Novo anúncio</button></div></div>
- <div class="toolbar" style="margin-bottom:14px"><select class="sel" data-chg="adF" data-k="client">${opt('all','Todos os clientes',f.client)}${S.clients.map(c=>opt(c.id,c.name,f.client)).join('')}</select><select class="sel" data-chg="adF" data-k="camp">${opt('all','Todas as campanhas',f.camp)}${opt('','Sem campanha',f.camp)}${S.campaigns.map(c=>opt(c.id,c.name,f.camp)).join('')}</select><select class="sel" data-chg="adF" data-k="st">${opt('ativos','Ativos (sem encerrados)',f.st)}${opt('todos','Todos',f.st)}${AD_ST.map(x=>opt(x,x,f.st)).join('')}</select></div>
- ${Object.keys(G).sort((a,b)=>a==='_'?1:b==='_'?-1:0).map(k=>`<section class="todo-g"><div class="grp-h">${k==='_'?'<span class="pill up t-gray">Sem campanha</span>':`<span class="tag camp-tag">${ic('mega')}${esc(S.campaigns.find(c=>c.id===k).name)}</span>`}<span class="faint">${G[k].length}</span></div><div class="ad-grid">${G[k].map(card).join('')}</div></section>`).join('')||'<div class="empty">Nenhum anúncio aqui. Crie uma tarefa no formato <b>Anúncio</b>: depois da aprovação do cliente ela aparece nesta tela.</div>'}`;
+ return`<div class="page-head"><div><h1>Anúncios</h1><div class="sub">Criativos de anúncio aprovados, separados por cliente. Não passam pela Gestão de publicação e não precisam de campanha.${nPend?` <b>${nPend} pronto${nPend>1?'s':''} para subir.</b>`:''}</div></div><div class="actions"><button class="btn pri" data-act="newAd">${ic('plus')}Novo anúncio</button></div></div>
+ <div class="toolbar" style="margin-bottom:14px"><select class="sel" data-chg="adF" data-k="client">${opt('all','Todos os clientes',f.client)}${S.clients.map(c=>opt(c.id,c.name,f.client)).join('')}</select><select class="sel" data-chg="adF" data-k="camp">${opt('all','Campanha: todas',f.camp)}${opt('','Sem campanha',f.camp)}${S.campaigns.map(c=>opt(c.id,c.name,f.camp)).join('')}</select><select class="sel" data-chg="adF" data-k="st">${opt('ativos','Ativos (sem encerrados)',f.st)}${opt('todos','Todos',f.st)}${AD_ST.map(x=>opt(x,x,f.st)).join('')}</select></div>
+ ${Object.keys(G).sort((a,b)=>cl(a).name.localeCompare(cl(b).name)).map(k=>`<section class="todo-g"><div class="grp-h"><span class="gtag lg" style="--c:${cl(k).color}">${esc(cl(k).name)}</span><span class="faint">${G[k].length}</span></div><div class="ad-grid">${G[k].map(card).join('')}</div></section>`).join('')||'<div class="empty">Nenhum anúncio aqui. Crie um anúncio pelo botão “Novo anúncio”: ele começa em Design gráfico e, quando for aprovado, aparece nesta tela.</div>'}`;
 }
 const VIEWS={anuncios:vAnuncios,senhas:vSenhas,tarefas:vTarefas,automacoes:vAuto,banco:vBanco,inicio:vInicio,producao:vTodas,calendario:vCalendario,portal:vPortal2,campanhas:vCampanhas,financeiro:vFinanceiro,clientes:vClientes,equipe:vEquipe};
 const LABELS={anuncios:'Anúncios',senhas:'Cofre de senhas',tarefas:'Minhas tarefas',banco:'Banco de posts',automacoes:'Automações',inicio:'Início',producao:'Todas as tarefas',calendario:'Calendário',portal:'Portal do cliente',campanhas:'Campanhas',financeiro:'Financeiro',clientes:'Clientes',equipe:'Equipe e aparência'};
@@ -1692,7 +1692,7 @@ function actionsFor(p){
    }
    if(p.status!=='Aprovação do cliente')A.push(['Mover para Criação',()=>move(p,'criacao')]);break;
   case'criacao':{const t=prodStage(p);A.push([`Mover para ${ST[t].name}`,()=>move(p,t)]);break}
-  case'design':case'edicao':A.push(['Enviar para aprovação do cliente',()=>move(p,'aprov','Em aprovação')]);break;
+  case'design':case'edicao':A.push(['Enviar para aprovação do cliente',()=>move(p,'aprov','Em aprovação')]);if(p.format==='anuncio')A.push(['Aprovado: mover para Anúncios',()=>{move(p,'ads','Pronto para subir');hist(p,'Aprovou internamente')},'sec']);break;
   case'aprov':
    if(p.status==='Em aprovação')A.push(['Aguardando o cliente',null]);
    else if(p.status==='Ajuste'){const t=prodStage(p);A.push([`Voltar para ${ST[t].name}`,()=>move(p,t,ST[t].statuses[1])])}
@@ -1798,7 +1798,7 @@ function newPost(date){if(!needClient())return;
    <div class="field" style="grid-column:1/-1"><label for="np-title">Título</label><input class="in" id="np-title" required placeholder="Ex.: 3 sinais de artrite" autocomplete="off"></div>
    <div class="field"><label for="np-client">Cliente</label><select class="in" id="np-client">${S.clients.map(c=>opt(c.id,c.name,cli)).join('')}</select></div>
    <div class="field"><label for="np-format">Formato</label><select class="in" id="np-format">${Object.keys(FMT).map(k=>opt(k,FMT[k],ui.newFmt||(stg==='design'?'carrossel':'reels'))).join('')}</select></div>
-   <div class="field"><label for="np-stage">Etapa</label><select class="in" id="np-stage">${STAGES.filter(x=>allowedStages().includes(x.id)).map(x=>opt(x.id,x.name,stg)).join('')}</select></div>
+   <div class="field"><label for="np-stage">Etapa</label><select class="in" id="np-stage">${STAGES.filter(x=>allowedStages().includes(x.id)).map(x=>opt(x.id,x.name,ui.newFmt==='anuncio'&&allowedStages().includes('design')?'design':stg)).join('')}</select></div>
    <div class="field"><label for="np-owner">Responsável</label><select class="in" id="np-owner">${S.team.map(u=>opt(u.id,u.name,ME().id)).join('')}</select></div>
    <div class="field"><label for="np-date">Data de publicação</label><input class="in" type="date" id="np-date" value="${date||iso(addDays(TODAY,7))}"></div>
    <div class="field"><label for="np-time">Horário</label><input class="in" type="time" id="np-time" value="11:00"></div>
