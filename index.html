@@ -485,6 +485,9 @@ select.csel option{background:var(--surface);color:var(--fg);font-weight:500}
 .auth-err{color:var(--red);font-size:13px}
 .syncdot{position:fixed;right:14px;bottom:14px;z-index:90;font-size:11.5px;color:var(--faint);background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:4px 10px;pointer-events:none}
 [hidden]{display:none!important}
+.t-pgreen{--tb:#DDF5E4;--tf:#1E7A43}.t-pblue{--tb:#DCEBFB;--tf:#2563A8}.t-black{--tb:#1C1C1E;--tf:#FFFFFF}
+.p-legend{display:flex;flex-wrap:wrap;gap:6px 12px;margin-top:10px;font-size:12px;color:var(--muted)}
+.p-legend span{display:inline-flex;align-items:center;gap:6px}.p-legend i{width:12px;height:12px;border-radius:4px;background:var(--tb);border:1.5px solid var(--tf);display:inline-block}
 .slug-in{display:flex;align-items:center;border:1px solid var(--line);border-radius:8px;background:var(--surface);overflow:hidden}.slug-in span{padding:0 4px 0 9px;color:var(--faint);font-size:13px;white-space:nowrap}.slug-in .in{border:0;border-radius:0;padding-left:0;min-width:0}
 .sicon.ok{border:0;border-radius:0;background:none;color:var(--green);display:grid;place-items:center;width:16px;height:16px}.sicon.ok svg{width:16px;height:16px;stroke-width:3}
 .tbl tr.row-ok td,.tbl.lite tr.row-ok td{background:color-mix(in srgb,var(--green) 10%,var(--surface))}
@@ -755,7 +758,7 @@ function phase(p){
 }
 function tone(p){const ph=phase(p);if(ph==='producao'&&(p.status==='Pronto'||p.status==='Copy aprovada'))return'green';return PH[ph][1]}
 const isDoneP=p=>(p.stage==='pub'&&(p.status==='Agendado'||p.status==='Postado'))||(p.stage==='ads'&&p.status==='No ar');
-const pill=p=>`<span class="pill t-${tone(p)}">${esc(p.status)}</span>`;
+const pill=p=>p.discarded?`<span class="pill t-black">Descartado</span>`:`<span class="pill t-${tone(p)}">${esc(p.status)}</span>`;
 const isLate=p=>p.date&&p.date<TODAY_ISO&&!['postado','agendado'].includes(phase(p));
 
 const HOL={'01-01':'Ano Novo','04-07':'Dia Mundial da Saúde|s','04-21':'Tiradentes','05-01':'Dia do Trabalho','09-07':'Independência','09-10':'Prevenção do Suicídio|s','10-10':'Saúde Mental|s','10-12':'N. Sra. Aparecida','10-18':'Dia do Médico|s','11-02':'Finados','11-14':'Dia Mundial do Diabetes|s','11-15':'Proclamação da República','11-20':'Consciência Negra','12-01':'Luta contra a AIDS|s','12-25':'Natal','12-31':'Réveillon'};
@@ -864,6 +867,7 @@ function onAccent(hex){const h=hex.replace('#','');if(h.length<6)return'#fff';co
 function applyTheme(){
  const t=S.settings.theme,el=document.documentElement;
  if(t==='system'){if(HOST_THEME)el.setAttribute('data-theme',HOST_THEME);else el.removeAttribute('data-theme')}else el.setAttribute('data-theme',t);
+ if(ui.clientMode)el.setAttribute('data-theme','light');
  el.style.setProperty('--accent',S.settings.accent);el.style.setProperty('--on-accent',onAccent(S.settings.accent));
  document.getElementById('themeSeg').innerHTML=themeSeg();
  document.getElementById('meName').textContent=ME().name;{const m=document.getElementById('meAv'),im=avImg(ME().id);m.textContent=initials(ME().name);m.className='av uc'+(im?' img':'');m.style.cssText=`--c:${ucolor(ME().id)}${im?`;background-image:url(${im})`:''}`}
@@ -1485,9 +1489,13 @@ function portalItem(p,tab){
 
 /* ---------- PORTAL DO CLIENTE (formato calendário + fila) ---------- */
 Object.assign(ui,{pMode:'mes',pMonth:new Date(TODAY.getFullYear(),TODAY.getMonth(),1),pWeek:addDays(TODAY,-TODAY.getDay()),pQueue:false,pPost:null,pTab:'conteudo',pFmt:'all',pPh:'all'});
-const PCL={producao:'Em produção',aprovacao:'Em aprovação',ajuste:'Ajuste',aprovado:'Aprovado',agendado:'Agendado',postado:'Publicado'};
-function pPosts(){return S.posts.filter(p=>p.format!=='anuncio'&&p.client===ui.portalClient&&(ui.pFmt==='all'||p.format===ui.pFmt)&&(ui.pPh==='all'||phase(p)===ui.pPh))}
-function pQueueList(){return S.posts.filter(p=>p.client===ui.portalClient&&phase(p)==='aprovacao').sort(sortDate)}
+const PCL={producao:'Em produção',aprovacao:'Em aprovação',ajuste:'Ajuste',aprovado:'Aprovado',agendado:'Agendado',postado:'Publicado',descartado:'Descartado'};
+const PTONE={producao:'gray',aprovacao:'amber',ajuste:'red',aprovado:'green',agendado:'pgreen',postado:'pblue',descartado:'black'};
+const pph=p=>p.discarded?'descartado':phase(p);
+const ptone=p=>PTONE[pph(p)];
+const pLegend=()=>`<div class="p-legend" aria-label="Legenda das cores">${Object.keys(PTONE).map(k=>`<span class="t-${PTONE[k]}"><i></i>${PCL[k]}</span>`).join('')}</div>`;
+function pPosts(){return S.posts.filter(p=>p.format!=='anuncio'&&p.client===ui.portalClient&&(ui.pFmt==='all'||p.format===ui.pFmt)&&(ui.pPh==='all'||pph(p)===ui.pPh))}
+function pQueueList(){return S.posts.filter(p=>p.client===ui.portalClient&&pph(p)==='aprovacao').sort(sortDate)}
 function pBanner(c){if(ui.clientMode)return'';return`<div class="banner">${ic('check')}Prévia: é assim que o cliente vê o portal.<select class="sel" data-chg="portalClient" aria-label="Cliente">${S.clients.map(x=>opt(x.id,x.name,c.id)).join('')}</select>${CLOUD?`<button class="btn sm" data-act="copyPortal" data-id="${c.id}">${ic('link')}Copiar link do cliente</button>`:''}</div>`}
 function vPortal2(){
  const c=cl(ui.portalClient);
@@ -1506,17 +1514,17 @@ function pContent(){
  const ws=iso(ui.pWeek),we=iso(addDays(ui.pWeek,6)),ym=ymOf(ui.pMonth);
  const label=wk?`${fmtD(ws)} – ${fmtD(we)}`:`${MESES[ui.pMonth.getMonth()]} ${ui.pMonth.getFullYear()}`;
  const R=ui.pMode==='feed'?P:wk?P.filter(p=>p.date>=ws&&p.date<=we):P.filter(p=>p.date&&p.date.slice(0,7)===ym);
- const n=k=>R.filter(p=>phase(p)===k).length;
- const counters=[['producao','gray'],['aprovacao','amber'],['ajuste','red'],['aprovado','green']].map(([k,t])=>`<span class="t-${t}"><b>${n(k)}</b>${PCL[k]}</span>`).join('')+`<span class="t-accent"><b>${n('agendado')+n('postado')}</b>Publicados</span>`;
+ const n=k=>R.filter(p=>pph(p)===k).length;
+ const counters=Object.keys(PTONE).filter(k=>k!=='descartado'||n(k)).map(k=>`<span class="t-${PTONE[k]}"><b>${n(k)}</b>${PCL[k]}</span>`).join('');
  const bar=`<div class="cal-head"><div class="row wrap" style="gap:10px">
   ${ui.pMode!=='feed'?`<div class="month"><button class="icon-btn" data-act="pNav" data-d="-1" aria-label="Anterior">${ic('chevL')}</button><span>${label}</span><button class="icon-btn" data-act="pNav" data-d="1" aria-label="Próximo">${ic('chevR')}</button></div><button class="btn sm" data-act="pToday">Hoje</button>`:''}
   <div class="seg">${[['semana','Semanal'],['mes','Mensal'],['feed','Feed']].map(([v,l])=>`<button data-act="pMode" data-v="${v}" class="${ui.pMode===v?'on':''}">${l}</button>`).join('')}</div>
   <select class="sel" data-chg="pFilter" data-k="pFmt" aria-label="Formato">${opt('all','Formato',ui.pFmt)}${Object.entries(FMT).map(([k,v])=>opt(k,v,ui.pFmt)).join('')}</select>
   <select class="sel" data-chg="pFilter" data-k="pPh" aria-label="Aprovação">${opt('all','Aprovação',ui.pPh)}${Object.entries(PCL).map(([k,v])=>opt(k,v,ui.pPh)).join('')}</select>
- </div><div class="counters">${counters}</div></div>`;
+ </div><div class="counters">${counters}</div>${pLegend()}</div>`;
  if(ui.pMode==='feed'){
   const F=[...P].filter(p=>p.format!=='stories').sort((a,b)=>b.date.localeCompare(a.date));
-  return bar+`<div class="feed">${F.map(p=>`<button class="tile ${['postado','agendado','aprovado'].includes(phase(p))?'':'dim'}" data-act="pOpen" data-id="${p.id}" title="${esc(p.title)}">${media(p,'sm')}${phase(p)!=='postado'?`<span class="pill t-${PH[phase(p)][1]}">${PCL[phase(p)]}</span>`:''}</button>`).join('')}</div>`;
+  return bar+`<div class="feed">${F.map(p=>`<button class="tile ${['postado','agendado','aprovado'].includes(pph(p))?'':'dim'}" data-act="pOpen" data-id="${p.id}" title="${esc(p.title)}">${media(p,'sm')}${pph(p)!=='postado'?`<span class="pill t-${ptone(p)}">${PCL[pph(p)]}</span>`:''}</button>`).join('')}</div>`;
  }
  let start,end;
  if(wk){start=new Date(ui.pWeek);end=addDays(start,6)}
@@ -1525,8 +1533,8 @@ function pContent(){
  for(let d=new Date(start);d<=end;d=addDays(d,1)){
   const di=iso(d),hol=HOL[`${pad(d.getMonth()+1)}-${pad(d.getDate())}`];
   const ps=P.filter(p=>p.date===di).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
-  const body=wk?ps.map(p=>`<button class="wk-item" data-act="pOpen" data-id="${p.id}">${media(p,'sm')}<span class="ev t-${PH[phase(p)][1]}">${esc(topic(p))}<small>${PCL[phase(p)]}</small></span></button>`).join('')
-   :ps.map(p=>`<button class="ev t-${PH[phase(p)][1]}" data-act="pOpen" data-id="${p.id}" title="${esc(p.title)}">${esc(topic(p))}<small>${FMT[p.format]}</small></button>`).join('');
+  const body=wk?ps.map(p=>`<button class="wk-item" data-act="pOpen" data-id="${p.id}">${media(p,'sm')}<span class="ev t-${ptone(p)}">${esc(topic(p))}<small>${PCL[pph(p)]}</small></span></button>`).join('')
+   :ps.map(p=>`<button class="ev t-${ptone(p)}" data-act="pOpen" data-id="${p.id}" title="${esc(p.title)}">${esc(topic(p))}<small>${FMT[p.format]}</small></button>`).join('');
   cells+=`<div class="day ${!wk&&d.getMonth()!==ui.pMonth.getMonth()?'out':''} ${di===TODAY_ISO?'today':''}"><div class="day-n"><b>${d.getDate()}</b></div>${hol?`<div class="hol ${hol.endsWith('|s')?'saude':''}">${esc(hol.replace('|s',''))}</div>`:''}${body}</div>`;
  }
  return bar+`<div class="cal-wrap"><div class="cal ${wk?'week':''}">${['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'].map(x=>`<div class="dow">${x}</div>`).join('')}${cells}</div></div>`+agendaHtml(R,'pOpen');
@@ -1540,13 +1548,13 @@ function pDrawer(q){
  </aside>`;
 }
 function pPostView(p){
- const c=cl(p.client),ph=phase(p),pend=ph==='aprovacao',isCopy=p.stage==='copy';
+ const c=cl(p.client),ph=pph(p),pend=ph==='aprovacao',isCopy=p.stage==='copy';
  const L=pend?pQueueList():S.posts.filter(x=>x.client===p.client&&x.date&&x.date.slice(0,7)===p.date.slice(0,7)).sort(sortDate);
  const i=L.findIndex(x=>x.id===p.id),prev=L[i-1],next=L[i+1];
  const left=isCopy?`<div class="media ph" style="--c:${c.color};--ar:4/5"><span class="m-fmt">Só a copy</span><span class="m-title">A arte será feita depois que você aprovar o texto.</span></div>`:media(p);
  const cmts=p.comments.map(x=>`<div class="cmt"><span class="av">${esc(initials(x.who))}</span><div class="grow"><div class="row"><b>${esc(x.who)}</b><span class="meta">${esc(x.t)}</span></div><p>${esc(x.txt)}</p></div></div>`).join('');
  return`<div class="pp">
-  <div class="pp-top"><button class="btn ghost sm" data-act="pBack">${ic('chevL')}Voltar</button><span class="pill t-${PH[ph][1]}">${p.status==='Copy aprovada'?'Copy aprovada':PCL[ph]}</span><span class="grow"></span><span class="tag row" style="gap:6px">${ic('cal')}${fmtD(p.date)}${p.time?' às '+p.time:''}</span></div>
+  <div class="pp-top"><button class="btn ghost sm" data-act="pBack">${ic('chevL')}Voltar</button><span class="pill t-${PTONE[ph]}">${p.status==='Copy aprovada'?'Copy aprovada':PCL[ph]}</span><span class="grow"></span><span class="tag row" style="gap:6px">${ic('cal')}${fmtD(p.date)}${p.time?' às '+p.time:''}</span></div>
   <div class="lbl">${isCopy?'Aprovação da copy':'Tema'}</div>
   <div class="row between wrap"><h1>${esc(p.title)}</h1>${ftag(p.format)}</div>
   <div class="pp-grid"><div>${left}</div><div style="min-width:0">
@@ -1558,7 +1566,7 @@ function pPostView(p){
   </div></div>
   <div class="pp-foot">
    <button class="btn ghost" data-act="pOpen" data-id="${prev?prev.id:''}" ${prev?'':'disabled'}>${ic('chevL')}Anterior</button>
-   <div class="row wrap">${pend&&ui.adjOpen!==p.id?`<button class="btn" data-act="adjOpen" data-id="${p.id}">${ic('back')}Pedir ajuste</button><button class="btn pri" data-act="approve" data-id="${p.id}">${ic('check')}Aprovar</button>`:`<span class="pill t-${PH[ph][1]}">${p.status==='Copy aprovada'?'Copy aprovada':PCL[ph]}</span>`}</div>
+   <div class="row wrap">${pend&&ui.adjOpen!==p.id?`<button class="btn" data-act="adjOpen" data-id="${p.id}">${ic('back')}Pedir ajuste</button><button class="btn pri" data-act="approve" data-id="${p.id}">${ic('check')}Aprovar</button>`:`<span class="pill t-${PTONE[ph]}">${p.status==='Copy aprovada'?'Copy aprovada':PCL[ph]}</span>`}</div>
    <button class="btn ghost" data-act="pOpen" data-id="${next?next.id:''}" ${next?'':'disabled'}>Próximo${ic('chevR')}</button>
   </div></div>`;
 }
@@ -1801,7 +1809,7 @@ function renderModal(){
    <button class="btn ghost" data-act="mNav" data-d="-1" ${i<=0?'disabled':''}>${ic('chevL')}Anterior</button>
    ${pill(p)}
    <span class="grow"></span>
-   <button class="btn" data-act="rowDup" data-id="${p.id}">${ic('copy')}Duplicar</button><button class="btn danger" data-act="delPost">Excluir</button>
+   <button class="btn" data-act="discard" data-id="${p.id}">${p.discarded?'Restaurar':'Descartar'}</button><button class="btn" data-act="rowDup" data-id="${p.id}">${ic('copy')}Duplicar</button><button class="btn danger" data-act="delPost">Excluir</button>
    ${ui.acts.map((a,j)=>`<button class="btn act-main ${a[1]?(a[2]==='sec'?'':'pri'):''}" data-act="doAct" data-i="${j}" ${a[1]?'':'disabled'}>${esc(a[0])}${a[1]&&a[2]!=='sec'?ic('arrowR'):''}</button>`).join('')}
    <button class="btn ghost" data-act="mNav" data-d="1" ${i<0||i>=ids.length-1?'disabled':''}>Próximo${ic('chevR')}</button>
   </div>
@@ -1912,6 +1920,7 @@ const A={
  todoShowDone:()=>{ui.todoDone=!ui.todoDone;render()},
  todoClear:()=>{const me=meId();const today=TODAY_ISO;S.todos=S.todos.filter(t=>!(t.owner===me&&t.done&&t.doneAt&&new Date(t.doneAt).toLocaleDateString('en-CA',{timeZone:TZ})!==today));save();render()},
  stop:()=>{},
+ discard:el=>{const p=S.posts.find(x=>x.id===el.dataset.id);p.discarded=!p.discarded;hist(p,p.discarded?'Descartou o conteúdo':'Restaurou o conteúdo');save();renderModal();render();toast(p.discarded?'Conteúdo descartado.':'Conteúdo restaurado.')},
  newAd:()=>{ui.newFmt='anuncio';newPost();ui.newFmt=null},
  search:()=>{document.body.classList.remove('menu');searchSheet()},
  srchOpen:el=>{const p=S.posts.find(x=>x.id===el.dataset.id);if(!p)return;ui.mtab='historico';openPost(p.id)},
