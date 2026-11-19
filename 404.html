@@ -1078,6 +1078,7 @@ window.vidFallback=(el,id)=>{if(!el||!el.isConnected)return;const f=document.cre
 const IS_IOS=/iPhone|iPad|iPod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
 const driveDirect=id=>`https://drive.usercontent.google.com/download?id=${id}&export=download&confirm=t`;
 const vidUrl=id=>`https://video.stagemed.com.br/v/${id}`;
+const WARM=new Set();window.warmVid=(id,delay=0)=>{if(!id||WARM.has(id))return;WARM.add(id);setTimeout(()=>{fetch(vidUrl(id),{headers:{Range:'bytes=0-1'}}).catch(()=>WARM.delete(id))},delay)};
 const slugify=t=>String(t||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40);
 const newTok=()=>{const a=new Uint8Array(18);crypto.getRandomValues(a);return[...a].map(b=>b.toString(36).padStart(2,'0')).join('').slice(0,28)};
 const portalUrl=c=>c.slug?`${location.origin}/conteudos/${c.slug}`:`${location.origin}/?portal=${c.token}`;
@@ -1247,7 +1248,7 @@ async function driveUpload(p,f){
   let id=done.id;
   if(!id)throw new Error('Envio terminou sem resposta do Drive');
   await gFetch(`https://www.googleapis.com/drive/v3/files/${id}/permissions`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({role:'reader',type:'anyone'})});
-  delete UP[p.id];p.clips=clipsOf(p);p.clips.push({id,name:f.name,size:f.size,at:new Date().toISOString(),by:window.myUid||''});if(!(p.driveUrl&&driveId(p.driveUrl))){p.driveUrl=`https://drive.google.com/file/d/${id}/view`;p.driveName=f.name;p.driveSize=f.size}ui.bigVideo=null;
+  warmVid(id,20000);delete UP[p.id];p.clips=clipsOf(p);p.clips.push({id,name:f.name,size:f.size,at:new Date().toISOString(),by:window.myUid||''});if(!(p.driveUrl&&driveId(p.driveUrl))){p.driveUrl=`https://drive.google.com/file/d/${id}/view`;p.driveName=f.name;p.driveSize=f.size}ui.bigVideo=null;
   hist(p,`Enviou o vídeo ${f.name} para o Google Drive`);save();toast('Vídeo no Drive. Pode levar alguns minutos para tocar.');
  }catch(e){delete UP[p.id];if(e.message!=='cancelado')toast(e.message||'Não foi possível enviar para o Drive.')}
  if(ui.modal===p.id)renderModal();render();
@@ -1298,7 +1299,7 @@ function media(p,cls=''){
   return`<div class="media car" style="--ar:${AR[p.format]}"><div class="car-t">${sl.map(x=>`<img src="${esc(x.url)}" alt="" loading="lazy">`).join('')}</div><button class="car-b l" data-act="carNav" data-d="-1" aria-label="Imagem anterior">${ic('chevL')}</button><button class="car-b r" data-act="carNav" data-d="1" aria-label="Próxima imagem">${ic('chevR')}</button><span class="car-n">1/${sl.length}</span></div>`}
  if(p.video&&p.video.url)return`<div class="media ${cls}" style="--ar:${AR[p.format]}">${cls?`<video src="${esc(p.video.url)}#t=0.5" muted playsinline preload="metadata"></video>`:`<video src="${esc(p.video.url)}" controls playsinline preload="metadata"></video>`}<span class="m-fmt">${FMT[p.format]}</span></div>`;
  if(p.mediaUrl)return`<div class="media ${cls}" style="--ar:${AR[p.format]}">${p.mediaType&&p.mediaType.startsWith('video')?`<video src="${p.mediaUrl}" controls playsinline></video>`:`<img src="${p.mediaUrl}" alt="">`}<span class="m-fmt">${FMT[p.format]}</span></div>`;
- if(p.driveUrl&&driveId(p.driveUrl)){const id=driveId(p.driveUrl);return`<div class="media dposter ${cls}" style="--ar:${AR[p.format]}"><img src="https://drive.google.com/thumbnail?id=${id}&sz=w900" alt="" loading="lazy" onerror="this.remove()">${cls?'':`<video src="${vidUrl(id)}" poster="https://drive.google.com/thumbnail?id=${id}&sz=w900" controls playsinline preload="none" onerror="vidFallback(this,'${id}')"></video>`}<span class="m-fmt">${FMT[p.format]}</span></div>`}
+ if(p.driveUrl&&driveId(p.driveUrl)){const id=driveId(p.driveUrl);warmVid(id,1500);return`<div class="media dposter ${cls}" style="--ar:${AR[p.format]}"><img src="https://drive.google.com/thumbnail?id=${id}&sz=w900" alt="" loading="lazy" onerror="this.remove()">${cls?'':`<video src="${vidUrl(id)}" poster="https://drive.google.com/thumbnail?id=${id}&sz=w900" controls playsinline preload="none" onerror="vidFallback(this,'${id}')"></video>`}<span class="m-fmt">${FMT[p.format]}</span></div>`}
  return`<div class="media ph ${cls}" style="--c:${c.color};--ar:${AR[p.format]}"><span class="m-fmt">${FMT[p.format]}</span><span class="m-title">${esc(topic(p))}</span><span class="m-client">${esc(c.name)}</span></div>`;
 }
 function sortDate(a,b){return(a.date||'9999').localeCompare(b.date||'9999')}
