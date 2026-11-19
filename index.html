@@ -486,6 +486,10 @@ select.csel option{background:var(--surface);color:var(--fg);font-weight:500}
 .syncdot{position:fixed;right:14px;bottom:14px;z-index:90;font-size:11.5px;color:var(--faint);background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:4px 10px;pointer-events:none}
 [hidden]{display:none!important}
 .media.dposter video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000;z-index:1}
+.media{isolation:isolate}
+.pp-foot{z-index:5}
+.media.dposter:has(.dframe){aspect-ratio:4/5!important;width:100%!important;max-width:420px!important;margin-left:auto;margin-right:auto}
+.media .dframe{position:absolute;inset:0;width:100%;height:100%;border:0;z-index:1;background:#000}
 .media.dposter{background:linear-gradient(160deg,#2a2a2e,#111114)}.media.dposter img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .vplay{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:64px;height:64px;border-radius:50%;border:0;background:rgba(0,0,0,.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:grid;place-items:center;cursor:pointer}
 .vplay svg{width:28px;height:28px;fill:#fff;margin-left:4px}.vplay:active{transform:translate(-50%,-50%) scale(.95)}
@@ -1071,6 +1075,7 @@ function go(v){if(location.hash.slice(1)===v)render();else location.hash=v}
 
 /* ---------- peças comuns ---------- */
 window.vidFallback=(el,id)=>{if(!el||!el.isConnected)return;const f=document.createElement('iframe');f.src=`https://drive.google.com/file/d/${id}/preview`;f.allow='autoplay; fullscreen';f.setAttribute('allowfullscreen','');f.style.cssText='position:absolute;inset:0;width:100%;height:100%;border:0;z-index:1';el.replaceWith(f)};
+const IS_IOS=/iPhone|iPad|iPod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
 const driveDirect=id=>`https://drive.usercontent.google.com/download?id=${id}&export=download&confirm=t`;
 const slugify=t=>String(t||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40);
 const newTok=()=>{const a=new Uint8Array(18);crypto.getRandomValues(a);return[...a].map(b=>b.toString(36).padStart(2,'0')).join('').slice(0,28)};
@@ -1292,7 +1297,7 @@ function media(p,cls=''){
   return`<div class="media car" style="--ar:${AR[p.format]}"><div class="car-t">${sl.map(x=>`<img src="${esc(x.url)}" alt="" loading="lazy">`).join('')}</div><button class="car-b l" data-act="carNav" data-d="-1" aria-label="Imagem anterior">${ic('chevL')}</button><button class="car-b r" data-act="carNav" data-d="1" aria-label="Próxima imagem">${ic('chevR')}</button><span class="car-n">1/${sl.length}</span></div>`}
  if(p.video&&p.video.url)return`<div class="media ${cls}" style="--ar:${AR[p.format]}">${cls?`<video src="${esc(p.video.url)}#t=0.5" muted playsinline preload="metadata"></video>`:`<video src="${esc(p.video.url)}" controls playsinline preload="metadata"></video>`}<span class="m-fmt">${FMT[p.format]}</span></div>`;
  if(p.mediaUrl)return`<div class="media ${cls}" style="--ar:${AR[p.format]}">${p.mediaType&&p.mediaType.startsWith('video')?`<video src="${p.mediaUrl}" controls playsinline></video>`:`<img src="${p.mediaUrl}" alt="">`}<span class="m-fmt">${FMT[p.format]}</span></div>`;
- if(p.driveUrl&&driveId(p.driveUrl)){const id=driveId(p.driveUrl);return`<div class="media dposter ${cls}" style="--ar:${AR[p.format]}"><img src="https://drive.google.com/thumbnail?id=${id}&sz=w900" alt="" loading="lazy" onerror="this.remove()">${cls?'':`<video src="${driveDirect(id)}" poster="https://drive.google.com/thumbnail?id=${id}&sz=w900" controls playsinline preload="none" onerror="vidFallback(this,'${id}')"></video>`}<span class="m-fmt">${FMT[p.format]}</span></div>`}
+ if(p.driveUrl&&driveId(p.driveUrl)){const id=driveId(p.driveUrl);return`<div class="media dposter ${cls}" style="--ar:${AR[p.format]}"><img src="https://drive.google.com/thumbnail?id=${id}&sz=w900" alt="" loading="lazy" onerror="this.remove()">${cls?'':IS_IOS?`<iframe src="https://drive.google.com/file/d/${id}/preview" allow="autoplay; fullscreen" allowfullscreen title="Vídeo" class="dframe"></iframe>`:`<video src="${driveDirect(id)}" poster="https://drive.google.com/thumbnail?id=${id}&sz=w900" controls playsinline preload="none" onerror="vidFallback(this,'${id}')"></video>`}<span class="m-fmt">${FMT[p.format]}</span></div>`}
  return`<div class="media ph ${cls}" style="--c:${c.color};--ar:${AR[p.format]}"><span class="m-fmt">${FMT[p.format]}</span><span class="m-title">${esc(topic(p))}</span><span class="m-client">${esc(c.name)}</span></div>`;
 }
 function sortDate(a,b){return(a.date||'9999').localeCompare(b.date||'9999')}
