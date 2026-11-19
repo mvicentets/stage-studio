@@ -485,6 +485,10 @@ select.csel option{background:var(--surface);color:var(--fg);font-weight:500}
 .auth-err{color:var(--red);font-size:13px}
 .syncdot{position:fixed;right:14px;bottom:14px;z-index:90;font-size:11.5px;color:var(--faint);background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:4px 10px;pointer-events:none}
 [hidden]{display:none!important}
+.rsel{width:16px;height:16px;accent-color:var(--accent);cursor:pointer;flex:none;margin:0}
+.bulk{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:70;display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center;max-width:calc(100vw - 24px);padding:10px 12px;border-radius:16px;background:var(--surface);border:1px solid var(--line-2);box-shadow:0 14px 40px rgba(0,0,0,.28)}
+.bulk b{font-size:13px;padding:0 4px}
+body:has(.bulk) .fab{display:none}
 .notifs{position:fixed;top:calc(14px + env(safe-area-inset-top,0px));right:14px;z-index:150;display:flex;flex-direction:column;gap:8px;width:min(340px,calc(100vw - 28px));pointer-events:none}
 .notif{pointer-events:auto;display:flex;gap:10px;align-items:flex-start;padding:12px 10px 12px 12px;border-radius:16px;background:color-mix(in srgb,var(--surface) 88%,transparent);backdrop-filter:blur(18px) saturate(1.4);-webkit-backdrop-filter:blur(18px) saturate(1.4);border:1px solid var(--line);box-shadow:0 12px 32px rgba(0,0,0,.22);cursor:pointer;opacity:0;transform:translateY(-10px) scale(.98);transition:opacity .25s,transform .25s}
 .notif.in{opacity:1;transform:none}.notif .av{width:32px;height:32px;font-size:12px;flex:none}
@@ -990,6 +994,7 @@ const FAB={senhas:['credNew','Nova senha'],tarefas:['todoFocus','Nova tarefa pes
 function fabSync(){const v=ui.view;const cfg=v in FAB?FAB[v]:(allowedStages().length?['newPost','Nova tarefa']:null);
  [document.getElementById('fab'),document.getElementById('mtPlus')].forEach(b=>{if(!b)return;b.hidden=!!ui.clientMode||!cfg;if(cfg){b.dataset.act=cfg[0];b.title=cfg[1];b.setAttribute('aria-label',cfg[1]);const sp=b.querySelector('span');if(sp)sp.textContent=cfg[1]}})}
 function render(){try{fabSync()}catch(e){}
+setTimeout(()=>{try{bulkBar()}catch(e){}},0);
 if(!can(ui.view)){ui.view=firstAllowed();try{history.replaceState(null,'','#'+ui.view)}catch(e){}}renderNav();document.getElementById('mtTitle').textContent=curStage()?ST[curStage()].name:LABELS[ui.view];document.getElementById('view').innerHTML=curStage()?vEtapa(curStage()):VIEWS[ui.view]();}
 function agendaHtml(L,act){
  const by={};[...L].filter(p=>p.date).sort(sortDate).forEach(p=>{(by[p.date]=by[p.date]||[]).push(p)});
@@ -1262,6 +1267,20 @@ function vEtapa(sid){
  ${stageToolbar([['status','Status'],['cliente','Cliente']])}<div id="boardArea">${areaHtml()}</div>`;
 }
 function navList(){const sid=curStage();const ok=allowedStages();let L=filtered().filter(p=>ok.includes(p.stage));if(sid)L=L.filter(p=>p.stage===sid);return L}
+const SEL=new Set();
+function bulkBar(){
+ let b=document.getElementById('bulk');
+ const ids=[...SEL].filter(id=>S.posts.some(p=>p.id===id));SEL.clear();ids.forEach(i=>SEL.add(i));
+ if(!SEL.size||!(ui.view==='producao'||curStage())){if(b)b.remove();return}
+ if(!b){b=document.createElement('div');b.id='bulk';b.className='bulk';document.body.appendChild(b)}
+ b.innerHTML=`<b>${SEL.size} selecionada${SEL.size>1?'s':''}</b>
+  <select class="isel plain" data-chg="bulkStatus" aria-label="Mudar status"><option value="">Status…</option>${STAGES.filter(x=>allowedStages().includes(x.id)).map(st=>`<optgroup label="${esc(st.name)}">${st.statuses.map(x=>`<option value="${st.id}|${esc(x)}">${esc(x)}</option>`).join('')}</optgroup>`).join('')}</select>
+  <label class="dpick" data-act="stop">${ic('cal')}<span>Data…</span><input type="date" data-chg="bulkDate" aria-label="Mudar data"></label>
+  <select class="isel plain" data-chg="bulkOwner" aria-label="Mudar responsável"><option value="">Responsável…</option>${S.team.map(u=>`<option value="${u.id}">${esc(u.name)}</option>`).join('')}</select>
+  <button class="btn sm danger" data-act="bulkDel">${ic('trash')}Excluir</button>
+  <button class="icon-btn sm" data-act="bulkClear" aria-label="Limpar seleção">${ic('x')}</button>`;
+}
+function bulkApply(fn,msg){const L=S.posts.filter(p=>SEL.has(p.id));L.forEach(fn);save();toast(msg.replace('{n}',L.length));render()}
 function areaHtml(){
  const sid=curStage();const L=navList();
  if(ui.sv==='quadro'){
@@ -1275,9 +1294,9 @@ function areaHtml(){
  else groups=STAGES.map(s=>({head:`<span class="sdot t-${STAGE_DOT[s.id]}"></span><a href="#etapa-${s.id}">${s.name}</a>`,items:L.filter(p=>p.stage===s.id)}));
  groups=groups.filter(x=>x.items.length);
  const showClient=g!=='cliente',showStage=!sid&&g!=='etapa';
- return`<div class="groups">${groups.map(gr=>`<section class="grp"><div class="grp-h">${gr.head}<span class="faint">${gr.items.length}</span></div>
+ return`<div class="groups">${groups.map(gr=>`<section class="grp"><div class="grp-h"><input type="checkbox" class="rsel" data-chg="grpSel" data-ids="${gr.items.map(p=>p.id).join(',')}" ${gr.items.every(p=>SEL.has(p.id))?'checked':''} aria-label="Selecionar todas do grupo">${gr.head}<span class="faint">${gr.items.length}</span></div>
   <div class="tbl-wrap"><table class="tbl lite"><thead><tr><th>Nome</th>${showClient?'<th>Cliente</th>':''}${showStage?'<th>Etapa</th>':''}<th>Status</th><th>Responsável</th><th>Publicação</th><th class="tdel"></th></tr></thead><tbody>
-  ${gr.items.map(p=>`<tr class="click" style="--c:${cl(p.client).color}" data-act="open" data-id="${p.id}"><td class="name" style="--c:${cl(p.client).color}"><div class="row"><span class="sicon t-${tone(p)}"></span><span class="ell">${esc(p.title)}</span>${ftag(p.format)}${camptag(p)}</div></td>${showClient?`<td>${ctag(p.client)}</td>`:''}${showStage?`<td>${rowStage(p)}</td>`:''}<td>${rowStatus(p)}</td><td class="own"><div class="row">${av(p.owner)}${rowOwner(p)}</div></td><td>${rowDate(p)}</td><td class="tdel"><div class="row" style="gap:2px;justify-content:flex-end">${rowDup(p)}${rowDel(p)}</div></td></tr>`).join('')}
+  ${gr.items.map(p=>`<tr class="click" style="--c:${cl(p.client).color}" data-act="open" data-id="${p.id}"><td class="name" style="--c:${cl(p.client).color}"><div class="row"><input type="checkbox" class="rsel" data-act="stop" data-chg="rowSel" data-id="${p.id}" ${SEL.has(p.id)?'checked':''} aria-label="Selecionar"><span class="sicon t-${tone(p)}"></span><span class="ell">${esc(p.title)}</span>${ftag(p.format)}${camptag(p)}</div></td>${showClient?`<td>${ctag(p.client)}</td>`:''}${showStage?`<td>${rowStage(p)}</td>`:''}<td>${rowStatus(p)}</td><td class="own"><div class="row">${av(p.owner)}${rowOwner(p)}</div></td><td>${rowDate(p)}</td><td class="tdel"><div class="row" style="gap:2px;justify-content:flex-end">${rowDup(p)}${rowDel(p)}</div></td></tr>`).join('')}
   </tbody></table></div></section>`).join('')}</div>`;
 }
 function board(cols){
@@ -1782,6 +1801,9 @@ const A={
  todoShowDone:()=>{ui.todoDone=!ui.todoDone;render()},
  todoClear:()=>{const me=meId();const today=TODAY_ISO;S.todos=S.todos.filter(t=>!(t.owner===me&&t.done&&t.doneAt&&new Date(t.doneAt).toLocaleDateString('en-CA',{timeZone:TZ})!==today));save();render()},
  stop:()=>{},
+ bulkClear:()=>{SEL.clear();render()},
+ bulkDel:el=>{if(!el.classList.contains('armed')){el.classList.add('armed');el.lastChild.textContent='Confirmar exclusão';setTimeout(()=>{if(el.isConnected){el.classList.remove('armed');el.lastChild.textContent='Excluir'}},3000);return}
+  const L=S.posts.filter(p=>SEL.has(p.id));S.posts=S.posts.filter(p=>!SEL.has(p.id));L.forEach(p=>[...(p.slides||[]),...(p.video?[p.video]:[])].forEach(x=>{if(x.path&&sb&&!pathUsed(x.path))sb.storage.from('media').remove([x.path]).catch(()=>{})}));SEL.clear();save();toast(`${L.length} tarefa${L.length>1?'s':''} excluída${L.length>1?'s':''}.`);render()},
  rowDup:el=>{const p=S.posts.find(x=>x.id===el.dataset.id);if(!p)return;const q=JSON.parse(JSON.stringify(p));
   ['mediaUrl','mediaType','mediaName','mediaSize','postedAt','link'].forEach(k=>delete q[k]);
   Object.assign(q,{id:uid('p'),title:p.title+' (cópia)',status:ST[p.stage].statuses[0],archived:false,comments:[],history:[{t:nowStamp(),who:(CLOUD?REAL():ME()).name,txt:`Duplicou de “${p.title}”`}],m:{},rank:0});
@@ -1903,6 +1925,11 @@ const C={
   const keep={n:val('kf-name'),a:val('kf-area'),fe:val('kf-fee'),co:val('kf-color'),cp:val('kf-copy'),st:val('kf-status'),pr:val('kf-prod')};clientForm(ui.kfId,true);
   const set=(i,v)=>{const e=document.getElementById(i);if(e)e.value=v};set('kf-name',keep.n);set('kf-area',keep.a);set('kf-fee',keep.fe);set('kf-color',keep.co);set('kf-copy',keep.cp);set('kf-status',keep.st);set('kf-prod',keep.pr)};img.src=URL.createObjectURL(f)},
  vaultQ:el=>{VAULT.q=el.value;render()},
+ rowSel:el=>{if(el.checked)SEL.add(el.dataset.id);else SEL.delete(el.dataset.id);render()},
+ grpSel:el=>{const ids=el.dataset.ids.split(',').filter(Boolean);ids.forEach(i=>el.checked?SEL.add(i):SEL.delete(i));render()},
+ bulkStatus:el=>{if(!el.value)return;const[st,status]=el.value.split('|');bulkApply(p=>{if(p.stage!==st){p.stage=st;p.status=status;hist(p,`Moveu para ${ST[st].name} · ${status}`)}else setStatus(p,status);autoFlow(p)},`Status alterado em {n} tarefas.`)},
+ bulkDate:el=>{if(!el.value)return;const d=el.value;bulkApply(p=>{p.date=d;hist(p,`Mudou a data para ${fmtD(d)}`)},`Data alterada em {n} tarefas.`)},
+ bulkOwner:el=>{if(!el.value)return;const u=el.value;bulkApply(p=>{p.owner=u;hist(p,`Passou para ${user(u).name}`)},`Responsável alterado em {n} tarefas.`)},
  bkSel:el=>{const p=S.posts.find(x=>x.id===el.dataset.id);p[el.dataset.k]=el.value;save()},
  bkF:el=>{ui.bk[el.dataset.k]=el.value;render()},
  drive:el=>{const p=S.posts.find(x=>x.id===ui.modal);const v=el.value.trim();if(v&&!driveId(v)){toast('Link do Drive não reconhecido.');return}p.driveUrl=v;if(v)hist(p,'Adicionou o link do Google Drive');save();renderModal();render()}
