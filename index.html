@@ -485,6 +485,20 @@ select.csel option{background:var(--surface);color:var(--fg);font-weight:500}
 .auth-err{color:var(--red);font-size:13px}
 .syncdot{position:fixed;right:14px;bottom:14px;z-index:90;font-size:11.5px;color:var(--faint);background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:4px 10px;pointer-events:none}
 [hidden]{display:none!important}
+.notifs{position:fixed;top:calc(14px + env(safe-area-inset-top,0px));right:14px;z-index:150;display:flex;flex-direction:column;gap:8px;width:min(340px,calc(100vw - 28px));pointer-events:none}
+.notif{pointer-events:auto;display:flex;gap:10px;align-items:flex-start;padding:12px 10px 12px 12px;border-radius:16px;background:color-mix(in srgb,var(--surface) 88%,transparent);backdrop-filter:blur(18px) saturate(1.4);-webkit-backdrop-filter:blur(18px) saturate(1.4);border:1px solid var(--line);box-shadow:0 12px 32px rgba(0,0,0,.22);cursor:pointer;opacity:0;transform:translateY(-10px) scale(.98);transition:opacity .25s,transform .25s}
+.notif.in{opacity:1;transform:none}.notif .av{width:32px;height:32px;font-size:12px;flex:none}
+.notif-b{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.notif-t{font-size:13px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.notif-x{flex:none;opacity:.6}
+@media (max-width:860px){.notifs{left:10px;right:10px;width:auto}}
+.vault-lock{max-width:380px;margin:30px auto;padding:26px 22px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center}
+.vault-ic{width:54px;height:54px;border-radius:16px;background:var(--accent-soft);color:var(--accent-ink);display:grid;place-items:center}.vault-ic svg{width:26px;height:26px}
+.cred-list{padding:2px 12px}
+.cred{display:grid;grid-template-columns:minmax(120px,1fr) minmax(0,1.3fr) minmax(0,1.3fr) auto;gap:10px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}.cred:last-child{border-bottom:0}
+.cred-s{font-weight:650}.cred-f{display:flex;flex-direction:column;gap:2px;min-width:0}.cred-f code{font-size:13px;font-family:ui-monospace,Menlo,monospace}
+.cred-a{display:flex;gap:2px;justify-content:flex-end}.cred-n{grid-column:1/-1}
+.icon-btn.sm{width:28px;height:28px}.icon-btn.sm svg{width:15px;height:15px}
+@media (max-width:760px){.cred{grid-template-columns:minmax(0,1fr) auto}.cred-s{grid-column:1}.cred-a{grid-column:2;grid-row:1}.cred-f{grid-column:1/-1}}
 .gdz{cursor:default}
 .cav.img{background-size:cover;background-position:center;color:transparent}
 .kf-photo{display:flex;align-items:center;gap:14px;margin-bottom:16px}.kf-photo .cav{width:64px;height:64px;font-size:20px;border-radius:16px}.kf-photo input{display:none}
@@ -636,6 +650,7 @@ button.me:hover{background:var(--hover)}
 </div>
 <div class="modal" id="modal" hidden></div>
 <div class="toast" id="toast" hidden></div>
+<div class="notifs" id="notifs" aria-live="polite"></div>
 <button class="fab" id="fab" data-act="newPost" aria-label="Nova tarefa" title="Nova tarefa" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Nova tarefa</span></button>
 <div class="auth" id="auth" hidden></div>
 
@@ -661,6 +676,7 @@ const ymOf=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}`;
 const nowStamp=()=>{const n=msNow();return`${pad(n.d)}/${pad(n.m)} ${pad(n.h)}:${pad(n.mi)}`};
 
 const IC={
+ lock:'M6 11h12v9H6zM8 11V8a4 4 0 0 1 8 0v3', eye:'M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6', bell:'M6 16V11a6 6 0 0 1 12 0v5l2 2H4zM10 20h4',
  copy:'M9 9h11v11H9zM5 15H4V4h11v1',
  chevD:'M6 9l6 6 6-6',
  todo:'M9 6h11M9 12h11M9 18h11M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2',
@@ -798,7 +814,7 @@ const cl=id=>S.clients.find(c=>c.id===id)||{name:'—',short:'—',color:'#888',
 const user=id=>S.team.find(u=>u.id===id)||{name:'—'};
 const initials=s=>s.replace(/^(Dra?\.|Clínica)\s*/,'').split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase();
 const ME=()=>S.team.find(u=>u.id===ui.as)||S.team[0];
-const PERMS=[['inicio','Início'],['calendario','Calendário'],['portal','Portal do cliente'],['campanhas','Campanhas'],['financeiro','Financeiro'],['clientes','Clientes'],['banco','Banco de posts']];
+const PERMS=[['inicio','Início'],['calendario','Calendário'],['portal','Portal do cliente'],['campanhas','Campanhas'],['financeiro','Financeiro'],['clientes','Clientes'],['banco','Banco de posts'],['senhas','Cofre de senhas']];
 const isAdmin=u=>u.role==='admin';
 function allowedStages(){const u=ME();return isAdmin(u)?STAGES.map(s=>s.id):((u.perms&&u.perms.stages)||[])}
 function can(view){if(view==='tarefas')return true;const u=ME();if(isAdmin(u))return true;if(view==='equipe'||view==='automacoes')return false;if(view==='producao')return allowedStages().length>0;if(view.startsWith('etapa-'))return allowedStages().includes(view.slice(6));return!!(u.perms&&u.perms[view])}
@@ -827,7 +843,7 @@ const themeSeg=()=>[['system','monitor','Auto'],['light','sun','Claro'],['dark',
 
 /* ---------- navegação ---------- */
 const NAV_TOP=[['inicio','home','Início'],['tarefas','todo','Minhas tarefas'],['calendario','cal','Calendário'],['portal','check','Portal do cliente']];
-const NAV_GES=[['automacoes','bolt','Automações'],['campanhas','mega','Campanhas'],['financeiro','wallet','Financeiro'],['clientes','users','Clientes'],['equipe','sliders','Equipe e aparência']];
+const NAV_GES=[['senhas','lock','Cofre de senhas'],['automacoes','bolt','Automações'],['campanhas','mega','Campanhas'],['financeiro','wallet','Financeiro'],['clientes','users','Clientes'],['equipe','sliders','Equipe e aparência']];
 const STAGE_DOT={ideia:'gray',copy:'blue',criacao:'amber',design:'accent',edicao:'red',aprov:'amber',pub:'green'};
 const curStage=()=>ui.view.startsWith('etapa-')?ui.view.slice(6):null;
 function renderNav(){
@@ -872,7 +888,7 @@ function profileSheet(){const u=ME(),im=avImg(u.id);const m=document.getElementB
  m.innerHTML=`<div class="backdrop" data-act="closeModal"></div><div class="sheet narrow" role="dialog" aria-modal="true" aria-label="Meu perfil"><div class="sheet-h"><b class="grow">Meu perfil</b><button class="icon-btn" data-act="closeModal" aria-label="Fechar">${ic('x')}</button></div>
  <div class="prof">${av(u.id)}<div><b>${esc(u.name)}</b><div class="meta">${esc(u.email||'')}</div></div>
  <div class="row wrap" style="justify-content:center"><label class="btn pri">${ic('upload')}${im?'Trocar foto':'Adicionar foto'}<input type="file" accept="image/*" data-chg="avatar"></label>${im?'<button class="btn ghost" data-act="avatarDel">Remover foto</button>':''}</div>
- <div class="meta">A foto aparece nas tarefas, nos comentários e na equipe.</div>${GDRIVE?`<div class="row wrap" style="justify-content:center;margin-top:8px">${ui.gState==='connected'||gOk()?`<span class="meta">✓ Google Drive conectado</span><button class="btn sm ghost" data-act="gDisconnect">Desconectar</button>`:`<button class="btn sm" data-act="gConnect">Conectar Google Drive</button>`}</div>`:''}</div></div>`;
+ <div class="meta">A foto aparece nas tarefas, nos comentários e na equipe.</div>${'Notification' in window?`<div class="row wrap" style="justify-content:center;margin-top:8px">${ui.sysNotif&&Notification.permission==='granted'?`<span class="meta">✓ Avisos do sistema ligados</span><button class="btn sm ghost" data-act="sysNotifOff">Desligar</button>`:`<button class="btn sm" data-act="sysNotifOn">${ic('bell')}Avisar mesmo com o app em segundo plano</button>`}</div>`:''}${GDRIVE?`<div class="row wrap" style="justify-content:center;margin-top:8px">${ui.gState==='connected'||gOk()?`<span class="meta">✓ Google Drive conectado</span><button class="btn sm ghost" data-act="gDisconnect">Desconectar</button>`:`<button class="btn sm" data-act="gConnect">Conectar Google Drive</button>`}</div>`:''}</div></div>`;
  m.hidden=false;ui.modal='__profile'}
 function vAuto(){
  const R=S.rules||[];
@@ -907,17 +923,70 @@ function todoSheet(id){const t=S.todos.find(x=>x.id===id);if(!t)return;const own
  m.hidden=false;document.body.classList.add('modal-open')}
 function vTarefas(){
  const L=myTodos(),open=L.filter(t=>!t.done),done=L.filter(t=>t.done).sort((a,b)=>(b.doneAt||'').localeCompare(a.doneAt||''));
+ const msDay=iso=>iso?new Date(iso).toLocaleDateString('en-CA',{timeZone:TZ}):'';
+ const doneToday=done.filter(t=>!t.doneAt||msDay(t.doneAt)===TODAY_ISO),archived=done.filter(t=>t.doneAt&&msDay(t.doneAt)!==TODAY_ISO);
  const grp=[['Atrasadas',open.filter(t=>t.due&&t.due<TODAY_ISO),'red'],['Hoje',open.filter(t=>t.due===TODAY_ISO),'accent'],['Próximas',open.filter(t=>t.due&&t.due>TODAY_ISO),'gray'],['Sem data',open.filter(t=>!t.due),'gray']];
  const item=t=>`<div class="todo ${t.done?'done':''}"><button class="tchk ${t.done?'on':''}" data-act="todoDone" data-id="${t.id}" aria-label="${t.done?'Desmarcar':'Concluir'}">${t.done?ic('check'):''}</button>
   <button class="todo-t" data-act="todoOpen" data-id="${t.id}"><span class="ell">${esc(t.title)}</span>${t.notes?`<span class="meta todo-n ell">${esc(t.notes.split('\n')[0])}</span>`:''}</button>${urgT(t)?`<span class="pill t-${urgT(t)[2]}">${urgT(t)[1]}</span>`:''}${(t.shared||[]).length||t.owner!==meId()?`<span class="todo-people">${[t.owner,...(t.shared||[])].filter(x=>x!==meId()).slice(0,3).map(av).join('')}</span>`:''}${dpick(t.due,'todoDue',t.id,!t.done&&t.due&&t.due<TODAY_ISO,'Prazo')}${t.owner===meId()?`<button class="icon-btn del-btn" data-act="todoDel" data-id="${t.id}" aria-label="Excluir">${ic('trash')}</button>`:''}</div>`;
  return`<div class="page-head"><div><h1>Minhas tarefas</h1><div class="sub">Suas tarefas internas e as que marcaram você. Não entram no fluxo de conteúdo nem ficam ligadas a cliente.</div></div></div>
  <form class="todo-add box" data-todo-form><input class="in" id="todoNew" placeholder="Adicionar tarefa… (ex.: responder orçamento)" autocomplete="off"><input class="in" type="date" id="todoNewDue" aria-label="Prazo"><button class="btn pri">${ic('plus')}Adicionar</button></form>
  ${grp.filter(g=>g[1].length).map(([t,l,tone])=>`<section class="todo-g"><div class="grp-h"><span class="pill up t-${tone}">${t}</span><span class="faint">${l.length}</span></div><div class="box todo-list">${l.sort((a,b)=>(URG.findIndex(u=>u[0]===b.urg))-(URG.findIndex(u=>u[0]===a.urg))||(a.due||'9').localeCompare(b.due||'9')).map(item).join('')}</div></section>`).join('')||(done.length?'':'<div class="empty">Nada por aqui. Escreva acima a primeira tarefa.</div>')}
- ${done.length?`<section class="todo-g"><button class="grp-h linkish" data-act="todoShowDone">${ic(ui.todoDone?'chevD':'chevR')}<span class="pill up t-green">Concluídas</span><span class="faint">${done.length}</span></button>${ui.todoDone?`<div class="box todo-list">${done.map(item).join('')}</div><button class="btn ghost sm" data-act="todoClear" style="margin-top:8px">Apagar concluídas</button>`:''}</section>`:''}`;
+ ${doneToday.length?`<section class="todo-g"><div class="grp-h"><span class="pill up t-green">Concluídas hoje</span><span class="faint">${doneToday.length}</span></div><div class="box todo-list">${doneToday.map(item).join('')}</div></section>`:''}
+ ${archived.length?`<section class="todo-g"><button class="grp-h linkish" data-act="todoShowDone">${ic(ui.todoDone?'chevD':'chevR')}<span class="pill up t-gray">Arquivadas</span><span class="faint">${archived.length}</span></button>${ui.todoDone?`<div class="box todo-list">${archived.map(item).join('')}</div><button class="btn ghost sm" data-act="todoClear" style="margin-top:8px">Apagar arquivadas</button>`:''}</section>`:''}`;
 }
-const VIEWS={tarefas:vTarefas,automacoes:vAuto,banco:vBanco,inicio:vInicio,producao:vTodas,calendario:vCalendario,portal:vPortal2,campanhas:vCampanhas,financeiro:vFinanceiro,clientes:vClientes,equipe:vEquipe};
-const LABELS={tarefas:'Minhas tarefas',banco:'Banco de posts',automacoes:'Automações',inicio:'Início',producao:'Todas as tarefas',calendario:'Calendário',portal:'Portal do cliente',campanhas:'Campanhas',financeiro:'Financeiro',clientes:'Clientes',equipe:'Equipe e aparência'};
-const FAB={tarefas:['todoFocus','Nova tarefa pessoal'],campanhas:['editCamp','Nova campanha'],clientes:['editClient','Novo cliente'],equipe:['addUser','Adicionar pessoa'],automacoes:['ruleNew','Nova automação'],financeiro:['finFocus','Novo lançamento'],banco:null,portal:null};
+/* ---------- Cofre de senhas ---------- */
+const SVCS=['Instagram','Facebook','Meta Business','WordPress','Hospedagem / painel','Google / Gmail','TikTok','YouTube','LinkedIn','Site / domínio','Outro'];
+const VAULT={open:false,list:null,err:'',reveal:{},t:null,q:''};
+function vaultLock(msg){VAULT.open=false;VAULT.list=null;VAULT.reveal={};VAULT.err=msg||'';clearTimeout(VAULT.t);if(ui.view==='senhas')render()}
+function vaultTouch(){clearTimeout(VAULT.t);if(VAULT.open)VAULT.t=setTimeout(()=>vaultLock('Cofre fechado por inatividade.'),5*60*1000)}
+async function vaultRpc(fn,args){const{data,error}=await sb.rpc(fn,args||{});if(error){if(/reauth/.test(error.message)){vaultLock('Por segurança, digite sua senha de novo.');throw error}if(/sem_permissao/.test(error.message)){vaultLock('Você não tem acesso ao cofre.');throw error}throw error}vaultTouch();return data}
+async function vaultLoad(){VAULT.list=await vaultRpc('creds_list');VAULT.open=true;VAULT.err='';vaultTouch();render()}
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&VAULT.open){VAULT.hid=setTimeout(()=>vaultLock('Cofre fechado porque o app ficou em segundo plano.'),60000)}else clearTimeout(VAULT.hid)});
+['click','keydown'].forEach(ev=>document.addEventListener(ev,()=>{if(VAULT.open&&ui.view==='senhas')vaultTouch()},true));
+window.addEventListener('hashchange',()=>{if(VAULT.open&&location.hash!=='#senhas')vaultLock()});
+function vSenhas(){
+ const head=`<div class="page-head"><div><h1>Cofre de senhas</h1><div class="sub">Senhas dos clientes guardadas com criptografia. Para abrir, digite sua senha de login. Fecha sozinho depois de 5 minutos parado.</div></div>${VAULT.open?`<div class="actions">${isAdmin(REAL())?`<button class="btn" data-act="credLog">Histórico</button>`:''}<button class="btn" data-act="vaultClose">${ic('lock')}Fechar cofre</button><button class="btn pri" data-act="credNew">${ic('plus')}Nova senha</button></div>`:''}</div>`;
+ if(!CLOUD)return head+'<div class="empty">O cofre só funciona na versão online do app.</div>';
+ if(!VAULT.open)return head+`<form class="box vault-lock" data-vault-form autocomplete="on"><div class="vault-ic">${ic('lock')}</div><b>Cofre trancado</b><span class="meta">Digite a senha que você usa para entrar no app.</span>
+  <input type="email" name="username" value="${esc(meEmail)}" autocomplete="username" hidden><input class="in" type="password" id="vaultPw" autocomplete="current-password" placeholder="Sua senha" required>
+  ${VAULT.err?`<div class="auth-err">${esc(VAULT.err)}</div>`:''}<button class="btn pri" style="width:100%;justify-content:center">Abrir cofre</button></form>`;
+ const q=VAULT.q.toLowerCase();const L=(VAULT.list||[]).filter(c=>!q||[c.service,c.login,c.notes,cl(c.client).name].join(' ').toLowerCase().includes(q));
+ const groups={};L.forEach(c=>{const k=c.client&&S.clients.find(x=>x.id===c.client)?c.client:'_';(groups[k]=groups[k]||[]).push(c)});
+ const row=c=>{const rv=VAULT.reveal[c.id];return`<div class="cred"><div class="cred-s">${esc(c.service)}</div>
+  <div class="cred-f"><span class="meta">Login</span><div class="row" style="gap:4px;min-width:0"><span class="ell">${esc(c.login||'—')}</span>${c.login?`<button class="icon-btn sm" data-act="credCopyLogin" data-id="${c.id}" title="Copiar login">${ic('copy')}</button>`:''}</div></div>
+  <div class="cred-f"><span class="meta">Senha</span><div class="row" style="gap:4px;min-width:0"><code class="ell">${rv?esc(rv):'••••••••••'}</code><button class="icon-btn sm" data-act="credReveal" data-id="${c.id}" title="${rv?'Esconder':'Mostrar'}">${ic('eye')}</button><button class="icon-btn sm" data-act="credCopy" data-id="${c.id}" title="Copiar senha">${ic('copy')}</button></div></div>
+  <div class="cred-a">${c.url?`<a class="icon-btn sm" href="${esc(/^https?:/.test(c.url)?c.url:'https://'+c.url)}" target="_blank" rel="noopener noreferrer" title="Abrir site">${ic('link')}</a>`:''}<button class="icon-btn sm" data-act="credEdit" data-id="${c.id}" title="Editar">${ic('sliders')}</button><button class="icon-btn sm del-btn" data-act="credDel" data-id="${c.id}" title="Excluir">${ic('trash')}</button></div>
+  ${c.notes?`<div class="cred-n meta">${esc(c.notes)}</div>`:''}</div>`};
+ return head+`<div class="toolbar" style="margin-bottom:14px"><input class="sel" placeholder="Buscar serviço, login ou cliente" value="${esc(VAULT.q)}" data-chg="vaultQ" style="flex:1;min-width:0"></div>
+ ${Object.keys(groups).sort((a,b)=>a==='_'?1:b==='_'?-1:cl(a).name.localeCompare(cl(b).name)).map(k=>`<section class="todo-g"><div class="grp-h">${k==='_'?'<span class="pill up t-gray">Geral</span>':`<span class="gtag lg" style="--c:${cl(k).color}">${esc(cl(k).name)}</span>`}<span class="faint">${groups[k].length}</span></div><div class="box cred-list">${groups[k].map(row).join('')}</div></section>`).join('')||'<div class="empty">Nenhuma senha guardada ainda. Toque em “Nova senha”.</div>'}`;
+}
+function credForm(id){const c=(VAULT.list||[]).find(x=>x.id===id)||{id:'',client:'',service:'Instagram',login:'',url:'',notes:''};const m=document.getElementById('modal');ui.modal='__cred';
+ m.innerHTML=`<div class="backdrop" data-act="closeModal"></div><div class="sheet narrow" role="dialog" aria-modal="true" aria-label="Senha">
+  <div class="sheet-h"><h2 class="grow">${id?'Editar senha':'Nova senha'}</h2><button class="icon-btn" data-act="closeModal" aria-label="Fechar">${ic('x')}</button></div>
+  <form class="sheet-b one" data-cred-form autocomplete="off"><div class="form-grid">
+   <div class="field"><label for="cr-client">Cliente</label><select class="in" id="cr-client">${opt('','Geral (sem cliente)',c.client||'')}${S.clients.map(x=>opt(x.id,x.name,c.client||'')).join('')}</select></div>
+   <div class="field"><label for="cr-svc">Serviço</label><input class="in" id="cr-svc" list="cr-svcs" value="${esc(c.service)}" required><datalist id="cr-svcs">${SVCS.map(x=>`<option value="${esc(x)}">`).join('')}</datalist></div>
+   <div class="field"><label for="cr-login">Login / usuário / e-mail</label><input class="in" id="cr-login" value="${esc(c.login||'')}" autocomplete="off"></div>
+   <div class="field"><label for="cr-pw">Senha</label><div class="row" style="gap:6px"><input class="in" type="password" id="cr-pw" autocomplete="new-password" placeholder="${id?'Deixe em branco para manter a atual':''}"><button type="button" class="icon-btn" data-act="credPwShow" title="Mostrar">${ic('eye')}</button></div></div>
+   <div class="field" style="grid-column:1/-1"><label for="cr-url">Site / endereço de login</label><input class="in" id="cr-url" value="${esc(c.url||'')}" placeholder="ex.: clinica.com.br/wp-admin"></div>
+   <div class="field" style="grid-column:1/-1"><label for="cr-notes">Observações</label><textarea class="in" id="cr-notes" rows="3" placeholder="Código de recuperação fica de fora. Ex.: 2FA no celular da Dra.">${esc(c.notes||'')}</textarea></div>
+  </div><button type="submit" hidden></button></form>
+  <div class="sheet-f"><span class="grow"></span><button class="btn ghost" data-act="closeModal">Cancelar</button><button class="btn pri" data-act="credSave" data-id="${id}">Salvar</button></div></div>`;
+ m.hidden=false;document.body.classList.add('modal-open')}
+async function credSave(id){const v=k=>document.getElementById(k).value;const svc=v('cr-svc').trim();if(!svc){toast('Diga qual é o serviço.');return}
+ const pw=v('cr-pw');if(!id&&!pw){toast('Digite a senha.');return}
+ try{await vaultRpc('cred_save',{cid:id||null,client:v('cr-client')||null,svc,lg:v('cr-login').trim(),u:v('cr-url').trim(),nt:v('cr-notes').trim(),pw:pw?pw:null});
+  document.getElementById('cr-pw').value='';closeModal();toast('Senha guardada no cofre.');await vaultLoad()}catch(e){if(!/reauth|sem_permissao/.test(e.message))toast('Não foi possível salvar: '+e.message)}}
+async function credSecret(id){return await vaultRpc('cred_reveal',{cid:id})}
+async function copyText(t,msg){try{await navigator.clipboard.writeText(t);toast(msg)}catch(e){toast('Não foi possível copiar.')}}
+document.addEventListener('submit',async e=>{const f=e.target.closest('[data-vault-form]');if(f){e.preventDefault();const pw=document.getElementById('vaultPw').value;const btn=f.querySelector('button');btn.disabled=true;
+  const{error}=await sb.auth.signInWithPassword({email:meEmail,password:pw});document.getElementById('vaultPw').value='';
+  if(error){btn.disabled=false;VAULT.err=/rate|many/i.test(error.message)?'Muitas tentativas. Espere alguns minutos.':'Senha incorreta.';render();return}
+  try{await vaultLoad()}catch(err){btn.disabled=false}return}
+ if(e.target.closest('[data-cred-form]')){e.preventDefault();credSave(document.querySelector('[data-act=credSave]').dataset.id)}},true);
+const VIEWS={senhas:vSenhas,tarefas:vTarefas,automacoes:vAuto,banco:vBanco,inicio:vInicio,producao:vTodas,calendario:vCalendario,portal:vPortal2,campanhas:vCampanhas,financeiro:vFinanceiro,clientes:vClientes,equipe:vEquipe};
+const LABELS={senhas:'Cofre de senhas',tarefas:'Minhas tarefas',banco:'Banco de posts',automacoes:'Automações',inicio:'Início',producao:'Todas as tarefas',calendario:'Calendário',portal:'Portal do cliente',campanhas:'Campanhas',financeiro:'Financeiro',clientes:'Clientes',equipe:'Equipe e aparência'};
+const FAB={senhas:['credNew','Nova senha'],tarefas:['todoFocus','Nova tarefa pessoal'],campanhas:['editCamp','Nova campanha'],clientes:['editClient','Novo cliente'],equipe:['addUser','Adicionar pessoa'],automacoes:['ruleNew','Nova automação'],financeiro:['finFocus','Novo lançamento'],banco:null,portal:null};
 function fabSync(){const v=ui.view;const cfg=v in FAB?FAB[v]:(allowedStages().length?['newPost','Nova tarefa']:null);
  [document.getElementById('fab'),document.getElementById('mtPlus')].forEach(b=>{if(!b)return;b.hidden=!!ui.clientMode||!cfg;if(cfg){b.dataset.act=cfg[0];b.title=cfg[1];b.setAttribute('aria-label',cfg[1]);const sp=b.querySelector('span');if(sp)sp.textContent=cfg[1]}})}
 function render(){try{fabSync()}catch(e){}
@@ -1687,10 +1756,23 @@ let tt;function toast(t){const el=document.getElementById('toast');el.textConten
 /* ---------- ações ---------- */
 const A={
  profile:()=>profileSheet(),
+ sysNotifOn:async()=>{try{const p=await Notification.requestPermission();if(p==='granted'){ui.sysNotif=true;try{localStorage.setItem('baseus-sysnotif','1')}catch(e){}toast('Avisos do sistema ligados.')}else toast('O navegador bloqueou os avisos.')}catch(e){toast('Este navegador não aceita avisos.')}profileSheet()},
+ sysNotifOff:()=>{ui.sysNotif=false;try{localStorage.removeItem('baseus-sysnotif')}catch(e){}profileSheet()},
+ vaultClose:()=>vaultLock(''),
+ credNew:()=>{if(!VAULT.open){toast('Abra o cofre primeiro.');return}credForm('')},
+ credEdit:el=>credForm(el.dataset.id),
+ credSave:el=>credSave(el.dataset.id),
+ credPwShow:()=>{const i=document.getElementById('cr-pw');i.type=i.type==='password'?'text':'password'},
+ credReveal:async el=>{const id=el.dataset.id;if(VAULT.reveal[id]){delete VAULT.reveal[id];render();return}try{VAULT.reveal[id]=await credSecret(id);render();setTimeout(()=>{if(VAULT.reveal[id]){delete VAULT.reveal[id];if(ui.view==='senhas')render()}},20000)}catch(e){}},
+ credCopy:async el=>{try{const s2=await credSecret(el.dataset.id);await copyText(s2,'Senha copiada. Some da área de transferência em 30 segundos.');setTimeout(()=>{if(document.hasFocus())navigator.clipboard.writeText('').catch(()=>{})},30000)}catch(e){}},
+ credCopyLogin:el=>{const c=(VAULT.list||[]).find(x=>x.id===el.dataset.id);if(c)copyText(c.login,'Login copiado.')},
+ credDel:async el=>{if(!el.classList.contains('armed')){el.classList.add('armed');toast('Toque de novo para excluir esta senha.');setTimeout(()=>{if(el.isConnected)el.classList.remove('armed')},3000);return}try{await vaultRpc('cred_delete',{cid:el.dataset.id});toast('Senha excluída.');await vaultLoad()}catch(e){}},
+ credLog:async()=>{try{const L=await vaultRpc('creds_history');const m=document.getElementById('modal');ui.modal='__credlog';const lab={viu:'viu a senha',criou:'criou',editou:'editou',excluiu:'excluiu'};
+  m.innerHTML=`<div class="backdrop" data-act="closeModal"></div><div class="sheet narrow" role="dialog" aria-modal="true" aria-label="Histórico do cofre"><div class="sheet-h"><h2 class="grow">Histórico do cofre</h2><button class="icon-btn" data-act="closeModal" aria-label="Fechar">${ic('x')}</button></div><div class="sheet-b one">${(L||[]).map(x=>`<div class="hist"><time>${new Date(x.at).toLocaleString('pt-BR',{timeZone:TZ,day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</time><span><b>${esc((S.team.find(u=>(u.email||'').toLowerCase()===(x.who||'').toLowerCase())||{}).name||x.who||'—')}</b> ${lab[x.action]||x.action} · ${esc(x.service||'(excluída)')}${x.client?' · '+esc(cl(x.client).name):''}</span></div>`).join('')||'<div class="empty">Sem registros.</div>'}</div></div>`;m.hidden=false;document.body.classList.add('modal-open')}catch(e){}},
  gConnect:()=>gConnect(),
  gDisconnect:async()=>{await gFn('disconnect');gTok=null;try{sessionStorage.removeItem('baseus-gtok')}catch(e){}ui.gState='none';toast('Google Drive desconectado.');profileSheet()},
  driveClear:()=>{const p=S.posts.find(x=>x.id===ui.modal);delete p.driveUrl;delete p.driveName;delete p.driveSize;save();renderModal();render()},
- todoDone:el=>{const t=S.todos.find(x=>x.id===el.dataset.id);t.done=!t.done;t.doneAt=t.done?new Date().toISOString():'';save();render();if(ui.modal==='__todo')todoSheet(t.id)},
+ todoDone:el=>{const t=S.todos.find(x=>x.id===el.dataset.id);t.done=!t.done;t.doneAt=t.done?new Date().toISOString():'';t.doneBy=t.done?meId():'';save();render();if(ui.modal==='__todo')todoSheet(t.id)},
  todoOpen:el=>todoSheet(el.dataset.id),
  todoUrg:el=>{const t=S.todos.find(x=>x.id===el.dataset.id);t.urg=t.urg===el.dataset.v?'':el.dataset.v;save();render();todoSheet(t.id)},
  todoShare:el=>{const t=S.todos.find(x=>x.id===el.dataset.id);if(t.owner!==meId())return;const sh=t.shared=t.shared||[];const i=sh.indexOf(el.dataset.v);if(i>=0)sh.splice(i,1);else sh.push(el.dataset.v);save();render();todoSheet(t.id)},
@@ -1698,7 +1780,7 @@ const A={
  todoFocus:()=>{const i=document.getElementById('todoNew');if(i){i.scrollIntoView({block:'center'});i.focus()}},
  finFocus:()=>{const i=document.getElementById('fin-desc');if(i){i.scrollIntoView({block:'center'});i.focus()}},
  todoShowDone:()=>{ui.todoDone=!ui.todoDone;render()},
- todoClear:()=>{const me=meId();S.todos=S.todos.filter(t=>!(t.owner===me&&t.done));save();render()},
+ todoClear:()=>{const me=meId();const today=TODAY_ISO;S.todos=S.todos.filter(t=>!(t.owner===me&&t.done&&t.doneAt&&new Date(t.doneAt).toLocaleDateString('en-CA',{timeZone:TZ})!==today));save();render()},
  stop:()=>{},
  rowDup:el=>{const p=S.posts.find(x=>x.id===el.dataset.id);if(!p)return;const q=JSON.parse(JSON.stringify(p));
   ['mediaUrl','mediaType','mediaName','mediaSize','postedAt','link'].forEach(k=>delete q[k]);
@@ -1820,6 +1902,7 @@ const C={
  clientPhoto:el=>{const f=el.files&&el.files[0];if(!f||!f.type.startsWith('image/')){toast('Escolha uma imagem.');return}const img=new Image();img.onload=()=>{const c=document.createElement('canvas');c.width=c.height=200;const s2=Math.min(img.width,img.height);c.getContext('2d').drawImage(img,(img.width-s2)/2,(img.height-s2)/2,s2,s2,0,0,200,200);URL.revokeObjectURL(img.src);ui.kfPhoto=c.toDataURL('image/jpeg',.85);
   const keep={n:val('kf-name'),a:val('kf-area'),fe:val('kf-fee'),co:val('kf-color'),cp:val('kf-copy'),st:val('kf-status'),pr:val('kf-prod')};clientForm(ui.kfId,true);
   const set=(i,v)=>{const e=document.getElementById(i);if(e)e.value=v};set('kf-name',keep.n);set('kf-area',keep.a);set('kf-fee',keep.fe);set('kf-color',keep.co);set('kf-copy',keep.cp);set('kf-status',keep.st);set('kf-prod',keep.pr)};img.src=URL.createObjectURL(f)},
+ vaultQ:el=>{VAULT.q=el.value;render()},
  bkSel:el=>{const p=S.posts.find(x=>x.id===el.dataset.id);p[el.dataset.k]=el.value;save()},
  bkF:el=>{ui.bk[el.dataset.k]=el.value;render()},
  drive:el=>{const p=S.posts.find(x=>x.id===ui.modal);const v=el.value.trim();if(v&&!driveId(v)){toast('Link do Drive não reconhecido.');return}p.driveUrl=v;if(v)hist(p,'Adicionou o link do Google Drive');save();renderModal();render()}
@@ -1923,13 +2006,44 @@ async function push(){
  }catch(err){dot('');toast('Não foi possível salvar: '+(/row-level|permission/i.test(err.message)?'você não tem permissão para isso.':err.message));const{data}=await sb.auth.getSession();enter(data.session)}
 }
 let dotT;function dot(t){let d=document.getElementById('syncdot');if(!d){d=document.createElement('div');d.id='syncdot';d.className='syncdot';document.body.appendChild(d)}d.textContent=t;d.hidden=!t;clearTimeout(dotT);if(t==='Salvo')dotT=setTimeout(()=>{d.hidden=true},1500)}
+/* ---------- notificações (pop-up no canto) ---------- */
+try{ui.sysNotif=localStorage.getItem('baseus-sysnotif')==='1'}catch(e){}
+const myName=()=>(CLOUD?REAL():ME()).name;
+function notify(o){
+ const box=document.getElementById('notifs');if(!box)return;
+ const el=document.createElement('div');el.className='notif';
+ el.innerHTML=`${o.av||`<span class="av">${esc(initials(o.who||'?'))}</span>`}<div class="notif-b"><div class="row between" style="gap:8px"><b class="ell">${esc(o.who||'')}</b><span class="faint" style="font-size:11px;flex:none">agora</span></div><div class="notif-t">${esc(o.text)}</div>${o.sub?`<div class="meta ell">${esc(o.sub)}</div>`:''}</div><button class="icon-btn sm notif-x" aria-label="Fechar">${ic('x')}</button>`;
+ el.addEventListener('click',e=>{if(e.target.closest('.notif-x')){el.remove();return}el.remove();if(o.post&&S.posts.find(p=>p.id===o.post))openPost(o.post);else if(o.todo){location.hash='#tarefas';setTimeout(()=>todoSheet(o.todo),100)}});
+ box.prepend(el);while(box.children.length>4)box.lastChild.remove();
+ requestAnimationFrame(()=>el.classList.add('in'));
+ setTimeout(()=>{el.classList.remove('in');setTimeout(()=>el.remove(),300)},7000);
+ if(document.hidden&&ui.sysNotif&&'Notification' in window&&Notification.permission==='granted'){try{new Notification((o.who?o.who+': ':'')+o.text,{body:o.sub||'',icon:'icon.png',tag:o.post||o.todo||''})}catch(e){}}
+}
+function avOf(name){const u=S.team.find(x=>x.name===name);return u?av(u.id):null}
+function notifyChange(coll,prev,cur){
+ const me=myName(),mid=(CLOUD?REAL():ME()).id;
+ if(coll==='posts'){
+  const h=(cur.history||[]).at(-1),ph=(prev&&prev.history||[]).length;
+  if(!prev){const who=(cur.history||[])[0]&&(cur.history||[])[0].who;if(who&&who!==me)notify({who,av:avOf(who),text:cur.owner===mid?'Criou uma tarefa para você':'Criou uma tarefa',sub:cur.title,post:cur.id});return}
+  const pc=(prev.comments||[]).length,cc=(cur.comments||[]).length;
+  if(cc>pc){const c=cur.comments[cc-1];if(c&&c.who!==me){notify({who:c.who,av:avOf(c.who),text:(c.client?'Cliente comentou: ':'Comentou: ')+c.txt,sub:cur.title,post:cur.id});return}}
+  if((cur.history||[]).length>ph&&h&&h.who!==me){notify({who:h.who,av:avOf(h.who),text:h.txt,sub:cur.title,post:cur.id});return}
+  if(prev.owner!==cur.owner&&cur.owner===mid)notify({who:'',text:'Uma tarefa passou para você',sub:cur.title,post:cur.id});
+ }
+ if(coll==='todos'){
+  const visible=cur.owner===mid||(cur.shared||[]).includes(mid);if(!visible)return;
+  if(cur.done&&!(prev&&prev.done)&&cur.doneBy&&cur.doneBy!==mid){const n=user(cur.doneBy).name;notify({who:n,av:av(cur.doneBy),text:'Concluiu a tarefa',sub:cur.title,todo:cur.id});return}
+  const was=prev&&(prev.shared||[]).includes(mid);if(!was&&(cur.shared||[]).includes(mid)&&cur.owner!==mid){const n=user(cur.owner).name;notify({who:n,av:av(cur.owner),text:'Marcou você numa tarefa',sub:cur.title,todo:cur.id})}
+ }
+ if(coll==='msgs'&&!prev&&cur.fromClient)notify({who:cur.who,text:'Mensagem no portal: '+cur.txt});
+}
 let subbed=false;function subscribe(){if(subbed)return;subbed=true;
  sb.channel('items-live').on('postgres_changes',{event:'*',schema:'public',table:'items'},pl=>{
   const del=pl.eventType==='DELETE',r=del?pl.old:pl.new;if(!r||!r.coll)return;const k=r.coll+'|'+r.id;
   if(r.coll==='settings'){if(!del){const j=ser(r.data);if(snap[k]===j)return;snap[k]=j;Object.assign(S.settings,r.data);applyTheme()}return}
   const arr=S[r.coll];if(!arr)return;const i=arr.findIndex(x=>x.id===r.id);
   if(del){if(i<0)return;arr.splice(i,1);delete snap[k]}
-  else{const j=ser(r.data);if(snap[k]===j)return;snap[k]=j;const keep=i>=0?{mediaUrl:arr[i].mediaUrl,mediaType:arr[i].mediaType,mediaName:arr[i].mediaName,mediaSize:arr[i].mediaSize}:{};
+  else{const j=ser(r.data);if(snap[k]===j)return;snap[k]=j;const prev=i>=0?arr[i]:null;setTimeout(()=>{try{notifyChange(r.coll,prev,r.data)}catch(e){console.warn(e)}},0);const keep=i>=0?{mediaUrl:arr[i].mediaUrl,mediaType:arr[i].mediaType,mediaName:arr[i].mediaName,mediaSize:arr[i].mediaSize}:{};
    const obj=Object.assign(r.data,Object.fromEntries(Object.entries(keep).filter(([,v])=>v!==undefined)));if(i>=0)arr[i]=obj;else arr.push(obj);if(r.coll==='posts')applyRules(obj,true)}
   if(r.coll==='team'||r.coll==='avatars'){if(r.coll==='team'&&!S.team.find(u=>u.id===realId)){showAuth('semacesso');return}applyTheme()}
   if(ui.modal&&ui.modal===r.id&&del){closeModal();toast('Este conteúdo foi excluído por outra pessoa.')}
