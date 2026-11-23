@@ -370,6 +370,10 @@ select.csel option{background:var(--surface);color:var(--fg);font-weight:500}
 .pp-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding-bottom:14px;border-bottom:1px solid var(--line);margin-bottom:18px}
 .pp-grid{display:grid;grid-template-columns:minmax(0,360px) minmax(0,1fr);gap:24px;margin-top:16px}
 .pp-grid .caption{margin:0;font-size:14px}
+.rte-bar{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px}.rte-bar button{min-width:36px;height:34px;padding:0 10px;border:1px solid var(--line);background:var(--surface);color:inherit;border-radius:8px;font:inherit;font-size:13px;cursor:pointer}.rte-bar button:hover{background:var(--surface-2)}.rte-bar .sep{width:1px;background:var(--line);margin:4px 2px}
+.rte{min-height:260px;max-height:60vh;overflow:auto;cursor:text;outline:none}.rte:empty:before{content:attr(data-ph);color:var(--faint)}
+.richtext{line-height:1.6;word-wrap:break-word}.richtext p{margin:0 0 8px}.richtext p:last-child{margin-bottom:0}.richtext h3{font-size:16px;font-weight:700;margin:14px 0 6px}.richtext h3:first-child{margin-top:0}.richtext ul,.richtext ol{margin:0 0 8px;padding-left:22px}.richtext li{margin:2px 0}.richtext mark{background:#fff1a8;color:#2b2400;padding:0 2px;border-radius:3px}
+.copytext{background:var(--surface-2);border-radius:10px;padding:14px 16px;font-size:14.5px;margin:6px 0 14px}.p-lbl{font-size:11.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-top:14px}
 .pp-foot{position:sticky;bottom:env(safe-area-inset-bottom,0px);display:flex;align-items:center;gap:10px;justify-content:space-between;background:var(--bg);border-top:1px solid var(--line);padding:12px 0;margin-top:24px;flex-wrap:wrap}
 .msgs{display:flex;flex-direction:column;gap:10px;max-width:680px}
 .bub{max-width:80%;padding:9px 13px;border-radius:12px;background:var(--surface-2)}
@@ -717,6 +721,17 @@ const MES=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','de
 const MESES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 const fmtD=s=>{if(!s)return'—';const d=parse(s);return`${d.getDate()} ${MES[d.getMonth()]}`};
 const brl=n=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:0}).format(n||0);
+const RT_TAG={B:'b',STRONG:'b',I:'i',EM:'i',U:'u',H1:'h3',H2:'h3',H3:'h3',H4:'h3',H5:'h3',H6:'h3',UL:'ul',OL:'ol',LI:'li',P:'p',DIV:'p',BLOCKQUOTE:'p',BR:'br',MARK:'mark'};
+const RT_SKIP=/^(SCRIPT|STYLE|TEMPLATE|IFRAME|OBJECT|EMBED|SVG|MATH|HEAD|TITLE|META|LINK|IMG|VIDEO|AUDIO|INPUT|BUTTON|SELECT|TEXTAREA)$/;
+function cleanRich(html){if(!html)return'';const src=new DOMParser().parseFromString('<body>'+html+'</body>','text/html').body;const out=document.createElement('div');
+ const walk=(a,b)=>{for(const n of a.childNodes){if(n.nodeType===3){b.appendChild(document.createTextNode(n.nodeValue));continue}if(n.nodeType!==1||RT_SKIP.test(n.tagName))continue;
+  const st=(n.getAttribute('style')||'').toLowerCase();let t=RT_TAG[n.tagName];
+  if(t==='b'&&/font-weight:\s*(normal|[1-4]00)/.test(st))t=null;
+  if(!t&&/font-weight:\s*(bold|[6-9]00)/.test(st))t='b';else if(!t&&/font-style:\s*italic/.test(st))t='i';
+  if(t){const e=b.appendChild(document.createElement(t));if(t!=='br')walk(n,e)}else walk(n,b)}};
+ walk(src,out);let h=out.innerHTML;let prev;do{prev=h;h=h.replace(/<(b|i|u|mark|p|h3|li|ul|ol)><\/\1>/g,'')}while(h!==prev);return h.replace(/^(<br>)+|(<br>)+$/g,'').trim()}
+const richText=html=>{if(!html)return'';const d=document.createElement('div');d.innerHTML=cleanRich(html.replace(/<\/(p|h3|li)>|<br>/g,m=>m+'\n'));return d.textContent.replace(/\n{3,}/g,'\n\n').trim()};
+const hasRich=html=>!!richText(html);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const opt=(v,l,sel)=>`<option value="${esc(v)}"${String(v)===String(sel)?' selected':''}>${esc(l)}</option>`;
 const ymOf=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}`;
@@ -1507,7 +1522,8 @@ function portalItem(p,tab){
    <div class="kind">${isCopy?'Aprovação da copy':'Arte final + legenda'}</div>
    <h2 style="font-size:18px;margin-top:4px">${esc(p.title)}</h2>
    <div class="row meta wrap" style="margin-top:6px">${ftag(p.format)}<span>Postagem prevista: ${fmtD(p.date)}${p.time?' às '+p.time:''}</span></div>
-   <div class="caption">${esc(p.caption)}</div>
+   ${hasRich(p.copyText)?`<div class="p-lbl">Texto</div><div class="copytext richtext">${cleanRich(p.copyText)}</div>${p.caption?'<div class="p-lbl">Legenda</div>':''}`:''}
+   ${p.caption||!hasRich(p.copyText)?`<div class="caption">${esc(p.caption)}</div>`:''}
    ${tab==='pendentes'?(ui.adjOpen===p.id?`<div class="adj"><label class="lbl" for="adj-${p.id}">O que você quer mudar?</label><textarea class="in" id="adj-${p.id}" placeholder="Ex.: trocar a foto do slide 2, mudar a última frase da legenda…"></textarea><div class="row"><button class="btn pri" data-act="sendAdj" data-id="${p.id}">Enviar pedido de ajuste</button><button class="btn ghost" data-act="adjCancel">Cancelar</button></div></div>`
     :`<div class="row wrap"><button class="btn pri" data-act="approve" data-id="${p.id}">${ic('check')}Aprovar</button><button class="btn" data-act="adjOpen" data-id="${p.id}">${ic('back')}Pedir ajuste</button></div>`)
    :tab==='ajustes'?`<div class="meta">Seu pedido: “${esc(lastC?lastC.txt:'—')}”. A equipe já está ajustando.</div>`:`<span class="pill t-${tone(p)}">${p.status==='Copy aprovada'?'Copy aprovada':PH[phase(p)][0]}</span>`}
@@ -1585,7 +1601,8 @@ function pPostView(p){
   <div class="lbl">${isCopy?'Aprovação da copy':'Tema'}</div>
   <div class="row between wrap"><h1>${esc(p.title)}</h1>${ftag(p.format)}</div>
   <div class="pp-grid"><div>${left}</div><div style="min-width:0">
-   <div class="caption">${esc(p.caption)||'<span class="faint">A legenda ainda não foi escrita.</span>'}</div>
+   ${hasRich(p.copyText)?`<div class="p-lbl" style="margin-top:0">Texto</div><div class="copytext richtext">${cleanRich(p.copyText)}</div>${p.caption?'<div class="p-lbl">Legenda</div>':''}`:''}
+   ${p.caption||!hasRich(p.copyText)?`<div class="caption">${esc(p.caption)||'<span class="faint">A legenda ainda não foi escrita.</span>'}</div>`:''}
    ${ph==='producao'?'<div class="note">A equipe ainda está trabalhando neste conteúdo.</div>':''}
    ${ui.adjOpen===p.id?`<div class="adj"><label class="lbl" for="adj-${p.id}">O que você quer mudar?</label><textarea class="in" id="adj-${p.id}" placeholder="Ex.: trocar a foto do slide 2, mudar a última frase da legenda…"></textarea><div class="row"><button class="btn pri" data-act="sendAdj" data-id="${p.id}">Enviar pedido de ajuste</button><button class="btn ghost" data-act="adjCancel">Cancelar</button></div></div>`:''}
    <div style="margin-top:20px"><div class="lbl">Comentários</div>${cmts||'<div class="faint" style="padding:4px 0 8px">Nenhum comentário.</div>'}
@@ -1825,9 +1842,16 @@ function renderModal(){
  document.body.classList.add('modal-open');
  const st=ST[p.stage];ui.acts=actionsFor(p);
  const ids=navList().map(x=>x.id);const i=ids.indexOf(p.id);
- const tabs=[['legenda','Legenda'],['briefing','Briefing'],['comentarios',`Comentários (${p.comments.length})`],['historico','Histórico']];
+ const tabs=[['legenda','Legenda'],['texto',hasRich(p.copyText)?'Texto •':'Texto'],['briefing','Briefing'],['comentarios',`Comentários (${p.comments.length})`],['historico','Histórico']];
  let body='';
  if(ui.mtab==='legenda')body=`<textarea class="in" id="m-caption" data-inp="pf" data-k="caption" aria-label="Legenda">${esc(p.caption)}</textarea><div class="row between meta" style="margin-top:6px"><span>${p.caption.length} caracteres</span><button class="btn ghost sm" data-act="copyCaption">Copiar legenda</button></div>`;
+ if(ui.mtab==='texto')body=`<div class="rte-bar" role="toolbar" aria-label="Formatação do texto" onmousedown="if(event.target.closest('button'))event.preventDefault()">
+  <button type="button" data-act="rte" data-cmd="bold" title="Negrito (Cmd+B)"><b>B</b></button><button type="button" data-act="rte" data-cmd="italic" title="Itálico (Cmd+I)"><i>I</i></button><button type="button" data-act="rte" data-cmd="underline" title="Sublinhado (Cmd+U)"><u>S</u></button><span class="sep"></span>
+  <button type="button" data-act="rte" data-cmd="h3" title="Título">Título</button><button type="button" data-act="rte" data-cmd="p" title="Texto normal">Normal</button><span class="sep"></span>
+  <button type="button" data-act="rte" data-cmd="insertUnorderedList" title="Lista com marcadores">• Lista</button><button type="button" data-act="rte" data-cmd="insertOrderedList" title="Lista numerada">1. Lista</button><button type="button" data-act="rte" data-cmd="mark" title="Destacar"><mark style="background:#fff1a8;padding:0 3px">Destaque</mark></button><span class="sep"></span>
+  <button type="button" data-act="rte" data-cmd="clear" title="Tirar formatação">Limpar</button></div>
+  <div class="in rte richtext" id="m-copytext" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Texto" data-inp="rte" data-ph="Roteiro, texto dos slides ou copy para o cliente aprovar. Dá para colar do Google Docs que a formatação vem junto.">${cleanRich(p.copyText)}</div>
+  <div class="row between meta" style="margin-top:6px"><span>Aparece no portal do cliente acima da legenda.</span><button class="btn ghost sm" data-act="copyText">Copiar texto</button></div>`;
  if(ui.mtab==='briefing')body=`<textarea class="in" id="m-brief" data-inp="pf" data-k="briefing" placeholder="Ideia central, referências e direcionamento para copy e design" aria-label="Briefing">${esc(p.briefing)}</textarea>`;
  if(ui.mtab==='comentarios')body=`${p.comments.map(c=>`<div class="cmt"><span class="av">${esc(initials(c.who))}</span><div class="grow"><div class="row"><b>${esc(c.who)}</b>${c.client?'<span class="pill t-amber">Cliente</span>':''}<span class="meta">${esc(c.t)}</span></div><p>${esc(c.txt)}</p></div></div>`).join('')||'<div class="faint" style="padding:8px 0 14px">Nenhum comentário ainda.</div>'}
    <div style="margin-top:12px"><textarea class="in" id="m-cmt" style="min-height:80px" placeholder="Escreva um comentário para a equipe"></textarea><div class="row" style="margin-top:8px"><button class="btn sm pri" data-act="addCmt">Comentar</button></div></div>`;
@@ -2054,6 +2078,14 @@ const A={
  mNav:el=>{const ids=navList().map(x=>x.id);const i=ids.indexOf(ui.modal)+Number(el.dataset.d);if(ids[i]){ui.modal=ids[i];renderModal()}},
  doAct:el=>{const a=ui.acts[Number(el.dataset.i)];const p=S.posts.find(x=>x.id===ui.modal);if(a&&a[1]){a[1]();save();toast(`${p.title.slice(0,40)}${p.title.length>40?'…':''} → ${ST[p.stage].name} · ${p.status}`);renderModal();render()}},
  addCmt:()=>{const p=S.posts.find(x=>x.id===ui.modal);const t=document.getElementById('m-cmt').value.trim();if(!t)return;p.comments.push({who:ME().name,client:false,t:nowStamp(),txt:t});save();renderModal()},
+ rte:el=>{const ed=document.getElementById('m-copytext');if(!ed)return;ed.focus();const c=el.dataset.cmd;
+  if(c==='h3'||c==='p')document.execCommand('formatBlock',false,c==='h3'?'<h3>':'<p>');
+  else if(c==='clear'){document.execCommand('removeFormat');document.execCommand('formatBlock',false,'<p>')}
+  else if(c==='mark'){const sel=getSelection();if(!sel.rangeCount)return;let n=sel.anchorNode;n=n&&n.nodeType===3?n.parentNode:n;const mk=n&&n.closest&&n.closest('mark');
+   if(mk&&ed.contains(mk)){mk.replaceWith(...mk.childNodes)}else if(!sel.isCollapsed){const r=sel.getRangeAt(0);const m=document.createElement('mark');m.appendChild(r.extractContents());r.insertNode(m);sel.removeAllRanges();const r2=document.createRange();r2.selectNodeContents(m);sel.addRange(r2)}}
+  else document.execCommand(c);I.rte(ed)},
+ copyText:()=>{const p=S.posts.find(x=>x.id===ui.modal);const t=richText(p.copyText);if(!t){toast('O texto está vazio.');return}const ok=()=>toast('Texto copiado.');
+  try{navigator.clipboard.write([new ClipboardItem({'text/html':new Blob([cleanRich(p.copyText)],{type:'text/html'}),'text/plain':new Blob([t],{type:'text/plain'})})]).then(ok).catch(()=>navigator.clipboard.writeText(t).then(ok))}catch(e){navigator.clipboard.writeText(t).then(ok).catch(()=>toast('Não consegui copiar.'))}},
  copyCaption:()=>{const p=S.posts.find(x=>x.id===ui.modal);const done=()=>toast('Legenda copiada.');
   try{navigator.clipboard.writeText(p.caption).then(done).catch(()=>{const t=document.getElementById('m-caption');t.select();toast('Selecionei a legenda. Use Cmd+C.')})}catch(e){const t=document.getElementById('m-caption');t.select();toast('Selecionei a legenda. Use Cmd+C.')}},
  clearMedia:()=>{const p=S.posts.find(x=>x.id===ui.modal);if(p.video){const v=p.video;delete p.video;if(v.path&&sb&&!pathUsed(v.path))sb.storage.from('media').remove([v.path]).catch(()=>{})}delete p.mediaUrl;delete p.mediaType;delete p.mediaName;delete p.mediaSize;save();renderModal();render()},
@@ -2130,12 +2162,15 @@ const I={
  srch:el=>{const r=document.getElementById('srchRes');if(r)r.innerHTML=searchRes(el.value)},
  search:el=>{ui.f.q=el.value;document.getElementById('boardArea').innerHTML=areaHtml()},
  pf:el=>{const p=S.posts.find(x=>x.id===ui.modal);p[el.dataset.k]=el.value;save()},
+ rte:el=>{const p=S.posts.find(x=>x.id===ui.modal);if(!p)return;p.copyText=hasRich(el.innerHTML)?cleanRich(el.innerHTML):'';clearTimeout(I._rt);I._rt=setTimeout(save,500)},
  accent:el=>{S.settings.accent=el.value;save();applyTheme();const h=document.getElementById('accentHex');if(h)h.value=el.value},
  teamName:el=>{const u=S.team.find(x=>x.id===el.dataset.id);u.name=el.value||'Sem nome';save();applyTheme()},
  teamEmail:el=>{const u=S.team.find(x=>x.id===el.dataset.id);u.email=el.value.trim();save()}
 };
 document.addEventListener('click',e=>{const el=e.target.closest('[data-act]');if(!el)return;const f=A[el.dataset.act];if(f){if(el.dataset.act!=='stop')e.preventDefault();f(el,e)}});
 document.addEventListener('change',e=>{const el=e.target.closest('[data-chg]');if(el&&C[el.dataset.chg])C[el.dataset.chg](el,e)});
+document.addEventListener('paste',e=>{const ed=e.target.closest&&e.target.closest('.rte');if(!ed)return;const cd=e.clipboardData;if(!cd)return;e.preventDefault();
+ const h=cd.getData('text/html');if(h){document.execCommand('insertHTML',false,cleanRich(h)||'')}else{const t=cd.getData('text/plain')||'';document.execCommand('insertHTML',false,t.split(/\n/).map(esc).join('<br>'))}I.rte(ed)});
 document.addEventListener('input',e=>{const el=e.target.closest('[data-inp]');if(el&&I[el.dataset.inp])I[el.dataset.inp](el,e)});
 document.addEventListener('keydown',e=>{
  if(e.key==='Escape'&&document.getElementById('vbox')){document.getElementById('vbox').remove();return}
@@ -2278,8 +2313,8 @@ let subbed=false;function subscribe(){if(subbed)return;subbed=true;
   liveRender(ui.modal===r.id);
  }).subscribe();
 }
-function liveRender(modalToo){const a=document.activeElement;if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)&&!a.closest('#auth')){pendingRender=true;if(modalToo)pendingRender='modal';return}render();if(modalToo&&ui.modal)renderModal()}
-document.addEventListener('focusout',()=>setTimeout(()=>{if(!pendingRender)return;const a=document.activeElement;if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))return;const m=pendingRender==='modal';pendingRender=false;render();if(m&&ui.modal)renderModal()},50));
+function liveRender(modalToo){const a=document.activeElement;if(a&&(/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)||a.isContentEditable)&&!a.closest('#auth')){pendingRender=true;if(modalToo)pendingRender='modal';return}render();if(modalToo&&ui.modal)renderModal()}
+document.addEventListener('focusout',()=>setTimeout(()=>{if(!pendingRender)return;const a=document.activeElement;if(a&&(/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)||a.isContentEditable))return;const m=pendingRender==='modal';pendingRender=false;render();if(m&&ui.modal)renderModal()},50));
 let portalTok='',portalSlug='';
 async function portalResolve(pin){const{data,error}=await sb.rpc('portal_resolve',{slug:portalSlug,pin:pin||''});if(error){if(/pin/.test(error.message))return'pin';return null}return data||null}
 async function portalLoad(){const{data,error}=await sb.rpc('portal_data',{tok:portalTok});
