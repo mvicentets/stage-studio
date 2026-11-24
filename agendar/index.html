@@ -52,7 +52,7 @@ h1 em{font-size:1.08em}
 .day .m{font-size:11.5px;color:var(--faint);text-transform:lowercase}
 .day[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
 .day[aria-pressed="true"] .w,.day[aria-pressed="true"] .m{color:rgba(255,255,255,.7)}
-.daylabel{font-size:15px;font-weight:600;margin:14px 0 10px;text-transform:capitalize}
+.daylabel{font-size:15px;font-weight:600;margin:14px 0 10px}
 .times{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .time{height:48px;border-radius:999px;border:1px solid rgba(31,75,255,.28);background:var(--white);color:var(--accent);font-weight:700;font-size:16px;cursor:pointer;transition:background .2s var(--ease),color .2s,transform .15s}
 .time:hover{background:var(--accent-soft)}
@@ -62,7 +62,7 @@ h1 em{font-size:1.08em}
 .back svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .sum{background:var(--ink);color:#fff;border-radius:18px;padding:18px;position:relative;overflow:hidden}
 .sum .mono{color:rgba(255,255,255,.6)}
-.sum .big{font-size:26px;font-weight:700;letter-spacing:-.035em;line-height:1.1;margin-top:8px;text-transform:capitalize}
+.sum .big{font-size:26px;font-weight:700;letter-spacing:-.035em;line-height:1.1;margin-top:8px}
 .sum .big em{font-size:1.1em}
 .sum .sub{color:rgba(255,255,255,.72);font-size:14.5px;margin-top:6px}
 .sum:after{content:"";position:absolute;right:-40px;top:-40px;width:150px;height:150px;border-radius:50%;background:radial-gradient(circle,rgba(31,151,255,.55),transparent 70%)}
@@ -87,7 +87,7 @@ textarea.in{height:auto;min-height:84px;padding:13px 15px;resize:vertical;line-h
 @keyframes pop{from{transform:scale(.4);opacity:0}to{transform:none;opacity:1}}
 .ok h2{font-size:34px;letter-spacing:-.04em;line-height:1.02;font-weight:700}
 .ok h2 em{font-size:1.1em}
-.ok .when{font-size:18px;font-weight:600;margin-top:14px;text-transform:capitalize}
+.ok .when{font-size:18px;font-weight:600;margin-top:14px}
 .ok p{color:var(--muted);margin-top:8px;font-size:15px}
 .ok .acts{display:grid;gap:10px;margin-top:22px}
 .empty{text-align:center;padding:26px 8px}
@@ -126,6 +126,7 @@ const IC={clock:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d
 const TZ=Intl.DateTimeFormat().resolvedOptions().timeZone||'America/Sao_Paulo';
 const F=(o)=>new Intl.DateTimeFormat('pt-BR',{timeZone:TZ,...o});
 const fDay=F({year:'numeric',month:'2-digit',day:'2-digit'}),fW=F({weekday:'short'}),fN=F({day:'numeric'}),fM=F({month:'short'}),fT=F({hour:'2-digit',minute:'2-digit'}),fLong=F({weekday:'long',day:'numeric',month:'long'});
+const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);const fL=d=>cap(fLong.format(d));
 const keyOf=d=>fDay.format(d).split('/').reverse().join('-');
 const tzName=()=>{try{const p=new Intl.DateTimeFormat('pt-BR',{timeZone:TZ,timeZoneName:'long'}).formatToParts(new Date()).find(x=>x.type==='timeZoneName');return p?p.value:TZ}catch(e){return TZ}};
 let D=null,day=null,pick=null,busy=false;
@@ -160,7 +161,7 @@ function render(){
   A.innerHTML=`<section class="card">
     <div class="step"><h2>Escolha o dia</h2><span class="mono">1 de 2</span></div>
     <div class="days" role="group" aria-label="Dias disponíveis">${D.days.map(k=>{const d=D.byDay[k][0];return`<button class="day" data-k="${k}" aria-pressed="${k===day}"><span class="w">${fW.format(d).replace('.','')}</span><span class="n">${fN.format(d)}</span><span class="m">${fM.format(d).replace('.','')}</span></button>`}).join('')}</div>
-    <div class="daylabel">${fLong.format(list[0])}</div>
+    <div class="daylabel">${fL(list[0])}</div>
     <div class="times" role="group" aria-label="Horários livres">${list.map(d=>`<button class="time" data-t="${d.toISOString()}">${fT.format(d)}</button>`).join('')}</div>
     <div class="tz">Horários no seu fuso: ${esc(tzName())}</div>
   </section>`;
@@ -174,7 +175,7 @@ function renderForm(err){
   const d=new Date(pick),end=new Date(+d+D.dur*60000);
   $('#app').innerHTML=`<section class="card">
     <button class="back" id="back">${IC.back}Trocar horário</button>
-    <div class="sum"><div class="mono">Sua reunião</div><div class="big">${fLong.format(d)}<br><em>${fT.format(d)}</em> às ${fT.format(end)}</div><div class="sub">${esc(D.title)} · ${D.dur} min${D.meet?' · Google Meet':''}</div></div>
+    <div class="sum"><div class="mono">Sua reunião</div><div class="big">${fL(d)}<br><em>${fT.format(d)}</em> às ${fT.format(end)}</div><div class="sub">${esc(D.title)} · ${D.dur} min${D.meet?' · Google Meet':''}</div></div>
     <form id="f" novalidate>
       <div class="step" style="margin:6px 0 -4px"><h2>Seus dados</h2><span class="mono">2 de 2</span></div>
       ${err?`<div class="err" role="alert">${esc(err)}</div>`:''}
@@ -213,7 +214,7 @@ function renderOk(j){
   $('#app').innerHTML=`<section class="card ok">
     <div class="tick">${IC.check}</div>
     <h2>Reunião <em>marcada</em></h2>
-    <div class="when">${fLong.format(d)} · ${fT.format(d)}</div>
+    <div class="when">${fL(d)} · ${fT.format(d)}</div>
     <p>${j.meet?'Mandamos o convite com o link da chamada para o seu e-mail.':'Está confirmado. Até lá!'}</p>
     <div class="acts">
       ${j.meet?`<a class="btn" href="${esc(j.meet)}" target="_blank" rel="noopener">${IC.video}Link da chamada</a>`:''}
