@@ -237,6 +237,8 @@ function ics(j){
   const txt=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Stage//Agenda//PT','BEGIN:VEVENT','UID:'+z(j.start)+'@stagemed.com.br','DTSTAMP:'+z(Date.now()),'DTSTART:'+z(j.start),'DTEND:'+z(j.end),'SUMMARY:'+(j.title||'Reunião com a Stage').replace(/[,;]/g,' '),j.meet?'LOCATION:'+j.meet:'',j.meet?'DESCRIPTION:Link da chamada: '+j.meet:'','END:VEVENT','END:VCALENDAR'].filter(Boolean).join('\r\n');
   return 'data:text/calendar;charset=utf-8,'+encodeURIComponent(txt);
 }
+const IOS=/iPhone|iPad|iPod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+function gcal(j){const z=d=>new Date(d).toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,'');const p=new URLSearchParams({action:'TEMPLATE',text:j.title||'Reunião com a Stage',dates:z(j.start)+'/'+z(j.end),details:j.meet?'Link da chamada: '+j.meet:'Reunião agendada pelo link da Stage.'});if(j.meet)p.set('location',j.meet);return 'https://calendar.google.com/calendar/render?'+p.toString()}
 function renderOk(j){
   const d=new Date(j.start);
   $('#app').innerHTML=`<section class="card ok">
@@ -246,7 +248,7 @@ function renderOk(j){
     <p>${j.meet?'Mandamos o convite com o link da chamada para o seu e-mail.':'Está confirmado. Até lá!'}</p>
     <div class="acts">
       ${j.meet?`<a class="btn" href="${esc(j.meet)}" target="_blank" rel="noopener">${IC.video}Link da chamada</a>`:''}
-      <a class="btn ghost" href="${ics(j)}" download="reuniao-stage.ics">${IC.cal}Salvar no meu calendário</a>
+      ${IOS?`<a class="btn ghost" href="${ics(j)}">${IC.cal}Adicionar ao calendário do iPhone</a>`:`<a class="btn ghost" href="${gcal(j)}" target="_blank" rel="noopener">${IC.cal}Adicionar ao Google Agenda</a>`}
     </div></section>`;
   $('#chips').innerHTML='';window.scrollTo({top:0,behavior:'smooth'});
 }
