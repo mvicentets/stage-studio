@@ -302,11 +302,45 @@ textarea.in{min-height:250px;resize:vertical;line-height:1.6}
 .stat .k{font-size:11.5px;color:var(--faint)}
 .cgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,270px),1fr));gap:14px}
 .client{padding:16px 18px;display:flex;flex-direction:column;gap:14px}
-.ag-link{display:flex;align-items:center;gap:8px;background:var(--surface-2);border-radius:12px;padding:10px 12px;font-weight:600;word-break:break-all}
-.ag-days{display:grid;gap:8px}.ag-day{display:grid;grid-template-columns:112px 1fr;gap:10px;align-items:start;padding:10px 0;border-top:1px solid var(--line)}.ag-day:first-child{border-top:0}.ag-day .dn{display:flex;align-items:center;gap:10px;font-weight:600;min-height:36px}
-.ag-rg{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.ag-r{display:flex;align-items:center;gap:4px}.ag-r input{width:96px;height:36px;padding:0 8px}.ag-off{color:var(--faint);font-size:13.5px;min-height:36px;display:flex;align-items:center}
-.ag-bk{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-top:1px solid var(--line)}.ag-bk:first-child{border-top:0}.ag-bk .dt{flex:none;width:58px;text-align:center;border-radius:12px;background:var(--surface-2);padding:7px 0}.ag-bk .dt b{display:block;font-size:20px;line-height:1.1;letter-spacing:-.02em}.ag-bk .dt span{font-size:11.5px;color:var(--muted);text-transform:uppercase}.ag-bk.cx{opacity:.55}
-@media(max-width:600px){.ag-day{grid-template-columns:1fr;gap:6px}}
+.agz{display:flex;flex-direction:column;gap:20px}
+.agz .box-h{padding:20px 24px 4px}.agz .box-h h2{font-size:16px}.agz .box-b{padding:14px 24px 24px}
+.agz-hero{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:20px 28px;align-items:center;padding:24px}
+.agz-k{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+.agz-url{display:flex;align-items:center;gap:10px;margin-top:8px;font-size:clamp(18px,2.2vw,24px);font-weight:700;letter-spacing:-.02em;word-break:break-all}
+.agz-url svg{width:20px;height:20px;flex:none;color:var(--accent)}
+.agz-acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.agz-state{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:14px;background:var(--surface-2)}
+.agz-state b{display:block;font-size:14px}.agz-state span{font-size:12.5px;color:var(--muted)}
+.agz-g{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;padding-top:18px;border-top:1px solid var(--line)}
+.agz-g .t{display:flex;align-items:flex-start;gap:12px;min-width:0;flex:1 1 320px}
+.agz-g .ico{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:var(--surface-2);flex:none}.agz-g .ico svg{width:18px;height:18px}
+.agz-g .t b{display:block;font-size:14px}.agz-g .t span{font-size:13px;color:var(--muted)}
+.agz-cols{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:20px;align-items:start}
+.agz-cols>div{display:flex;flex-direction:column;gap:20px;min-width:0}
+.agz-bk{display:flex;gap:16px;align-items:flex-start;padding:18px 0;border-top:1px solid var(--line)}.agz-bk:first-child{border-top:0;padding-top:4px}
+.agz-dt{flex:none;width:60px;border-radius:14px;background:var(--surface-2);text-align:center;padding:8px 0 9px}
+.agz-dt span{display:block;font-size:11px;font-weight:600;letter-spacing:.05em;color:var(--muted);text-transform:uppercase}.agz-dt b{display:block;font-size:24px;line-height:1.1;letter-spacing:-.03em}
+.agz-bk.today .agz-dt{background:var(--accent);color:#fff}.agz-bk.today .agz-dt span{color:rgba(255,255,255,.8)}
+.agz-nm{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:15px;font-weight:700}
+.agz-when{font-size:13.5px;color:var(--muted);margin-top:2px}.agz-when b{color:var(--text,inherit);font-weight:600}
+.agz-note{margin-top:8px;font-size:13.5px;padding:8px 12px;border-radius:10px;background:var(--surface-2)}
+.agz-bk .row{margin-top:12px}
+.agz-bk.cx{opacity:.5}
+.agz-empty{padding:26px 8px;text-align:center;color:var(--muted)}.agz-empty b{display:block;color:inherit;font-size:15px;margin-bottom:4px}
+.agz-f{display:grid;grid-template-columns:1fr 1fr;gap:16px 16px}.agz-f .full{grid-column:1/-1}
+.agz-f .in{height:42px}.agz-f textarea.in{height:76px;min-height:76px;padding-top:10px}
+.agz-sec{padding-top:22px;margin-top:22px;border-top:1px solid var(--line)}
+.agz-sec h3{font-size:14px;font-weight:700;margin-bottom:4px}.agz-sec p{font-size:13px;color:var(--muted);margin-bottom:14px}
+.agz-day{display:grid;grid-template-columns:118px minmax(0,1fr);gap:12px;align-items:start;padding:12px 0;border-top:1px solid var(--line)}.agz-day:first-of-type{border-top:0}
+.agz-dn{display:flex;align-items:center;gap:10px;font-weight:600;font-size:14px;min-height:42px}.agz-off{display:flex;align-items:center;min-height:42px}.agz-add{width:42px;height:42px;border-radius:12px;border:1px dashed var(--line-2,var(--line));background:none;color:var(--muted);display:grid;place-items:center;cursor:pointer}.agz-add:hover{background:var(--surface-2);color:inherit}.agz-add svg{width:16px;height:16px}
+.agz-rg{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.agz-r{display:inline-flex;align-items:center;gap:6px;padding:4px 4px 4px 6px;border-radius:12px;background:var(--surface-2)}
+.agz-r input{width:86px;height:34px;padding:0 8px;border-radius:9px;background:var(--surface);font-variant-numeric:tabular-nums}
+.agz-r .icon-btn{width:28px;height:28px}
+.agz-off{color:var(--faint);font-size:13.5px}
+.agz-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+@media(max-width:1100px){.agz-cols{grid-template-columns:1fr}}
+@media(max-width:700px){.agz-hero{grid-template-columns:1fr;padding:20px}.agz .box-h{padding:18px 18px 2px}.agz .box-b{padding:12px 18px 20px}.agz-f{grid-template-columns:1fr}.agz-day{grid-template-columns:1fr;gap:8px}}
 .sw{position:relative;width:34px;height:20px;border-radius:99px;background:var(--line-2);border:0;flex:none;transition:background .15s}
 .sw.on{background:var(--accent)}
 .sw::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .15s;box-shadow:0 1px 2px rgba(0,0,0,.2)}
@@ -1733,47 +1767,61 @@ function agConnect(){
  agClient.requestCode();
 }
 function vAgenda(){
- const a=agCfg(),now=Date.now();
+ const a=agCfg(),now=Date.now(),todayK=agFmt(new Date().toISOString(),{year:'numeric',month:'2-digit',day:'2-digit'});
  const B=[...(S.bookings||[])].sort((x,y)=>String(x.start).localeCompare(String(y.start)));
  const live=b=>b.status!=='cancelado'&&Date.parse(b.end)>now;
  const up=B.filter(live),past=B.filter(b=>!live(b)).reverse();
  if(B.some(b=>!b.seen))setTimeout(()=>{(S.bookings||[]).forEach(b=>{b.seen=true});save();renderNav()},1200);
  if(ui.agG===undefined&&CLOUD){ui.agG='…';aFn('status').then(j=>{ui.agG=j.connected?{email:j.email||''}:j.status===200?null:{err:j.error||'Erro'};if(ui.view==='agenda')render()}).catch(()=>{ui.agG={err:'Sem conexão'};if(ui.view==='agenda')render()})}
- const g=ui.agG;
- const gBox=g==='…'?'<span class="faint">Verificando conexão…</span>'
-  :g&&g.email!==undefined?`<div class="row between wrap" style="gap:8px"><span class="row" style="gap:8px">${ic('check')}<span>Conectado${g.email?' como <b>'+esc(g.email)+'</b>':''}. Compromissos do seu Google Agenda bloqueiam horários, e cada reunião vira evento com link do Meet.</span></span><button class="btn sm ghost" data-act="agDisc">Desconectar</button></div>`
-  :g&&g.err?`<div class="row between wrap" style="gap:8px"><span class="faint">${esc(g.err)}</span><button class="btn sm" data-act="agRetry">Tentar de novo</button></div>`
-  :`<div class="row between wrap" style="gap:8px"><span class="faint">Conecte para bloquear horários em que você já tem compromisso e criar o link do Meet sozinho.</span><button class="btn sm pri" data-act="agConn">${ic('cal')}Conectar Google Agenda</button></div>`;
- const bk=b=>{const cx=b.status==='cancelado';return`<div class="ag-bk${cx?' cx':''}"><div class="dt"><span>${agFmt(b.start,{month:'short'}).replace('.','')}</span><b>${agFmt(b.start,{day:'numeric'})}</b></div>
-  <div class="grow" style="min-width:0"><div class="row wrap" style="gap:6px"><b>${esc(b.name)}</b>${cx?'<span class="pill t-gray">Cancelada</span>':b.seen?'':'<span class="pill t-accent">Nova</span>'}</div>
-  <div class="meta" style="text-transform:capitalize">${agFmt(b.start,{weekday:'long'})} · ${agFmt(b.start,{hour:'2-digit',minute:'2-digit'})} às ${agFmt(b.end,{hour:'2-digit',minute:'2-digit'})}</div>
-  ${b.note?`<div style="margin-top:4px">${esc(b.note)}</div>`:''}
-  <div class="row wrap" style="gap:6px;margin-top:8px">${b.meet&&!cx?`<a class="btn sm pri" href="${esc(b.meet)}" target="_blank" rel="noopener">Google Meet</a>`:''}${b.whats?`<a class="btn sm" href="https://wa.me/${leadWa(b.whats)}" target="_blank" rel="noopener">WhatsApp ${esc(leadTel(b.whats))}</a>`:''}${b.email?`<a class="btn sm ghost" href="mailto:${esc(b.email)}">${esc(b.email)}</a>`:''}${!cx&&live(b)?`<button class="btn sm ghost" data-act="agCancel" data-id="${b.id}">Cancelar</button>`:''}</div></div></div>`};
+ const g=ui.agG,cap=x=>x.charAt(0).toUpperCase()+x.slice(1);
+ const gOn=g&&g.email!==undefined;
+ const gRow=`<div class="agz-g"><div class="t"><span class="ico">${ic('cal')}</span><div><b>${gOn?'Google Agenda conectado':'Google Agenda'}</b><span>${g==='…'?'Verificando conexão…':gOn?`${g.email?esc(g.email)+' · ':''}seus compromissos bloqueiam horários e cada reunião ganha link do Meet.`:g&&g.err?esc(g.err):'Conecte para bloquear horários em que você já tem compromisso e criar o link do Meet sozinho.'}</span></div></div>
+  ${g==='…'?'':gOn?`<button class="btn sm ghost" data-act="agDisc">Desconectar</button>`:g&&g.err?`<button class="btn sm" data-act="agRetry">Tentar de novo</button>`:`<button class="btn sm pri" data-act="agConn">${ic('cal')}Conectar Google Agenda</button>`}</div>`;
+ const bk=b=>{const cx=b.status==='cancelado',isToday=agFmt(b.start,{year:'numeric',month:'2-digit',day:'2-digit'})===todayK;
+  return`<div class="agz-bk${cx?' cx':''}${isToday&&!cx?' today':''}"><div class="agz-dt"><span>${isToday?'Hoje':agFmt(b.start,{month:'short'}).replace('.','')}</span><b>${agFmt(b.start,{day:'numeric'})}</b></div>
+  <div class="grow" style="min-width:0"><div class="agz-nm">${esc(b.name)}${cx?'<span class="pill t-gray">Cancelada</span>':b.seen?'':'<span class="pill t-accent">Nova</span>'}</div>
+  <div class="agz-when">${cap(agFmt(b.start,{weekday:'long'}))} · <b>${agFmt(b.start,{hour:'2-digit',minute:'2-digit'})} às ${agFmt(b.end,{hour:'2-digit',minute:'2-digit'})}</b></div>
+  ${b.note?`<div class="agz-note">${esc(b.note)}</div>`:''}
+  <div class="row wrap" style="gap:6px">${b.meet&&!cx?`<a class="btn sm pri" href="${esc(b.meet)}" target="_blank" rel="noopener">Google Meet</a>`:''}${b.whats?`<a class="btn sm" href="https://wa.me/${leadWa(b.whats)}" target="_blank" rel="noopener">WhatsApp ${esc(leadTel(b.whats))}</a>`:''}${b.email?`<a class="btn sm ghost" href="mailto:${esc(b.email)}">${esc(b.email)}</a>`:''}${!cx&&live(b)?`<button class="btn sm ghost" data-act="agCancel" data-id="${b.id}">Cancelar</button>`:''}</div></div></div>`};
  const opt2=(v,list,suf)=>list.map(x=>`<option value="${x}"${+v===x?' selected':''}>${x}${suf}</option>`).join('');
- const days=[1,2,3,4,5,6,0].map(d=>{const rg=a.week[d]||[];return`<div class="ag-day"><div class="dn"><button class="sw ${rg.length?'on':''}" data-act="agDay" data-d="${d}" role="switch" aria-checked="${!!rg.length}" aria-label="${AG_DOW[d]}"><i></i></button>${AG_DOW[d]}</div>
-  <div class="ag-rg">${rg.length?rg.map((r,i)=>`<span class="ag-r"><input class="in" type="time" step="900" value="${r[0]}" data-chg="agRange" data-d="${d}" data-i="${i}" data-j="0" aria-label="${AG_DOW[d]} início"><span class="faint">–</span><input class="in" type="time" step="900" value="${r[1]}" data-chg="agRange" data-d="${d}" data-i="${i}" data-j="1" aria-label="${AG_DOW[d]} fim">${rg.length>1?`<button class="icon-btn" data-act="agRmR" data-d="${d}" data-i="${i}" aria-label="Tirar este horário">${ic('x')}</button>`:''}</span>`).join('')+(rg.length<3?`<button class="btn sm ghost" data-act="agAddR" data-d="${d}">${ic('plus')}Horário</button>`:''):'<span class="ag-off">Sem reuniões</span>'}</div></div>`}).join('');
+ const days=[1,2,3,4,5,6,0].map(d=>{const rg=a.week[d]||[];return`<div class="agz-day"><div class="agz-dn"><button class="sw ${rg.length?'on':''}" data-act="agDay" data-d="${d}" role="switch" aria-checked="${!!rg.length}" aria-label="${AG_DOW[d]}"><i></i></button>${AG_DOW[d]}</div>
+  <div class="agz-rg">${rg.length?rg.map((r,i)=>`<span class="agz-r"><input class="in" type="time" step="900" value="${r[0]}" data-chg="agRange" data-d="${d}" data-i="${i}" data-j="0" aria-label="${AG_DOW[d]} início"><span class="faint">até</span><input class="in" type="time" step="900" value="${r[1]}" data-chg="agRange" data-d="${d}" data-i="${i}" data-j="1" aria-label="${AG_DOW[d]} fim">${rg.length>1?`<button class="icon-btn" data-act="agRmR" data-d="${d}" data-i="${i}" aria-label="Tirar este horário">${ic('x')}</button>`:''}</span>`).join('')+(rg.length<3?`<button class="agz-add" data-act="agAddR" data-d="${d}" title="Adicionar outro horário" aria-label="Adicionar horário na ${AG_DOW[d]}">${ic('plus')}</button>`:''):'<span class="agz-off">Sem reuniões neste dia</span>'}</div></div>`}).join('');
  const offs=[...a.off].sort().filter(x=>x>=TODAY_ISO);
- return`<div class="page-head"><div><h1>Agenda</h1><div class="sub">Link para clientes marcarem reunião com você · ${up.length} marcada${up.length===1?'':'s'}</div></div></div>
- <section class="box"><div class="box-h"><h2>Link da agenda</h2><button class="sw ${a.on?'on':''}" data-act="agOn" role="switch" aria-checked="${!!a.on}" aria-label="Agenda aberta"><i></i></button></div><div class="box-b">
-  <div class="ag-link">${ic('link')}<span class="grow">${AG_URL.replace('https://','')}</span></div>
-  <div class="row wrap" style="gap:6px;margin-top:10px"><button class="btn sm pri" data-act="agCopy">${ic('copy')}Copiar link</button><a class="btn sm" href="${AG_URL}" target="_blank" rel="noopener">Abrir página</a><span class="faint" style="align-self:center">${a.on?'Aberta: clientes conseguem marcar.':'Fechada: a página avisa que não há agenda.'}</span></div>
-  <div style="margin-top:14px">${gBox}</div></div></section>
- <section class="box"><div class="box-h"><h2>Próximas reuniões</h2><span class="faint">${up.length}</span></div><div class="box-b">${up.map(bk).join('')||'<div class="faint" style="padding:6px 0">Nenhuma reunião marcada ainda. Mande o link para seus clientes.</div>'}
-  ${past.length?`<details style="margin-top:10px"><summary class="faint" style="cursor:pointer">Anteriores e canceladas (${past.length})</summary>${past.slice(0,40).map(bk).join('')}</details>`:''}</div></section>
- <section class="box"><div class="box-h"><h2>Como a reunião aparece</h2></div><div class="box-b"><div class="fields">
-  <div class="field"><label for="ag-title">Nome da reunião</label><input class="in" id="ag-title" value="${esc(a.title)}" data-chg="agSet" data-k="title" maxlength="80"></div>
-  <div class="field"><label for="ag-host">Com quem <span class="faint">(aparece para o cliente)</span></label><input class="in" id="ag-host" value="${esc(a.host||'')}" data-chg="agSet" data-k="host" placeholder="Matheus · Stage" maxlength="60"></div>
-  <div class="field" style="grid-column:1/-1"><label for="ag-desc">Texto da página</label><textarea class="in" id="ag-desc" data-chg="agSet" data-k="desc" maxlength="400" style="min-height:70px;height:70px" placeholder="Escolha o dia e o horário que ficam melhor para você.">${esc(a.desc||'')}</textarea></div>
-  <div class="field"><label for="ag-dur">Duração</label><select class="in" id="ag-dur" data-chg="agSet" data-k="dur" data-n="1">${opt2(a.dur,[15,20,30,40,45,60,90],' min')}</select></div>
-  <div class="field"><label for="ag-buf">Intervalo entre reuniões</label><select class="in" id="ag-buf" data-chg="agSet" data-k="buffer" data-n="1">${opt2(a.buffer,[0,5,10,15,30],' min')}</select></div>
-  <div class="field"><label for="ag-not">Antecedência mínima</label><select class="in" id="ag-not" data-chg="agSet" data-k="notice" data-n="1">${opt2(a.notice,[0,1,2,4,12,24,48],' h')}</select></div>
-  <div class="field"><label for="ag-ah">Até quantos dias à frente</label><select class="in" id="ag-ah" data-chg="agSet" data-k="ahead" data-n="1">${opt2(a.ahead,[7,14,21,30,45,60],' dias')}</select></div>
- </div></div></section>
- <section class="box"><div class="box-h"><h2>Horários disponíveis</h2><span class="faint">Horário de MS</span></div><div class="box-b"><div class="ag-days">${days}</div></div></section>
- <section class="box"><div class="box-h"><h2>Dias bloqueados</h2></div><div class="box-b">
-  <div class="row wrap" style="gap:6px"><input class="in" type="date" id="ag-offd" min="${TODAY_ISO}" style="max-width:180px" aria-label="Dia para bloquear"><button class="btn sm" data-act="agOffAdd">${ic('plus')}Bloquear dia</button></div>
-  <div class="row wrap" style="gap:6px;margin-top:10px">${offs.map(x=>`<span class="tag row" style="gap:6px">${fmtD(x)}<button class="icon-btn" style="width:22px;height:22px" data-act="agOffRm" data-d="${x}" aria-label="Desbloquear ${fmtD(x)}">${ic('x')}</button></span>`).join('')||'<span class="faint">Feriados, viagens, folgas: bloqueie aqui.</span>'}</div>
- </div></section>`;
+ return`<div class="page-head"><div><h1>Agenda</h1><div class="sub">Clientes marcam reunião com você por um link · ${up.length} marcada${up.length===1?'':'s'}</div></div></div>
+ <div class="agz">
+ <section class="box agz-hero">
+  <div style="min-width:0"><div class="agz-k">Link para mandar aos clientes</div>
+   <div class="agz-url">${ic('link')}<span>${AG_URL.replace('https://','')}</span></div>
+   <div class="agz-acts"><button class="btn pri" data-act="agCopy">${ic('copy')}Copiar link</button><a class="btn" href="${AG_URL}" target="_blank" rel="noopener">Abrir página</a></div></div>
+  <div class="agz-state"><button class="sw ${a.on?'on':''}" data-act="agOn" role="switch" aria-checked="${!!a.on}" aria-label="Agenda aberta"><i></i></button><div><b>${a.on?'Agenda aberta':'Agenda fechada'}</b><span>${a.on?'Clientes conseguem marcar':'A página avisa que não há horários'}</span></div></div>
+  ${gRow}
+ </section>
+ <div class="agz-cols">
+  <div>
+   <section class="box"><div class="box-h"><h2>Próximas reuniões</h2><span class="faint">${up.length}</span></div><div class="box-b">
+    ${up.map(bk).join('')||'<div class="agz-empty"><b>Nenhuma reunião marcada</b>Copie o link acima e mande para seus clientes.</div>'}
+    ${past.length?`<details style="margin-top:14px;border-top:1px solid var(--line);padding-top:14px"><summary class="faint" style="cursor:pointer">Anteriores e canceladas (${past.length})</summary>${past.slice(0,40).map(bk).join('')}</details>`:''}
+   </div></section>
+  </div>
+  <div>
+   <section class="box"><div class="box-h"><h2>Configurações</h2><span class="faint">Horário de MS</span></div><div class="box-b">
+    <div class="agz-f">
+     <div class="field"><label for="ag-title">Nome da reunião</label><input class="in" id="ag-title" value="${esc(a.title)}" data-chg="agSet" data-k="title" maxlength="80"></div>
+     <div class="field"><label for="ag-host">Com quem</label><input class="in" id="ag-host" value="${esc(a.host||'')}" data-chg="agSet" data-k="host" placeholder="Matheus · Stage" maxlength="60"></div>
+     <div class="field full"><label for="ag-desc">Texto da página</label><textarea class="in" id="ag-desc" data-chg="agSet" data-k="desc" maxlength="400" placeholder="Escolha o dia e o horário que ficam melhor para você.">${esc(a.desc||'')}</textarea></div>
+     <div class="field"><label for="ag-dur">Duração</label><select class="in" id="ag-dur" data-chg="agSet" data-k="dur" data-n="1">${opt2(a.dur,[15,20,30,40,45,60,90],' min')}</select></div>
+     <div class="field"><label for="ag-buf">Intervalo entre reuniões</label><select class="in" id="ag-buf" data-chg="agSet" data-k="buffer" data-n="1">${opt2(a.buffer,[0,5,10,15,30],' min')}</select></div>
+     <div class="field"><label for="ag-not">Antecedência mínima</label><select class="in" id="ag-not" data-chg="agSet" data-k="notice" data-n="1">${opt2(a.notice,[0,1,2,4,12,24,48],' h')}</select></div>
+     <div class="field"><label for="ag-ah">Até quantos dias à frente</label><select class="in" id="ag-ah" data-chg="agSet" data-k="ahead" data-n="1">${opt2(a.ahead,[7,14,21,30,45,60],' dias')}</select></div>
+    </div>
+    <div class="agz-sec"><h3>Horários disponíveis</h3><p>Os clientes só veem horários dentro destas faixas.</p>${days}</div>
+    <div class="agz-sec"><h3>Dias bloqueados</h3><p>Feriados, viagens e folgas ficam sem horários.</p>
+     <div class="row wrap" style="gap:8px"><input class="in" type="date" id="ag-offd" min="${TODAY_ISO}" style="max-width:190px;height:38px" aria-label="Dia para bloquear"><button class="btn sm" data-act="agOffAdd">${ic('plus')}Bloquear dia</button></div>
+     ${offs.length?`<div class="agz-chips">${offs.map(x=>`<span class="tag row" style="gap:6px">${fmtD(x)}<button class="icon-btn" style="width:22px;height:22px" data-act="agOffRm" data-d="${x}" aria-label="Desbloquear ${fmtD(x)}">${ic('x')}</button></span>`).join('')}</div>`:''}
+    </div>
+   </div></section>
+  </div>
+ </div></div>`;
 }
 function vLeads(){
  const L=[...(S.leads||[])].sort((a,b)=>String(b.created||'').localeCompare(String(a.created||'')));
