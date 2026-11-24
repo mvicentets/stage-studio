@@ -76,7 +76,6 @@ textarea.in{height:auto;min-height:84px;padding:13px 15px;resize:vertical;line-h
 .btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;height:56px;border-radius:999px;border:0;background:var(--accent);color:#fff;font-weight:700;font-size:17px;cursor:pointer;transition:background .25s var(--ease),transform .15s,opacity .2s;text-decoration:none}
 .btn:hover{background:#1940E0}.btn:active{transform:scale(.98)}
 .btn[disabled]{opacity:.6;pointer-events:none}
-.btn.wa{background:#25D366;color:#0b2e17}.btn.wa:hover{background:#1fbf5b}
 .btn.ghost{background:var(--white);color:var(--fg);border:1px solid var(--line)}
 .btn.ghost:hover{background:#F7F7F4}
 .btn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
@@ -101,7 +100,7 @@ textarea.in{height:auto;min-height:84px;padding:13px 15px;resize:vertical;line-h
 @media (min-width:600px){.wrap{padding-top:36px}.card{padding:26px 24px}.days{margin:0 -24px;padding-left:24px;padding-right:24px}.times{grid-template-columns:repeat(4,1fr)}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
-<script>window.AGENDA_CFG={"url": "https://bfpzjpwtzogtgwwklkjz.supabase.co", "key": "sb_publishable_S_0MZ2yopkPPBIOT3dERmw_IQPvdAzE", "wa": ""}</script>
+<script>window.AGENDA_CFG={"url": "https://bfpzjpwtzogtgwwklkjz.supabase.co", "key": "sb_publishable_S_0MZ2yopkPPBIOT3dERmw_IQPvdAzE"}</script>
 </head>
 <body>
 <div class="wrap">
@@ -123,7 +122,7 @@ const AG=window.AGENDA_CFG||{};
 const FN=AG.url+'/functions/v1/agenda';
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const IC={wa:'<svg viewBox="0 0 24 24" style="fill:currentColor;stroke:none"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1-.7.8-.8 1-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6a2.7 2.7 0 0 0 1.8-1.2 2.2 2.2 0 0 0 .1-1.2c0-.1-.2-.2-.4-.3Z"/></svg>',clock:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',video:'<svg viewBox="0 0 24 24"><rect x="3" y="6" width="13" height="12" rx="3"/><path d="m16 10 5-3v10l-5-3"/></svg>',user:'<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>',back:'<svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>',check:'<svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>',cal:'<svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M8 3v4M16 3v4M3.5 10h17"/></svg>'};
+const IC={clock:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',video:'<svg viewBox="0 0 24 24"><rect x="3" y="6" width="13" height="12" rx="3"/><path d="m16 10 5-3v10l-5-3"/></svg>',user:'<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>',back:'<svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>',check:'<svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>',cal:'<svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M8 3v4M16 3v4M3.5 10h17"/></svg>'};
 const TZ=Intl.DateTimeFormat().resolvedOptions().timeZone||'America/Sao_Paulo';
 const F=(o)=>new Intl.DateTimeFormat('pt-BR',{timeZone:TZ,...o});
 const fDay=F({year:'numeric',month:'2-digit',day:'2-digit'}),fW=F({weekday:'short'}),fN=F({day:'numeric'}),fM=F({month:'short'}),fT=F({hour:'2-digit',minute:'2-digit'}),fLong=F({weekday:'long',day:'numeric',month:'long'});
@@ -199,7 +198,7 @@ function renderForm(err){
     busy=true;const b=$('#go');b.disabled=true;b.textContent='Confirmando…';
     let j;try{j=await call({action:'book',start:pick,name,email,whats,note,hp:$('#hp').value})}catch(x){j={error:'Sem conexão. Tente de novo.'}}
     busy=false;
-    if(j.ok){try{localStorage.setItem('stage-agenda',JSON.stringify({name,email,whats}))}catch(x){}return renderOk(j,name)}
+    if(j.ok){try{localStorage.setItem('stage-agenda',JSON.stringify({name,email,whats}))}catch(x){}return renderOk(j)}
     if(j.taken){pick=null;await load(true);const A=$('#app');A.insertAdjacentHTML('afterbegin',`<div class="err" role="alert" style="margin-bottom:12px">${esc(j.error)}</div>`);return}
     saved={name,email,whats};renderForm(j.error||'Não foi possível agendar. Tente de novo.');$('#nt').value=note;
   };
@@ -210,18 +209,15 @@ function ics(j){
   const txt=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Stage//Agenda//PT','BEGIN:VEVENT','UID:'+z(j.start)+'@stagemed.com.br','DTSTAMP:'+z(Date.now()),'DTSTART:'+z(j.start),'DTEND:'+z(j.end),'SUMMARY:'+(j.title||'Reunião com a Stage').replace(/[,;]/g,' '),j.meet?'LOCATION:'+j.meet:'',j.meet?'DESCRIPTION:Link da chamada: '+j.meet:'','END:VEVENT','END:VCALENDAR'].filter(Boolean).join('\r\n');
   return 'data:text/calendar;charset=utf-8,'+encodeURIComponent(txt);
 }
-function renderOk(j,name){
+function renderOk(j){
   const d=new Date(j.start);
-  const WA=String(AG.wa||'').replace(/\D/g,'');
-  const msg=`Pronto, escolhi um horário! ${fL(d)} às ${fT.format(d)}.${name?` Aqui é ${name.split(' ').slice(0,2).join(' ')}.`:''}`;
   $('#app').innerHTML=`<section class="card ok">
     <div class="tick">${IC.check}</div>
     <h2>Reunião <em>marcada</em></h2>
     <div class="when">${fL(d)} · ${fT.format(d)}</div>
     <p>${j.meet?'Mandamos o convite com o link da chamada para o seu e-mail.':'Está confirmado. Até lá!'}</p>
     <div class="acts">
-      ${WA?`<a class="btn wa" href="https://wa.me/${WA}?text=${encodeURIComponent(msg)}" rel="noopener">${IC.wa}Pronto, escolhi um horário</a>`:''}
-      ${j.meet?`<a class="btn${WA?' ghost':''}" href="${esc(j.meet)}" target="_blank" rel="noopener">${IC.video}Link da chamada</a>`:''}
+      ${j.meet?`<a class="btn" href="${esc(j.meet)}" target="_blank" rel="noopener">${IC.video}Link da chamada</a>`:''}
       <a class="btn ghost" href="${ics(j)}" download="reuniao-stage.ics">${IC.cal}Salvar no meu calendário</a>
     </div></section>`;
   $('#chips').innerHTML='';window.scrollTo({top:0,behavior:'smooth'});
