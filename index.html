@@ -302,6 +302,11 @@ textarea.in{min-height:250px;resize:vertical;line-height:1.6}
 .stat .k{font-size:11.5px;color:var(--faint)}
 .cgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,270px),1fr));gap:14px}
 .client{padding:16px 18px;display:flex;flex-direction:column;gap:14px}
+.ag-link{display:flex;align-items:center;gap:8px;background:var(--surface-2);border-radius:12px;padding:10px 12px;font-weight:600;word-break:break-all}
+.ag-days{display:grid;gap:8px}.ag-day{display:grid;grid-template-columns:112px 1fr;gap:10px;align-items:start;padding:10px 0;border-top:1px solid var(--line)}.ag-day:first-child{border-top:0}.ag-day .dn{display:flex;align-items:center;gap:10px;font-weight:600;min-height:36px}
+.ag-rg{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.ag-r{display:flex;align-items:center;gap:4px}.ag-r input{width:96px;height:36px;padding:0 8px}.ag-off{color:var(--faint);font-size:13.5px;min-height:36px;display:flex;align-items:center}
+.ag-bk{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-top:1px solid var(--line)}.ag-bk:first-child{border-top:0}.ag-bk .dt{flex:none;width:58px;text-align:center;border-radius:12px;background:var(--surface-2);padding:7px 0}.ag-bk .dt b{display:block;font-size:20px;line-height:1.1;letter-spacing:-.02em}.ag-bk .dt span{font-size:11.5px;color:var(--muted);text-transform:uppercase}.ag-bk.cx{opacity:.55}
+@media(max-width:600px){.ag-day{grid-template-columns:1fr;gap:6px}}
 .sw{position:relative;width:34px;height:20px;border-radius:99px;background:var(--line-2);border:0;flex:none;transition:background .15s}
 .sw.on{background:var(--accent)}
 .sw::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .15s;box-shadow:0 1px 2px rgba(0,0,0,.2)}
@@ -867,7 +872,7 @@ function seed(){
 }
 function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.posts)return s}catch(e){}return null}
 let S=CLOUD?{clients:[],team:[{id:'u0',name:'…',email:'',role:'membro',perms:{stages:[]}}],posts:[],campaigns:[],fin:[],msgs:[],avatars:[],rules:[],todos:[],leads:[],settings:{accent:'#1A3FF5',theme:'system'},seq:100,v2:true}:(load()||seed());
-if(!S.leads)S.leads=[];
+if(!S.leads)S.leads=[];if(!S.bookings)S.bookings=[];
 if(S.settings&&S.settings.accent==='#3E63DD')S.settings.accent='#1A3FF5';
 S.msgs=S.msgs||[];S.avatars=S.avatars||[];S.todos=S.todos||[];if(!S.rules){S.rules=CLOUD?[]:DEFAULT_RULES()}
 S.team.forEach((u,i)=>{
@@ -886,7 +891,7 @@ const ME=()=>S.team.find(u=>u.id===ui.as)||S.team[0];
 const PERMS=[['inicio','Início'],['calendario','Calendário'],['portal','Portal do cliente'],['campanhas','Campanhas'],['financeiro','Financeiro'],['clientes','Clientes'],['banco','Banco de posts'],['senhas','Cofre de senhas'],['anuncios','Anúncios']];
 const isAdmin=u=>u.role==='admin';
 function allowedStages(){const u=ME();return isAdmin(u)?STAGES.map(s=>s.id):((u.perms&&u.perms.stages)||[])}
-function can(view){if(view==='tarefas')return true;const u=ME();if(isAdmin(u))return true;if(view==='equipe'||view==='automacoes'||view==='leads')return false;if(view==='producao')return allowedStages().length>0;if(view.startsWith('etapa-'))return allowedStages().includes(view.slice(6));return!!(u.perms&&u.perms[view])}
+function can(view){if(view==='tarefas')return true;const u=ME();if(isAdmin(u))return true;if(view==='equipe'||view==='automacoes'||view==='leads'||view==='agenda')return false;if(view==='producao')return allowedStages().length>0;if(view.startsWith('etapa-'))return allowedStages().includes(view.slice(6));return!!(u.perms&&u.perms[view])}
 function firstAllowed(){return['inicio','producao',...STAGES.map(s=>'etapa-'+s.id),'calendario','portal','banco','campanhas','anuncios','financeiro','clientes'].find(can)||'equipe'}
 
 /* ---------- estado da interface ---------- */
@@ -914,7 +919,7 @@ const themeSeg=()=>[['system','monitor','Auto'],['light','sun','Claro'],['dark',
 /* ---------- navegação ---------- */
 const NAV_TOP=[['inicio','home','Início'],['tarefas','todo','Minhas tarefas'],['calendario','cal','Calendário'],['portal','check','Portal do cliente']];
 const NAV_ADS=[['campanhas','mega','Campanhas'],['anuncios','target','Anúncios']];
-const NAV_GES=[['leads','bell','Leads'],['senhas','lock','Cofre de senhas'],['automacoes','bolt','Automações'],['financeiro','wallet','Financeiro'],['clientes','users','Clientes'],['equipe','sliders','Equipe e aparência']];
+const NAV_GES=[['agenda','cal','Agenda'],['leads','bell','Leads'],['senhas','lock','Cofre de senhas'],['automacoes','bolt','Automações'],['financeiro','wallet','Financeiro'],['clientes','users','Clientes'],['equipe','sliders','Equipe e aparência']];
 const STAGE_DOT={ideia:'gray',copy:'blue',criacao:'amber',design:'accent',edicao:'red',aprov:'amber',pub:'green',ads:'accent'};
 const curStage=()=>ui.view.startsWith('etapa-')?ui.view.slice(6):null;
 function renderNav(){
@@ -931,7 +936,7 @@ function renderNav(){
   +(NAV_ADS.some(x=>can(x[0]))?'<div class="nav-h">Tráfego pago</div>':'')
   +NAV_ADS.filter(x=>can(x[0])).map(x=>a(x[0],ic(x[1]),x[2],x[0]==='anuncios'?n(S.posts.filter(p=>p.stage==='ads'&&p.status!=='Encerrado').length):'')).join('')
   +(NAV_GES.some(x=>can(x[0]))?'<div class="nav-h">Gestão</div>':'')
-  +NAV_GES.filter(x=>can(x[0])).map(x=>a(x[0],ic(x[1]),x[2]==='Equipe e aparência'?'Equipe e acessos':x[2],x[0]==='leads'&&leadsNew()?`<span class="count">${leadsNew()}</span>`:'')).join('');
+  +NAV_GES.filter(x=>can(x[0])).map(x=>a(x[0],ic(x[1]),x[2]==='Equipe e aparência'?'Equipe e acessos':x[2],x[0]==='leads'&&leadsNew()?`<span class="count">${leadsNew()}</span>`:x[0]==='agenda'&&bookNew()?`<span class="count">${bookNew()}</span>`:'')).join('');
 }
 const FUNIL=['Topo','Meio','Fundo'];
 const OBJ=['Autoridade','Educação','Engajamento','Conexão','Prova social','Conversão'];
@@ -1071,9 +1076,9 @@ function vAnuncios(){
  <div class="toolbar" style="margin-bottom:14px"><select class="sel" data-chg="adF" data-k="client">${opt('all','Todos os clientes',f.client)}${S.clients.map(c=>opt(c.id,c.name,f.client)).join('')}</select><select class="sel" data-chg="adF" data-k="camp">${opt('all','Campanha: todas',f.camp)}${opt('','Sem campanha',f.camp)}${S.campaigns.map(c=>opt(c.id,c.name,f.camp)).join('')}</select><select class="sel" data-chg="adF" data-k="st">${opt('ativos','Ativos (sem encerrados)',f.st)}${opt('todos','Todos',f.st)}${AD_ST.map(x=>opt(x,x,f.st)).join('')}</select></div>
  ${Object.keys(G).sort((a,b)=>cl(a).name.localeCompare(cl(b).name)).map(k=>`<section class="todo-g"><div class="grp-h"><span class="gtag lg" style="--c:${cl(k).color}">${esc(cl(k).name)}</span><span class="faint">${G[k].length}</span></div><div class="cri-grid">${G[k].map(card).join('')}</div></section>`).join('')||'<div class="empty">Nenhum anúncio aqui. Crie um anúncio pelo botão “Novo anúncio”: ele começa em Design gráfico e, quando for aprovado, aparece nesta tela.</div>'}`;
 }
-const VIEWS={leads:vLeads,anuncios:vAnuncios,senhas:vSenhas,tarefas:vTarefas,automacoes:vAuto,banco:vBanco,inicio:vInicio,producao:vTodas,calendario:vCalendario,portal:vPortal2,campanhas:vCampanhas,financeiro:vFinanceiro,clientes:vClientes,equipe:vEquipe};
+const VIEWS={agenda:vAgenda,leads:vLeads,anuncios:vAnuncios,senhas:vSenhas,tarefas:vTarefas,automacoes:vAuto,banco:vBanco,inicio:vInicio,producao:vTodas,calendario:vCalendario,portal:vPortal2,campanhas:vCampanhas,financeiro:vFinanceiro,clientes:vClientes,equipe:vEquipe};
 const LABELS={anuncios:'Anúncios',senhas:'Cofre de senhas',tarefas:'Minhas tarefas',banco:'Banco de posts',automacoes:'Automações',inicio:'Início',producao:'Todas as tarefas',calendario:'Calendário',portal:'Portal do cliente',campanhas:'Campanhas',financeiro:'Financeiro',clientes:'Clientes',equipe:'Equipe e aparência'};
-const FAB={anuncios:['newAd','Novo anúncio'],senhas:['credNew','Nova senha'],tarefas:['todoFocus','Nova tarefa pessoal'],campanhas:['editCamp','Nova campanha'],clientes:['editClient','Novo cliente'],equipe:['addUser','Adicionar pessoa'],automacoes:['ruleNew','Nova automação'],financeiro:['finFocus','Novo lançamento'],banco:null,portal:null};
+const FAB={anuncios:['newAd','Novo anúncio'],senhas:['credNew','Nova senha'],tarefas:['todoFocus','Nova tarefa pessoal'],campanhas:['editCamp','Nova campanha'],clientes:['editClient','Novo cliente'],equipe:['addUser','Adicionar pessoa'],automacoes:['ruleNew','Nova automação'],financeiro:['finFocus','Novo lançamento'],banco:null,portal:null,agenda:null,leads:null};
 function fabSync(){const v=ui.view;const cfg=v in FAB?FAB[v]:(allowedStages().length?['newPost','Nova tarefa']:null);
  [document.getElementById('fab'),document.getElementById('mtPlus')].forEach(b=>{if(!b)return;b.hidden=!!ui.clientMode||!cfg;if(cfg){b.dataset.act=cfg[0];b.title=cfg[1];b.setAttribute('aria-label',cfg[1]);const sp=b.querySelector('span');if(sp)sp.textContent=cfg[1]}})}
 function render(){try{fabSync()}catch(e){}
@@ -1704,6 +1709,72 @@ const leadsNew=()=>(S.leads||[]).filter(l=>!l.seen).length;
 const leadWa=d=>{d=String(d||'').replace(/\D/g,'');return d.length<=11?'55'+d:d};
 const leadTel=d=>{d=String(d||'').replace(/\D/g,'');return d.length===11?`(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`:d.length===10?`(${d.slice(0,2)}) ${d.slice(2,6)}-${d.slice(6)}`:d};
 const leadWhen=s=>{if(!s)return'—';const d=new Date(s);return`${d.getDate()} ${MES[d.getMonth()]} · ${pad(d.getHours())}:${pad(d.getMinutes())}`};
+const AG_URL='https://app.stagemed.com.br/agendar';
+const pad2=n=>String(n).padStart(2,'0');
+const AG_DOW=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+const AG_DEF=()=>{const w={};[1,2,3,4,5].forEach(d=>{w[d]=[['09:00','12:00'],['14:00','18:00']]});return{on:false,title:'Reunião com a Stage',desc:'',dur:30,buffer:0,notice:12,ahead:21,host:'',off:[],week:w}};
+const agCfg=()=>{if(!S.settings.agenda)S.settings.agenda=AG_DEF();const a=S.settings.agenda;if(!a.week)a.week={};if(!a.off)a.off=[];return a};
+const agFmt=(iso,o)=>new Intl.DateTimeFormat('pt-BR',{timeZone:TZ,...o}).format(new Date(iso));
+const bookNew=()=>(S.bookings||[]).filter(b=>!b.seen&&b.status!=='cancelado').length;
+async function aFn(action,extra={}){const{data}=await sb.auth.getSession();const tok=data&&data.session&&data.session.access_token;
+ const r=await fetch(CLOUD.url+'/functions/v1/agenda',{method:'POST',headers:{Authorization:'Bearer '+tok,apikey:CLOUD.key,'Content-Type':'application/json'},body:JSON.stringify({action,...extra})});
+ let j={};try{j=await r.json()}catch(e){}return{status:r.status,...j}}
+let agClient=null;
+function agConnect(){
+ if(!(window.google&&google.accounts&&google.accounts.oauth2)){toast('Carregando o Google… toque de novo em 2 segundos.');gLoad().catch(()=>{});return}
+ if(!agClient)agClient=google.accounts.oauth2.initCodeClient({client_id:CLOUD.gclient,scope:'openid email https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/calendar.freebusy',ux_mode:'popup',select_account:true,callback:async r=>{
+  if(!r||!r.code){toast('Não foi possível conectar o Google Agenda.');return}
+  toast('Conectando…');const j=await aFn('connect',{code:r.code});
+  if(j.saved){ui.agG={email:j.email};toast('Google Agenda conectado.');render();return}
+  if(j.access_token){try{google.accounts.oauth2.revoke(j.access_token,()=>{})}catch(e){}}
+  if(j.missing){toast(j.error);return}
+  if(j.access_token){toast('Quase lá: toque em “Conectar Google Agenda” mais uma vez para deixar a conexão permanente.');return}
+  toast('Erro ao conectar: '+(j.error||'tente de novo'))},error_callback:e=>{toast(e&&e.type==='popup_closed'?'Janela do Google fechada.':'Não foi possível abrir o Google. Libere pop-ups para este site.')}});
+ agClient.requestCode();
+}
+function vAgenda(){
+ const a=agCfg(),now=Date.now();
+ const B=[...(S.bookings||[])].sort((x,y)=>String(x.start).localeCompare(String(y.start)));
+ const live=b=>b.status!=='cancelado'&&Date.parse(b.end)>now;
+ const up=B.filter(live),past=B.filter(b=>!live(b)).reverse();
+ if(B.some(b=>!b.seen))setTimeout(()=>{(S.bookings||[]).forEach(b=>{b.seen=true});save();renderNav()},1200);
+ if(ui.agG===undefined&&CLOUD){ui.agG='…';aFn('status').then(j=>{ui.agG=j.connected?{email:j.email||''}:j.status===200?null:{err:j.error||'Erro'};if(ui.view==='agenda')render()}).catch(()=>{ui.agG={err:'Sem conexão'};if(ui.view==='agenda')render()})}
+ const g=ui.agG;
+ const gBox=g==='…'?'<span class="faint">Verificando conexão…</span>'
+  :g&&g.email!==undefined?`<div class="row between wrap" style="gap:8px"><span class="row" style="gap:8px">${ic('check')}<span>Conectado${g.email?' como <b>'+esc(g.email)+'</b>':''}. Compromissos do seu Google Agenda bloqueiam horários, e cada reunião vira evento com link do Meet.</span></span><button class="btn sm ghost" data-act="agDisc">Desconectar</button></div>`
+  :g&&g.err?`<div class="row between wrap" style="gap:8px"><span class="faint">${esc(g.err)}</span><button class="btn sm" data-act="agRetry">Tentar de novo</button></div>`
+  :`<div class="row between wrap" style="gap:8px"><span class="faint">Conecte para bloquear horários em que você já tem compromisso e criar o link do Meet sozinho.</span><button class="btn sm pri" data-act="agConn">${ic('cal')}Conectar Google Agenda</button></div>`;
+ const bk=b=>{const cx=b.status==='cancelado';return`<div class="ag-bk${cx?' cx':''}"><div class="dt"><span>${agFmt(b.start,{month:'short'}).replace('.','')}</span><b>${agFmt(b.start,{day:'numeric'})}</b></div>
+  <div class="grow" style="min-width:0"><div class="row wrap" style="gap:6px"><b>${esc(b.name)}</b>${cx?'<span class="pill t-gray">Cancelada</span>':b.seen?'':'<span class="pill t-accent">Nova</span>'}</div>
+  <div class="meta" style="text-transform:capitalize">${agFmt(b.start,{weekday:'long'})} · ${agFmt(b.start,{hour:'2-digit',minute:'2-digit'})} às ${agFmt(b.end,{hour:'2-digit',minute:'2-digit'})}</div>
+  ${b.note?`<div style="margin-top:4px">${esc(b.note)}</div>`:''}
+  <div class="row wrap" style="gap:6px;margin-top:8px">${b.meet&&!cx?`<a class="btn sm pri" href="${esc(b.meet)}" target="_blank" rel="noopener">Google Meet</a>`:''}${b.whats?`<a class="btn sm" href="https://wa.me/${leadWa(b.whats)}" target="_blank" rel="noopener">WhatsApp ${esc(leadTel(b.whats))}</a>`:''}${b.email?`<a class="btn sm ghost" href="mailto:${esc(b.email)}">${esc(b.email)}</a>`:''}${!cx&&live(b)?`<button class="btn sm ghost" data-act="agCancel" data-id="${b.id}">Cancelar</button>`:''}</div></div></div>`};
+ const opt2=(v,list,suf)=>list.map(x=>`<option value="${x}"${+v===x?' selected':''}>${x}${suf}</option>`).join('');
+ const days=[1,2,3,4,5,6,0].map(d=>{const rg=a.week[d]||[];return`<div class="ag-day"><div class="dn"><button class="sw ${rg.length?'on':''}" data-act="agDay" data-d="${d}" role="switch" aria-checked="${!!rg.length}" aria-label="${AG_DOW[d]}"><i></i></button>${AG_DOW[d]}</div>
+  <div class="ag-rg">${rg.length?rg.map((r,i)=>`<span class="ag-r"><input class="in" type="time" step="900" value="${r[0]}" data-chg="agRange" data-d="${d}" data-i="${i}" data-j="0" aria-label="${AG_DOW[d]} início"><span class="faint">–</span><input class="in" type="time" step="900" value="${r[1]}" data-chg="agRange" data-d="${d}" data-i="${i}" data-j="1" aria-label="${AG_DOW[d]} fim">${rg.length>1?`<button class="icon-btn" data-act="agRmR" data-d="${d}" data-i="${i}" aria-label="Tirar este horário">${ic('x')}</button>`:''}</span>`).join('')+(rg.length<3?`<button class="btn sm ghost" data-act="agAddR" data-d="${d}">${ic('plus')}Horário</button>`:''):'<span class="ag-off">Sem reuniões</span>'}</div></div>`}).join('');
+ const offs=[...a.off].sort().filter(x=>x>=TODAY_ISO);
+ return`<div class="page-head"><div><h1>Agenda</h1><div class="sub">Link para clientes marcarem reunião com você · ${up.length} marcada${up.length===1?'':'s'}</div></div></div>
+ <section class="box"><div class="box-h"><h2>Link da agenda</h2><button class="sw ${a.on?'on':''}" data-act="agOn" role="switch" aria-checked="${!!a.on}" aria-label="Agenda aberta"><i></i></button></div><div class="box-b">
+  <div class="ag-link">${ic('link')}<span class="grow">${AG_URL.replace('https://','')}</span></div>
+  <div class="row wrap" style="gap:6px;margin-top:10px"><button class="btn sm pri" data-act="agCopy">${ic('copy')}Copiar link</button><a class="btn sm" href="${AG_URL}" target="_blank" rel="noopener">Abrir página</a><span class="faint" style="align-self:center">${a.on?'Aberta: clientes conseguem marcar.':'Fechada: a página avisa que não há agenda.'}</span></div>
+  <div style="margin-top:14px">${gBox}</div></div></section>
+ <section class="box"><div class="box-h"><h2>Próximas reuniões</h2><span class="faint">${up.length}</span></div><div class="box-b">${up.map(bk).join('')||'<div class="faint" style="padding:6px 0">Nenhuma reunião marcada ainda. Mande o link para seus clientes.</div>'}
+  ${past.length?`<details style="margin-top:10px"><summary class="faint" style="cursor:pointer">Anteriores e canceladas (${past.length})</summary>${past.slice(0,40).map(bk).join('')}</details>`:''}</div></section>
+ <section class="box"><div class="box-h"><h2>Como a reunião aparece</h2></div><div class="box-b"><div class="fields">
+  <div class="field"><label for="ag-title">Nome da reunião</label><input class="in" id="ag-title" value="${esc(a.title)}" data-chg="agSet" data-k="title" maxlength="80"></div>
+  <div class="field"><label for="ag-host">Com quem <span class="faint">(aparece para o cliente)</span></label><input class="in" id="ag-host" value="${esc(a.host||'')}" data-chg="agSet" data-k="host" placeholder="Matheus · Stage" maxlength="60"></div>
+  <div class="field" style="grid-column:1/-1"><label for="ag-desc">Texto da página</label><textarea class="in" id="ag-desc" data-chg="agSet" data-k="desc" maxlength="400" style="min-height:70px;height:70px" placeholder="Escolha o dia e o horário que ficam melhor para você.">${esc(a.desc||'')}</textarea></div>
+  <div class="field"><label for="ag-dur">Duração</label><select class="in" id="ag-dur" data-chg="agSet" data-k="dur" data-n="1">${opt2(a.dur,[15,20,30,40,45,60,90],' min')}</select></div>
+  <div class="field"><label for="ag-buf">Intervalo entre reuniões</label><select class="in" id="ag-buf" data-chg="agSet" data-k="buffer" data-n="1">${opt2(a.buffer,[0,5,10,15,30],' min')}</select></div>
+  <div class="field"><label for="ag-not">Antecedência mínima</label><select class="in" id="ag-not" data-chg="agSet" data-k="notice" data-n="1">${opt2(a.notice,[0,1,2,4,12,24,48],' h')}</select></div>
+  <div class="field"><label for="ag-ah">Até quantos dias à frente</label><select class="in" id="ag-ah" data-chg="agSet" data-k="ahead" data-n="1">${opt2(a.ahead,[7,14,21,30,45,60],' dias')}</select></div>
+ </div></div></section>
+ <section class="box"><div class="box-h"><h2>Horários disponíveis</h2><span class="faint">Horário de MS</span></div><div class="box-b"><div class="ag-days">${days}</div></div></section>
+ <section class="box"><div class="box-h"><h2>Dias bloqueados</h2></div><div class="box-b">
+  <div class="row wrap" style="gap:6px"><input class="in" type="date" id="ag-offd" min="${TODAY_ISO}" style="max-width:180px" aria-label="Dia para bloquear"><button class="btn sm" data-act="agOffAdd">${ic('plus')}Bloquear dia</button></div>
+  <div class="row wrap" style="gap:6px;margin-top:10px">${offs.map(x=>`<span class="tag row" style="gap:6px">${fmtD(x)}<button class="icon-btn" style="width:22px;height:22px" data-act="agOffRm" data-d="${x}" aria-label="Desbloquear ${fmtD(x)}">${ic('x')}</button></span>`).join('')||'<span class="faint">Feriados, viagens, folgas: bloqueie aqui.</span>'}</div>
+ </div></section>`;
+}
 function vLeads(){
  const L=[...(S.leads||[])].sort((a,b)=>String(b.created||'').localeCompare(String(a.created||'')));
  const f=ui.leadF||'todos';const V=f==='todos'?L:L.filter(l=>(l.status||'novo')===f);
@@ -2086,6 +2157,17 @@ const A={
   else document.execCommand(c);I.rte(ed)},
  copyText:()=>{const p=S.posts.find(x=>x.id===ui.modal);const t=richText(p.copyText);if(!t){toast('O texto está vazio.');return}const ok=()=>toast('Texto copiado.');
   try{navigator.clipboard.write([new ClipboardItem({'text/html':new Blob([cleanRich(p.copyText)],{type:'text/html'}),'text/plain':new Blob([t],{type:'text/plain'})})]).then(ok).catch(()=>navigator.clipboard.writeText(t).then(ok))}catch(e){navigator.clipboard.writeText(t).then(ok).catch(()=>toast('Não consegui copiar.'))}},
+ agOn:()=>{const a=agCfg();a.on=!a.on;save();render();toast(a.on?'Agenda aberta para clientes.':'Agenda fechada.')},
+ agCopy:()=>{const ok=()=>toast('Link copiado.');try{navigator.clipboard.writeText(AG_URL).then(ok).catch(()=>prompt('Copie o link:',AG_URL))}catch(e){prompt('Copie o link:',AG_URL)}},
+ agConn:()=>agConnect(),
+ agRetry:()=>{ui.agG=undefined;render()},
+ agDisc:async()=>{if(!confirm('Desconectar o Google Agenda? A página continua funcionando, mas sem bloquear seus compromissos nem criar link do Meet.'))return;await aFn('disconnect');ui.agG=null;render();toast('Google Agenda desconectado.')},
+ agCancel:async el=>{const b=(S.bookings||[]).find(x=>x.id===el.dataset.id);if(!b||!confirm(`Cancelar a reunião com ${b.name}? ${b.eventId?'O cliente recebe o aviso de cancelamento do Google.':''}`))return;el.disabled=true;const j=await aFn('cancel',{id:b.id});if(j.ok){b.status='cancelado';snapshot();render();toast(j.google?'Reunião cancelada. O cliente recebe o aviso do Google.':'Reunião cancelada. Avise o cliente pelo WhatsApp.')}else{el.disabled=false;toast(j.error||'Não foi possível cancelar.')}},
+ agDay:el=>{const a=agCfg(),d=el.dataset.d;a.week[d]=(a.week[d]||[]).length?[]:[['09:00','12:00'],['14:00','18:00']];save();render()},
+ agAddR:el=>{const a=agCfg(),r=a.week[el.dataset.d]||(a.week[el.dataset.d]=[]);const last=r[r.length-1];const st=last?last[1]:'09:00';const [h,m]=st.split(':').map(Number);const en=pad2(Math.min(23,h+2))+':'+pad2(m);r.push([st,en>st?en:'23:45']);save();render()},
+ agRmR:el=>{const a=agCfg();(a.week[el.dataset.d]||[]).splice(+el.dataset.i,1);save();render()},
+ agOffAdd:()=>{const v=(document.getElementById('ag-offd')||{}).value;if(!v){toast('Escolha o dia.');return}const a=agCfg();if(!a.off.includes(v))a.off.push(v);a.off=a.off.filter(x=>x>=TODAY_ISO);save();render()},
+ agOffRm:el=>{const a=agCfg();a.off=a.off.filter(x=>x!==el.dataset.d);save();render()},
  copyCaption:()=>{const p=S.posts.find(x=>x.id===ui.modal);const done=()=>toast('Legenda copiada.');
   try{navigator.clipboard.writeText(p.caption).then(done).catch(()=>{const t=document.getElementById('m-caption');t.select();toast('Selecionei a legenda. Use Cmd+C.')})}catch(e){const t=document.getElementById('m-caption');t.select();toast('Selecionei a legenda. Use Cmd+C.')}},
  clearMedia:()=>{const p=S.posts.find(x=>x.id===ui.modal);if(p.video){const v=p.video;delete p.video;if(v.path&&sb&&!pathUsed(v.path))sb.storage.from('media').remove([v.path]).catch(()=>{})}delete p.mediaUrl;delete p.mediaType;delete p.mediaName;delete p.mediaSize;save();renderModal();render()},
@@ -2119,6 +2201,8 @@ const A={
   const keep=S.settings;S=seed();S.settings=keep;save();toast('Dados de exemplo restaurados.');render()}
 };
 const C={
+ agSet:el=>{const a=agCfg();a[el.dataset.k]=el.dataset.n?Number(el.value):el.value.trim();save()},
+ agRange:el=>{const a=agCfg(),r=(a.week[el.dataset.d]||[])[+el.dataset.i];if(!r||!el.value)return;r[+el.dataset.j]=el.value;if(r[0]>=r[1]){toast('O fim precisa ser depois do início.');if(+el.dataset.j===1){const[h,m]=r[0].split(':').map(Number);r[1]=pad2(Math.min(23,h+1))+':'+pad2(m)}else{const[h,m]=r[1].split(':').map(Number);r[0]=pad2(Math.max(0,h-1))+':'+pad2(m)}render()}save()},
  leadSt:el=>{const l=(S.leads||[]).find(x=>x.id===el.dataset.id);if(!l)return;l.status=el.value;l.seen=true;save();render()},
  filter:el=>{ui.f[el.dataset.k]=el.value;render()},
  calClient:el=>{ui.calClient=el.value;saveUi();render()},
@@ -2195,7 +2279,7 @@ document.addEventListener('drop',e=>{const t=e.target.closest('[data-drop],[data
 
 /* ---------- nuvem (Supabase): login + dados compartilhados ---------- */
 const LOGO='<svg class="logo" role="img" aria-label="Stage" viewBox="0 0 286 305" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M37.2292 203.226L41.0692 176.739C42.5092 167.349 41.5492 163.737 37.9492 159.403L21.1492 138.695C14.9092 130.989 12.2692 123.043 13.7092 112.93L17.7892 83.0723C19.9492 66.4578 31.7092 56.5855 48.7492 56.5855C66.2692 56.5855 76.8292 67.421 74.4292 85.2394L69.1492 123.043H48.9892L54.0292 86.9249C54.9892 79.7012 52.8292 75.3671 47.0692 75.3671C41.7892 75.3671 38.9092 78.9789 37.9492 85.9618L34.8292 108.355C33.6292 116.783 34.1092 120.635 37.9492 125.21L54.9892 146.4C62.4292 155.55 63.6292 162.774 62.1892 173.128L57.3892 206.597C54.9892 223.212 43.7092 233.325 26.1892 233.325C9.14917 233.325 -1.89083 222.971 0.269173 206.838L6.26917 163.978H26.4292L20.9092 203.467C19.9492 210.691 22.3492 214.543 28.1092 214.543C33.6292 214.543 36.0292 210.691 37.2292 203.226Z" fill="currentColor"/><path d="M140.616 47.1947H115.349L93.7492 201.3H73.1092L94.7092 47.1947H62.1892L66.6163 28.4131H145.861L140.616 47.1947Z" fill="currentColor"/><path d="M145.861 37.8039H172.021L167.941 210.691H148.261L149.941 167.83H130.741L94.9939 305H75.3139L145.861 37.8039ZM147.781 98.0013L135.061 149.771H150.661L152.581 98.0013L153.781 74.4039H153.301L147.781 98.0013Z" fill="currentColor"/><path d="M243.369 66.4579H223.209L228.249 30.3395C229.209 23.3566 227.049 18.7816 221.289 18.7816C215.529 18.7816 211.929 23.3566 210.969 30.3395L194.889 146.4C193.929 153.383 196.329 157.958 201.849 157.958C207.369 157.958 211.209 153.383 212.169 146.4L218.169 102.817H208.569L211.209 83.3131H240.969L228.249 174.813H210.249L211.449 166.867C208.569 172.646 202.089 176.739 194.169 176.739C181.449 176.739 171.369 166.386 173.769 149.771L190.809 26.9684C193.209 10.3539 205.929 0 223.209 0C240.249 0 251.289 10.3539 248.889 26.9684L243.369 66.4579Z" fill="currentColor"/><path d="M249.656 75.3671H286L283.36 94.1486H267.656L259.976 149.049H283.016L280.376 167.83H257.336L248.696 229.472H275.816L273.176 248.254H225.416L249.656 75.3671Z" fill="currentColor"/></svg>';
-const COLLS=['clients','team','posts','campaigns','fin','msgs','avatars','rules','todos','leads'];
+const COLLS=['clients','team','posts','campaigns','fin','msgs','avatars','rules','todos','leads','bookings'];
 let sb=null,snap={},syncT=null,pendingRender=false,meEmail='',realId=null;
 const REAL=()=>S.team.find(u=>u.id===realId)||ME();
 const ser=x=>JSON.stringify(x,(k,v)=>k==='mediaUrl'||k==='mediaType'||k==='mediaName'||k==='mediaSize'?undefined:v);
@@ -2237,7 +2321,7 @@ async function enter(session){
  meEmail=(session.user.email||'').toLowerCase();window.myUid=session.user.id;showAuth('carregando');
  const{data,error}=await sb.from('items').select('coll,id,data').order('created_at',{ascending:true});
  if(error){showAuth('erro',error.message);return}
- const N={clients:[],team:[],posts:[],campaigns:[],fin:[],msgs:[],avatars:[],rules:[],todos:[],leads:[]};let st=null;
+ const N={clients:[],team:[],posts:[],campaigns:[],fin:[],msgs:[],avatars:[],rules:[],todos:[],leads:[],bookings:[]};let st=null;
  data.forEach(r=>{if(r.coll==='settings')st=r.data;else if(N[r.coll])N[r.coll].push(r.data)});
  const me=N.team.find(u=>(u.email||'').toLowerCase()===meEmail);
  if(!me){showAuth('semacesso');return}
@@ -2298,6 +2382,7 @@ function notifyChange(coll,prev,cur){
  }
  if(coll==='todos'&&!prev&&cur.auto&&cur.owner===mid){notify({who:'Lembrete',text:cur.title,sub:'Toque para abrir',todo:cur.id});return}
  if(coll==='msgs'&&!prev&&cur.fromClient)notify({who:cur.who,text:'Mensagem no portal: '+cur.txt});
+ if(coll==='bookings'&&!prev&&cur.status!=='cancelado'){notify({who:'Nova reunião',text:(cur.name||'Cliente')+' marcou uma reunião',sub:agFmt(cur.start,{weekday:'long',day:'numeric',month:'short'})+' às '+agFmt(cur.start,{hour:'2-digit',minute:'2-digit'})});renderNav()}
  if(coll==='leads'&&!prev){notify({who:'Novo lead',text:(cur.nome||'Contato')+' · '+(LEAD_PL[cur.plano]||'plano'),sub:(cur.insta?'@'+cur.insta+' · ':'')+leadTel(cur.whats),lead:true});renderNav()}
 }
 let subbed=false;function subscribe(){if(subbed)return;subbed=true;

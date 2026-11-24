@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Agendar reunião · Stage</title>
+<meta name="description" content="Escolha um horário livre e marque sua reunião com a Stage.">
+<meta name="theme-color" content="#F3F2EE">
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/svg+xml" href="/icon.svg">
+<link rel="apple-touch-icon" href="/icon.png">
+<link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+:root{
+  --accent:#1F4BFF;--accent-2:#1F97FF;--accent-soft:rgba(31,75,255,.08);
+  --green:#12B76A;--ink:#111111;--paper:#F3F2EE;--white:#fff;
+  --fg:#0E0E10;--muted:#5E5E66;--faint:#8D8D96;--line:rgba(14,14,16,.12);
+  --sans:'Satoshi',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  --serif:'Instrument Serif',Georgia,serif;--mono:'JetBrains Mono',ui-monospace,Menlo,monospace;
+  --ease:cubic-bezier(.22,1,.36,1);--r:22px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{font-family:var(--sans);background:var(--paper);color:var(--fg);line-height:1.5;-webkit-font-smoothing:antialiased;min-height:100vh;min-height:100dvh}
+button,input,textarea{font:inherit;color:inherit}
+em{font-family:var(--serif);font-style:italic;font-weight:400;letter-spacing:-.01em}
+.mono{font-family:var(--mono);font-size:11.5px;letter-spacing:.06em;text-transform:uppercase}
+.wrap{max-width:560px;margin:0 auto;padding:20px 16px calc(40px + env(safe-area-inset-bottom))}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:17px;letter-spacing:-.02em}
+.brand img{width:30px;height:30px;border-radius:9px}
+.hero{padding:34px 4px 22px}
+.hero .mono{color:var(--muted)}
+h1{font-size:clamp(40px,11vw,58px);line-height:.98;letter-spacing:-.045em;font-weight:700;margin-top:12px}
+h1 em{font-size:1.08em}
+.desc{color:var(--muted);font-size:16px;margin-top:14px;max-width:440px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+.chip{display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 14px;border-radius:999px;background:var(--white);border:1px solid var(--line);font-size:14px;font-weight:500}
+.chip svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;color:var(--accent)}
+.card{background:var(--white);border-radius:var(--r);padding:20px 16px;box-shadow:0 1px 0 rgba(14,14,16,.04),0 12px 40px -18px rgba(14,14,16,.18);animation:in .45s var(--ease) both}
+@keyframes in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.step{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.step h2{font-size:19px;letter-spacing:-.02em;font-weight:700}
+.step .mono{color:var(--faint)}
+.days{display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x mandatory;padding:2px 2px 10px;margin:0 -16px;padding-left:16px;padding-right:16px;scrollbar-width:none}
+.days::-webkit-scrollbar{display:none}
+.day{flex:0 0 auto;scroll-snap-align:start;width:64px;padding:10px 0 9px;border-radius:16px;border:1px solid var(--line);background:var(--white);display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer;transition:background .25s var(--ease),border-color .25s,color .25s,transform .2s}
+.day:active{transform:scale(.96)}
+.day .w{font-size:12px;font-weight:500;color:var(--muted);text-transform:capitalize}
+.day .n{font-size:22px;font-weight:700;letter-spacing:-.03em;line-height:1.15}
+.day .m{font-size:11.5px;color:var(--faint);text-transform:lowercase}
+.day[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
+.day[aria-pressed="true"] .w,.day[aria-pressed="true"] .m{color:rgba(255,255,255,.7)}
+.daylabel{font-size:15px;font-weight:600;margin:14px 0 10px;text-transform:capitalize}
+.times{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.time{height:48px;border-radius:999px;border:1px solid rgba(31,75,255,.28);background:var(--white);color:var(--accent);font-weight:700;font-size:16px;cursor:pointer;transition:background .2s var(--ease),color .2s,transform .15s}
+.time:hover{background:var(--accent-soft)}
+.time:active{transform:scale(.96);background:var(--accent);color:#fff}
+.tz{font-size:13px;color:var(--faint);margin-top:14px;text-align:center}
+.back{display:inline-flex;align-items:center;gap:6px;background:none;border:0;color:var(--muted);font-weight:500;font-size:15px;cursor:pointer;padding:6px 0;margin-bottom:10px}
+.back svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.sum{background:var(--ink);color:#fff;border-radius:18px;padding:18px;position:relative;overflow:hidden}
+.sum .mono{color:rgba(255,255,255,.6)}
+.sum .big{font-size:26px;font-weight:700;letter-spacing:-.035em;line-height:1.1;margin-top:8px;text-transform:capitalize}
+.sum .big em{font-size:1.1em}
+.sum .sub{color:rgba(255,255,255,.72);font-size:14.5px;margin-top:6px}
+.sum:after{content:"";position:absolute;right:-40px;top:-40px;width:150px;height:150px;border-radius:50%;background:radial-gradient(circle,rgba(31,151,255,.55),transparent 70%)}
+form{margin-top:18px;display:grid;gap:14px}
+label{display:block;font-size:14px;font-weight:600;margin-bottom:6px}
+label span{color:var(--faint);font-weight:400}
+.in{width:100%;height:52px;border-radius:14px;border:1px solid var(--line);background:#FAFAF8;padding:0 15px;font-size:17px;outline:none;transition:border-color .2s,box-shadow .2s,background .2s;-webkit-appearance:none;appearance:none}
+textarea.in{height:auto;min-height:84px;padding:13px 15px;resize:vertical;line-height:1.45}
+.in:focus{border-color:var(--accent);background:#fff;box-shadow:0 0 0 4px var(--accent-soft)}
+.hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
+.btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;height:56px;border-radius:999px;border:0;background:var(--accent);color:#fff;font-weight:700;font-size:17px;cursor:pointer;transition:background .25s var(--ease),transform .15s,opacity .2s;text-decoration:none}
+.btn:hover{background:#1940E0}.btn:active{transform:scale(.98)}
+.btn[disabled]{opacity:.6;pointer-events:none}
+.btn.ghost{background:var(--white);color:var(--fg);border:1px solid var(--line)}
+.btn.ghost:hover{background:#F7F7F4}
+.btn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.note{font-size:13.5px;color:var(--faint);text-align:center;margin-top:2px}
+.err{background:#FFF1EF;color:#B42318;border-radius:12px;padding:11px 14px;font-size:14.5px}
+.ok{text-align:center;padding:10px 4px 4px}
+.ok .tick{width:68px;height:68px;border-radius:50%;background:var(--green);display:grid;place-items:center;margin:0 auto 18px;animation:pop .5s var(--ease) both}
+.ok .tick svg{width:34px;height:34px;stroke:#fff;fill:none;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+@keyframes pop{from{transform:scale(.4);opacity:0}to{transform:none;opacity:1}}
+.ok h2{font-size:34px;letter-spacing:-.04em;line-height:1.02;font-weight:700}
+.ok h2 em{font-size:1.1em}
+.ok .when{font-size:18px;font-weight:600;margin-top:14px;text-transform:capitalize}
+.ok p{color:var(--muted);margin-top:8px;font-size:15px}
+.ok .acts{display:grid;gap:10px;margin-top:22px}
+.empty{text-align:center;padding:26px 8px}
+.empty h2{font-size:24px;letter-spacing:-.03em}
+.empty p{color:var(--muted);margin-top:8px}
+.sk{border-radius:16px;background:linear-gradient(90deg,#EFEEEA 0%,#F7F6F3 50%,#EFEEEA 100%);background-size:200% 100%;animation:sh 1.2s linear infinite}
+@keyframes sh{to{background-position:-200% 0}}
+.foot{text-align:center;color:var(--faint);font-size:13px;margin-top:26px}
+.foot b{color:var(--fg);font-weight:700}
+@media (min-width:600px){.wrap{padding-top:36px}.card{padding:26px 24px}.days{margin:0 -24px;padding-left:24px;padding-right:24px}.times{grid-template-columns:repeat(4,1fr)}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+<script>window.AGENDA_CFG={"url": "https://bfpzjpwtzogtgwwklkjz.supabase.co", "key": "sb_publishable_S_0MZ2yopkPPBIOT3dERmw_IQPvdAzE"}</script>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand"><img src="/icon.svg" alt="">Stage</div>
+  <header class="hero">
+    <div class="mono">Agenda</div>
+    <h1 id="h1">Vamos <em>conversar</em>?</h1>
+    <p class="desc" id="desc">Escolha o dia e o horário que ficam melhor para você.</p>
+    <div class="chips" id="chips"></div>
+  </header>
+  <main id="app" aria-live="polite">
+    <div class="card"><div class="sk" style="height:22px;width:50%"></div><div style="display:flex;gap:8px;margin:16px 0"><div class="sk" style="height:78px;width:64px"></div><div class="sk" style="height:78px;width:64px"></div><div class="sk" style="height:78px;width:64px"></div><div class="sk" style="height:78px;width:64px"></div></div><div class="sk" style="height:48px"></div></div>
+  </main>
+  <div class="foot">Feito com <b>Baseus</b> · Stage</div>
+</div>
+<script>
+(()=>{
+const AG=window.AGENDA_CFG||{};
+const FN=AG.url+'/functions/v1/agenda';
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const IC={clock:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',video:'<svg viewBox="0 0 24 24"><rect x="3" y="6" width="13" height="12" rx="3"/><path d="m16 10 5-3v10l-5-3"/></svg>',user:'<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>',back:'<svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>',check:'<svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>',cal:'<svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M8 3v4M16 3v4M3.5 10h17"/></svg>'};
+const TZ=Intl.DateTimeFormat().resolvedOptions().timeZone||'America/Sao_Paulo';
+const F=(o)=>new Intl.DateTimeFormat('pt-BR',{timeZone:TZ,...o});
+const fDay=F({year:'numeric',month:'2-digit',day:'2-digit'}),fW=F({weekday:'short'}),fN=F({day:'numeric'}),fM=F({month:'short'}),fT=F({hour:'2-digit',minute:'2-digit'}),fLong=F({weekday:'long',day:'numeric',month:'long'});
+const keyOf=d=>fDay.format(d).split('/').reverse().join('-');
+const tzName=()=>{try{const p=new Intl.DateTimeFormat('pt-BR',{timeZone:TZ,timeZoneName:'long'}).formatToParts(new Date()).find(x=>x.type==='timeZoneName');return p?p.value:TZ}catch(e){return TZ}};
+let D=null,day=null,pick=null,busy=false;
+
+async function call(body){
+  const r=await fetch(FN,{method:'POST',headers:{'Content-Type':'application/json',apikey:AG.key},body:JSON.stringify(body)});
+  let j={};try{j=await r.json()}catch(e){}
+  return {status:r.status,...j};
+}
+async function load(keepDay){
+  try{D=await call({action:'slots'})}catch(e){D={error:'Sem conexão. Confira a internet e tente de novo.'}}
+  if(D.on){
+    if(D.title)document.title=D.title+' · Stage';
+    const chips=[`<span class="chip">${IC.clock}${D.dur} min</span>`];
+    if(D.meet)chips.push(`<span class="chip">${IC.video}Google Meet</span>`);
+    if(D.host)chips.push(`<span class="chip">${IC.user}${esc(D.host)}</span>`);
+    $('#chips').innerHTML=chips.join('');
+    if(D.desc)$('#desc').textContent=D.desc;
+    D.byDay={};(D.slots||[]).forEach(s=>{const d=new Date(s);const k=keyOf(d);(D.byDay[k]=D.byDay[k]||[]).push(d)});
+    D.days=Object.keys(D.byDay).sort();
+    if(!keepDay||!D.byDay[day])day=D.days[0]||null;
+  }
+  render();
+}
+function render(){
+  const A=$('#app');
+  if(D.error&&!D.on){A.innerHTML=`<div class="card empty"><h2>Ops</h2><p>${esc(D.error)}</p><div style="margin-top:18px"><button class="btn ghost" id="retry">Tentar de novo</button></div></div>`;$('#retry').onclick=()=>load();return}
+  if(!D.on){A.innerHTML=`<div class="card empty"><h2>Agenda fechada</h2><p>No momento não estamos marcando reuniões por aqui. Fale com a gente pelo WhatsApp.</p></div>`;return}
+  if(!D.days.length){A.innerHTML=`<div class="card empty"><h2>Sem horários livres</h2><p>Todos os horários dos próximos dias já foram preenchidos. Volte em breve ou fale com a gente.</p></div>`;return}
+  if(pick)return renderForm();
+  const list=D.byDay[day]||[];
+  A.innerHTML=`<section class="card">
+    <div class="step"><h2>Escolha o dia</h2><span class="mono">1 de 2</span></div>
+    <div class="days" role="group" aria-label="Dias disponíveis">${D.days.map(k=>{const d=D.byDay[k][0];return`<button class="day" data-k="${k}" aria-pressed="${k===day}"><span class="w">${fW.format(d).replace('.','')}</span><span class="n">${fN.format(d)}</span><span class="m">${fM.format(d).replace('.','')}</span></button>`}).join('')}</div>
+    <div class="daylabel">${fLong.format(list[0])}</div>
+    <div class="times" role="group" aria-label="Horários livres">${list.map(d=>`<button class="time" data-t="${d.toISOString()}">${fT.format(d)}</button>`).join('')}</div>
+    <div class="tz">Horários no seu fuso: ${esc(tzName())}</div>
+  </section>`;
+  A.querySelectorAll('.day').forEach(b=>b.onclick=()=>{day=b.dataset.k;render();const s=A.querySelector('.day[aria-pressed="true"]');s&&s.scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'})});
+  A.querySelectorAll('.time').forEach(b=>b.onclick=()=>{pick=b.dataset.t;render();window.scrollTo({top:$('#app').offsetTop-12,behavior:'smooth'})});
+  const s=A.querySelector('.day[aria-pressed="true"]');if(s)s.scrollIntoView({inline:'center',block:'nearest'});
+}
+const maskTel=v=>{const d=v.replace(/\D/g,'').slice(0,11);if(d.length<3)return d;if(d.length<7)return`(${d.slice(0,2)}) ${d.slice(2)}`;return`(${d.slice(0,2)}) ${d.slice(2,d.length-4)}-${d.slice(-4)}`};
+let saved={};try{saved=JSON.parse(localStorage.getItem('stage-agenda')||'{}')}catch(e){}
+function renderForm(err){
+  const d=new Date(pick),end=new Date(+d+D.dur*60000);
+  $('#app').innerHTML=`<section class="card">
+    <button class="back" id="back">${IC.back}Trocar horário</button>
+    <div class="sum"><div class="mono">Sua reunião</div><div class="big">${fLong.format(d)}<br><em>${fT.format(d)}</em> às ${fT.format(end)}</div><div class="sub">${esc(D.title)} · ${D.dur} min${D.meet?' · Google Meet':''}</div></div>
+    <form id="f" novalidate>
+      <div class="step" style="margin:6px 0 -4px"><h2>Seus dados</h2><span class="mono">2 de 2</span></div>
+      ${err?`<div class="err" role="alert">${esc(err)}</div>`:''}
+      <div><label for="nm">Nome</label><input class="in" id="nm" autocomplete="name" required value="${esc(saved.name||'')}" placeholder="Dra. Ana Souza"></div>
+      <div><label for="em">E-mail <span>· o convite chega aqui</span></label><input class="in" id="em" type="email" inputmode="email" autocomplete="email" autocapitalize="off" required value="${esc(saved.email||'')}" placeholder="voce@email.com"></div>
+      <div><label for="wa">WhatsApp</label><input class="in" id="wa" type="tel" inputmode="tel" autocomplete="tel" required value="${esc(saved.whats||'')}" placeholder="(67) 99999-9999"></div>
+      <div><label for="nt">Sobre o que quer falar? <span>· opcional</span></label><textarea class="in" id="nt" rows="3" placeholder="Conte rapidinho o assunto"></textarea></div>
+      <input class="hp" id="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <button class="btn" id="go" type="submit">${IC.check}Confirmar reunião</button>
+      <div class="note">${D.meet?'Você recebe o convite com o link da chamada no e-mail.':'Você recebe a confirmação na hora.'}</div>
+    </form></section>`;
+  $('#back').onclick=()=>{pick=null;render()};
+  const wa=$('#wa');wa.oninput=()=>{wa.value=maskTel(wa.value)};if(wa.value)wa.value=maskTel(wa.value);
+  $('#f').onsubmit=async e=>{
+    e.preventDefault();if(busy)return;
+    const name=$('#nm').value.trim(),email=$('#em').value.trim(),whats=wa.value,note=$('#nt').value.trim();
+    if(name.length<2)return focusErr('#nm','Escreva seu nome.');
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email))return focusErr('#em','Confira seu e-mail.');
+    if(whats.replace(/\D/g,'').length<10)return focusErr('#wa','Confira seu WhatsApp com DDD.');
+    busy=true;const b=$('#go');b.disabled=true;b.textContent='Confirmando…';
+    let j;try{j=await call({action:'book',start:pick,name,email,whats,note,hp:$('#hp').value})}catch(x){j={error:'Sem conexão. Tente de novo.'}}
+    busy=false;
+    if(j.ok){try{localStorage.setItem('stage-agenda',JSON.stringify({name,email,whats}))}catch(x){}return renderOk(j)}
+    if(j.taken){pick=null;await load(true);const A=$('#app');A.insertAdjacentHTML('afterbegin',`<div class="err" role="alert" style="margin-bottom:12px">${esc(j.error)}</div>`);return}
+    saved={name,email,whats};renderForm(j.error||'Não foi possível agendar. Tente de novo.');$('#nt').value=note;
+  };
+}
+function focusErr(sel,msg){const v={name:$('#nm').value,email:$('#em').value,whats:$('#wa').value},n=$('#nt').value;saved=v;renderForm(msg);$('#nt').value=n;const el=$(sel);el.focus();el.style.borderColor='#F04438'}
+function ics(j){
+  const z=d=>new Date(d).toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,'');
+  const txt=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Stage//Agenda//PT','BEGIN:VEVENT','UID:'+z(j.start)+'@stagemed.com.br','DTSTAMP:'+z(Date.now()),'DTSTART:'+z(j.start),'DTEND:'+z(j.end),'SUMMARY:'+(j.title||'Reunião com a Stage').replace(/[,;]/g,' '),j.meet?'LOCATION:'+j.meet:'',j.meet?'DESCRIPTION:Link da chamada: '+j.meet:'','END:VEVENT','END:VCALENDAR'].filter(Boolean).join('\r\n');
+  return 'data:text/calendar;charset=utf-8,'+encodeURIComponent(txt);
+}
+function renderOk(j){
+  const d=new Date(j.start);
+  $('#app').innerHTML=`<section class="card ok">
+    <div class="tick">${IC.check}</div>
+    <h2>Reunião <em>marcada</em></h2>
+    <div class="when">${fLong.format(d)} · ${fT.format(d)}</div>
+    <p>${j.meet?'Mandamos o convite com o link da chamada para o seu e-mail.':'Está confirmado. Até lá!'}</p>
+    <div class="acts">
+      ${j.meet?`<a class="btn" href="${esc(j.meet)}" target="_blank" rel="noopener">${IC.video}Link da chamada</a>`:''}
+      <a class="btn ghost" href="${ics(j)}" download="reuniao-stage.ics">${IC.cal}Salvar no meu calendário</a>
+    </div></section>`;
+  $('#chips').innerHTML='';window.scrollTo({top:0,behavior:'smooth'});
+}
+if(!AG.url){D={error:'Página sem configuração.'};render()}else load();
+})();
+</script>
+</body>
+</html>
