@@ -214,6 +214,11 @@ select.in,.sel{width:auto;border:1px solid var(--line);background:var(--surface)
 .hol.saude{background:var(--accent-soft);color:var(--accent-ink)}
 .ev{display:block;width:100%;text-align:left;font-size:11.5px;padding:4px 6px 4px 7px;border-radius:7px;background:var(--tb);color:var(--fg);border:0;border-left:3px solid var(--tf);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
 .ev small{display:block;font-size:10.5px;color:var(--muted);font-weight:500}
+.ev.tev{--tb:var(--surface-2);--tf:var(--fg);display:flex;flex-direction:column;cursor:pointer}
+.ev.tev .tev-t{display:flex;align-items:center;gap:4px;overflow:hidden;text-overflow:ellipsis}
+.ev.tev .tev-t svg{width:12px;height:12px;flex:none;color:var(--muted)}
+.ev.tev.done{opacity:.55}.ev.tev.done .tev-t span{text-decoration:line-through}
+.legend .tev-l{display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--surface-2);border-left:3px solid var(--fg)}
 .legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px;font-size:12px;color:var(--muted)}
 .legend span{display:inline-flex;gap:6px;align-items:center}
 
@@ -1241,13 +1246,24 @@ const myTodos=()=>(S.todos||[]).filter(t=>t.owner===meId()||(t.shared||[]).inclu
 const URG=[['baixa','Baixa','gray'],['media','Média','blue'],['alta','Alta','amber'],['urgente','Urgente','red']];
 const urgT=t=>URG.find(u=>u[0]===t.urg);
 function todoSheet(id){const t=S.todos.find(x=>x.id===id);if(!t)return;const own=t.owner===meId();const sh=t.shared||[];
+ if(!own&&!sh.includes(meId())){const m=document.getElementById('modal');ui.modal='__todo';ui.todoOpen=id;const ppl=[t.owner,...sh];
+  m.innerHTML=`<div class="backdrop" data-act="closeModal"></div><div class="sheet narrow" role="dialog" aria-modal="true" aria-label="Tarefa em equipe">
+   <div class="sheet-h"><b class="grow">${esc(t.title)}</b><button class="icon-btn" data-act="closeModal" aria-label="Fechar">${ic('x')}</button></div>
+   <div class="sheet-b one"><div class="form-grid">
+    <div class="field"><label>Prazo</label><div>${fmtD(t.due)}${t.done?' · <span class="pill t-green">Concluída</span>':''}</div></div>
+    ${urgT(t)?`<div class="field"><label>Urgência</label><div><span class="pill t-${urgT(t)[2]}">${urgT(t)[1]}</span></div></div>`:''}
+    <div class="field" style="grid-column:1/-1"><label>Pessoas na tarefa</label><div class="row wrap" style="gap:6px">${ppl.map(u=>`<span class="chip person-chip on" style="--c:${ucolor(u)}">${av(u)}${esc(user(u).name)}</span>`).join('')}</div></div>
+    ${t.notes?`<div class="field" style="grid-column:1/-1"><label>Detalhes</label><div style="white-space:pre-wrap">${esc(t.notes)}</div></div>`:''}
+   </div><div class="meta" style="margin-top:10px">Tarefa em equipe criada por ${esc(user(t.owner).name)}. Você está vendo pelo Calendário; só quem participa pode editar.</div></div>
+   <div class="sheet-f"><span class="grow"></span><button class="btn pri" data-act="closeModal">Fechar</button></div></div>`;
+  m.hidden=false;document.body.classList.add('modal-open');return}
  const m=document.getElementById('modal');ui.modal='__todo';ui.todoOpen=id;
  m.innerHTML=`<div class="backdrop" data-act="closeModal"></div><div class="sheet narrow" role="dialog" aria-modal="true" aria-label="Tarefa">
   <div class="sheet-h"><button class="tchk ${t.done?'on':''}" data-act="todoDone" data-id="${t.id}" aria-label="Concluir">${t.done?ic('check'):''}</button><input class="title-in" value="${esc(t.title)}" data-chg="todoTitle" data-id="${t.id}" aria-label="Título"><button class="icon-btn" data-act="closeModal" aria-label="Fechar">${ic('x')}</button></div>
   <div class="sheet-b one"><div class="form-grid">
    <div class="field"><label for="td-due">Prazo</label><input class="in" type="date" id="td-due" value="${esc(t.due||'')}" data-chg="todoDue" data-id="${t.id}"></div>
    <div class="field"><label>Urgência</label><div class="row wrap" style="gap:6px">${URG.map(u=>`<button class="chip urg ${t.urg===u[0]?'on':''} t-${u[2]}" data-act="todoUrg" data-id="${t.id}" data-v="${u[0]}">${u[1]}</button>`).join('')}</div></div>
-   <div class="field" style="grid-column:1/-1"><label>Pessoas na tarefa</label><div class="row wrap" style="gap:6px">${S.team.filter(u=>u.id!==t.owner).map(u=>`<button class="chip person-chip ${sh.includes(u.id)?'on':''}" style="--c:${ucolor(u.id)}" data-act="todoShare" data-id="${t.id}" data-v="${u.id}" ${own?'':'disabled'}>${av(u.id)}${esc(u.name)}</button>`).join('')||'<span class="meta">Só você na equipe.</span>'}</div><div class="meta" style="margin-top:4px">${own?'Quem você marcar também vê e pode editar esta tarefa.':`Criada por ${esc(user(t.owner).name)}. Só quem criou muda as pessoas.`}</div></div>
+   <div class="field" style="grid-column:1/-1"><label>Pessoas na tarefa</label><div class="row wrap" style="gap:6px">${S.team.filter(u=>u.id!==t.owner).map(u=>`<button class="chip person-chip ${sh.includes(u.id)?'on':''}" style="--c:${ucolor(u.id)}" data-act="todoShare" data-id="${t.id}" data-v="${u.id}" ${own?'':'disabled'}>${av(u.id)}${esc(u.name)}</button>`).join('')||'<span class="meta">Só você na equipe.</span>'}</div><div class="meta" style="margin-top:4px">${own?'Quem você marcar também vê e pode editar esta tarefa. Com prazo e mais de uma pessoa, ela aparece no Calendário para toda a equipe.':`Criada por ${esc(user(t.owner).name)}. Só quem criou muda as pessoas.`}</div></div>
    <div class="field" style="grid-column:1/-1"><label for="td-notes">Detalhes</label><textarea class="in" id="td-notes" rows="6" placeholder="Escreva os detalhes, links, o que precisa ser feito…" data-chg="todoNotes" data-id="${t.id}">${esc(t.notes||'')}</textarea></div>
   </div></div>
   <div class="sheet-f">${own?`<button class="btn danger" data-act="todoDel" data-id="${t.id}">Excluir</button>`:''}<span class="grow"></span><button class="btn pri" data-act="closeModal">Pronto</button></div></div>`;
@@ -1794,11 +1810,14 @@ function card(p){
 }
 
 /* ---------- CALENDÁRIO ---------- */
+const teamTodos=di=>(S.todos||[]).filter(t=>t.due===di&&(t.shared||[]).length);
+const todoEv=t=>{const ppl=[t.owner,...(t.shared||[])].filter((x,i,a)=>a.indexOf(x)===i);const names=ppl.map(x=>user(x).name.split(' ')[0]);
+ return`<button class="ev tev${t.done?' done':''}" data-act="todoOpen" data-id="${t.id}" title="${esc(t.title+' · '+names.join(', '))}"><span class="tev-t">${ic('users')}<span class="ell">${esc(t.title)}</span></span><small>${esc(names.length>2?names.slice(0,2).join(', ')+' +'+(names.length-2):names.join(' e '))}</small></button>`};
 function vCalendario(){
  const m=ui.calMonth,y=m.getFullYear(),mo=m.getMonth();
  const inMonth=S.posts.filter(p=>p.format!=='anuncio'&&p.date&&p.date.slice(0,7)===`${y}-${pad(mo+1)}`&&(ui.calClient==='all'||p.client===ui.calClient));
  const counts=Object.keys(PH).map(k=>[k,inMonth.filter(p=>phase(p)===k).length]);
- const head=`<div class="page-head"><div><h1>Calendário</h1><div class="sub">Datas de postagem preenchidas pela equipe. Arraste um post para outro dia para mudar a data.</div></div>
+ const head=`<div class="page-head"><div><h1>Calendário</h1><div class="sub">Datas de postagem e tarefas em equipe (visíveis para todos). Arraste um post para outro dia para mudar a data.</div></div>
   <div class="actions"><button class="btn pri" data-act="newPost">${ic('plus')}Novo conteúdo</button></div></div>
   <div class="cal-head">
    <div class="row wrap" style="gap:10px">
@@ -1819,10 +1838,11 @@ function vCalendario(){
    <div class="day-n"><b>${d.getDate()}</b><button class="add" data-act="newOn" data-date="${di}" aria-label="Novo conteúdo em ${fmtD(di)}">${ic('plus')}</button></div>
    ${h?`<div class="hol ${h.endsWith('|s')?'saude':''}" title="${esc(h.replace('|s',''))}">${esc(h.replace('|s',''))}</div>`:''}
    ${ps.map(p=>`<button class="ev t-${PH[phase(p)][1]}" style="border-left-color:${cl(p.client).color}" draggable="true" data-drag="${p.id}" data-act="open" data-id="${p.id}" title="${esc(p.title)}">${esc(topic(p))}<small>${ui.calClient==='all'?esc(cl(p.client).short)+' · ':''}${FMT[p.format]}</small></button>`).join('')}
+   ${teamTodos(di).map(todoEv).join('')}
   </div>`;
  }
  return head+`<div class="cal-wrap"><div class="cal">${['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'].map(d=>`<div class="dow">${d}</div>`).join('')}${cells}</div></div>
-  <div class="legend">${Object.values(PH).map(v=>`<span class="t-${v[1]}"><span class="dot"></span>${v[0]}</span>`).join('')}<span><span class="hol saude" style="padding:0 6px">Data da saúde</span></span></div>`+agendaHtml(inMonth,'open');
+  <div class="legend">${Object.values(PH).map(v=>`<span class="t-${v[1]}"><span class="dot"></span>${v[0]}</span>`).join('')}<span><span class="hol saude" style="padding:0 6px">Data da saúde</span></span><span><span class="tev-l"></span>Tarefa em equipe</span></div>`+agendaHtml(inMonth,'open');
 }
 function feedView(){
  if(ui.calClient==='all')return`<div class="empty">Escolha um cliente para ver a prévia do feed dele.</div>`;
