@@ -1427,7 +1427,7 @@ function stageToolbar(groups){
   <select class="sel" data-chg="filter" data-k="owner" aria-label="Responsável">${opt('all','Toda a equipe',f.owner)}${S.team.map(u=>opt(u.id,u.name,f.owner)).join('')}</select>
   <label class="search">${ic('search')}<input class="in" id="q" placeholder="Buscar" value="${esc(f.q)}" data-inp="search"></label>
   ${(f.client!=='all'||f.format!=='all'||f.owner!=='all'||f.phase!=='all'||f.q)?`<button class="btn ghost sm" data-act="clearFilters">Limpar filtros${f.phase!=='all'?' ('+PH[f.phase][0]+')':''}</button>`:''}
-  <span class="grow"></span><button class="btn pri sm" data-act="newPost">${ic('plus')}Tarefa</button>
+  <span class="grow"></span><button class="btn ghost sm" data-act="exportDocs" title="Baixa um documento com o roteiro e a legenda das tarefas filtradas">${ic('download')}Baixar roteiros</button><button class="btn pri sm" data-act="newPost">${ic('plus')}Tarefa</button>
  </div>`;
 }
 function groupKey(){const sid=curStage();if(ui.groupBy==='cliente')return'cliente';return sid?'status':'etapa'}
@@ -1465,8 +1465,82 @@ function bulkBar(){
   <select class="isel plain" data-chg="bulkStatus" aria-label="Mudar status"><option value="">Status…</option>${STAGES.filter(x=>allowedStages().includes(x.id)).map(st=>`<optgroup label="${esc(st.name)}">${st.statuses.map(x=>`<option value="${st.id}|${esc(x)}">${esc(x)}</option>`).join('')}</optgroup>`).join('')}</select>
   <label class="dpick" data-act="stop">${ic('cal')}<span>Data…</span><input type="date" data-chg="bulkDate" aria-label="Mudar data"></label>
   <select class="isel plain" data-chg="bulkOwner" aria-label="Mudar responsável"><option value="">Responsável…</option>${S.team.map(u=>`<option value="${u.id}">${esc(u.name)}</option>`).join('')}</select>
+  <button class="btn sm" data-act="exportDocsSel">${ic('download')}Baixar roteiros</button>
   <button class="btn sm danger" data-act="bulkDel">${ic('trash')}Excluir</button>
   <button class="icon-btn sm" data-act="bulkClear" aria-label="Limpar seleção">${ic('x')}</button>`;
+}
+/* Exporta roteiro (Texto) + legenda para .docx no modelo Stage (abre no Word, Google Docs e Pages) */
+const STAGE_LOGO={"vb": [286, 305], "d": ["M37.2292 203.226L41.0692 176.739C42.5092 167.349 41.5492 163.737 37.9492 159.403L21.1492 138.695C14.9092 130.989 12.2692 123.043 13.7092 112.93L17.7892 83.0723C19.9492 66.4578 31.7092 56.5855 48.7492 56.5855C66.2692 56.5855 76.8292 67.421 74.4292 85.2394L69.1492 123.043H48.9892L54.0292 86.9249C54.9892 79.7012 52.8292 75.3671 47.0692 75.3671C41.7892 75.3671 38.9092 78.9789 37.9492 85.9618L34.8292 108.355C33.6292 116.783 34.1092 120.635 37.9492 125.21L54.9892 146.4C62.4292 155.55 63.6292 162.774 62.1892 173.128L57.3892 206.597C54.9892 223.212 43.7092 233.325 26.1892 233.325C9.14917 233.325 -1.89083 222.971 0.269173 206.838L6.26917 163.978H26.4292L20.9092 203.467C19.9492 210.691 22.3492 214.543 28.1092 214.543C33.6292 214.543 36.0292 210.691 37.2292 203.226Z", "M140.616 47.1947H115.349L93.7492 201.3H73.1092L94.7092 47.1947H62.1892L66.6163 28.4131H145.861L140.616 47.1947Z", "M145.861 37.8039H172.021L167.941 210.691H148.261L149.941 167.83H130.741L94.9939 305H75.3139L145.861 37.8039ZM147.781 98.0013L135.061 149.771H150.661L152.581 98.0013L153.781 74.4039H153.301L147.781 98.0013Z", "M243.369 66.4579H223.209L228.249 30.3395C229.209 23.3566 227.049 18.7816 221.289 18.7816C215.529 18.7816 211.929 23.3566 210.969 30.3395L194.889 146.4C193.929 153.383 196.329 157.958 201.849 157.958C207.369 157.958 211.209 153.383 212.169 146.4L218.169 102.817H208.569L211.209 83.3131H240.969L228.249 174.813H210.249L211.449 166.867C208.569 172.646 202.089 176.739 194.169 176.739C181.449 176.739 171.369 166.386 173.769 149.771L190.809 26.9684C193.209 10.3539 205.929 0 223.209 0C240.249 0 251.289 10.3539 248.889 26.9684L243.369 66.4579Z", "M249.656 75.3671H286L283.36 94.1486H267.656L259.976 149.049H283.016L280.376 167.83H257.336L248.696 229.472H275.816L273.176 248.254H225.416L249.656 75.3671Z"]};
+const DOCX_FOOT='Liberando você para focar no que realmente importa.';
+function zipStore(files){const T=zipStore.t||(zipStore.t=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0}return t})());
+ const crc=d=>{let c=0xFFFFFFFF;for(let i=0;i<d.length;i++)c=T[(c^d[i])&255]^(c>>>8);return(c^0xFFFFFFFF)>>>0};
+ const enc=new TextEncoder();const parts=[],cen=[];let off=0;
+ for(const[name,data0]of files){const data=typeof data0==='string'?enc.encode(data0):data0;const nm=enc.encode(name);const c=crc(data);
+  const h=new DataView(new ArrayBuffer(30));h.setUint32(0,0x04034b50,true);h.setUint16(4,20,true);h.setUint16(6,0x0800,true);h.setUint32(14,c,true);h.setUint32(18,data.length,true);h.setUint32(22,data.length,true);h.setUint16(26,nm.length,true);
+  parts.push(h.buffer,nm,data);
+  const e=new DataView(new ArrayBuffer(46));e.setUint32(0,0x02014b50,true);e.setUint16(4,20,true);e.setUint16(6,20,true);e.setUint16(8,0x0800,true);e.setUint32(16,c,true);e.setUint32(20,data.length,true);e.setUint32(24,data.length,true);e.setUint16(28,nm.length,true);e.setUint32(42,off,true);
+  cen.push(e.buffer,nm);off+=30+nm.length+data.length}
+ const csz=cen.reduce((n,x)=>n+(x.byteLength||x.length),0);const end=new DataView(new ArrayBuffer(22));end.setUint32(0,0x06054b50,true);end.setUint16(8,files.length,true);end.setUint16(10,files.length,true);end.setUint32(12,csz,true);end.setUint32(16,off,true);
+ return new Blob([...parts,...cen,end.buffer],{type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'})}
+async function docxArt(){
+ try{await Promise.all(['500 80px Satoshi','400 80px Satoshi'].map(f=>document.fonts.load(f)))}catch(e){}
+ const K=6,PT=12700;const mk=(w,h,draw)=>new Promise(res=>{const c=document.createElement('canvas');c.width=Math.round(w*K);c.height=Math.round(h*K);const x=c.getContext('2d');x.scale(K,K);draw(x);c.toBlob(b=>b.arrayBuffer().then(a=>res({png:new Uint8Array(a),cx:Math.round(w*PT),cy:Math.round(h*PT)})),'image/png')});
+ const logo=(x,ox,oy,h)=>{const k=h/STAGE_LOGO.vb[1];x.save();x.translate(ox,oy);x.scale(k,k);x.fillStyle='#111';STAGE_LOGO.d.forEach(d=>x.fill(new Path2D(d)));x.restore()};
+ const fit=(x,txt,weight,width)=>{x.font=`${weight} 100px Satoshi, "Readex Pro", Arial, sans-serif`;const s=100*width/x.measureText(txt).width;x.font=`${weight} ${s}px Satoshi, "Readex Pro", Arial, sans-serif`};
+ const W=448,H=46,PAD=26;
+ const head=await mk(W,H+PAD,x=>{logo(x,0,0,H);fit(x,'Roteiros',500,61.5);x.fillStyle='#111';x.textAlign='right';x.textBaseline='alphabetic';x.fillText('Roteiros',W,31)});
+ const FW=205,LW=8.5,GAP=6;
+ const foot=await mk(FW+GAP+LW,13,x=>{fit(x,DOCX_FOOT,400,FW);x.fillStyle='#1a1a1a';x.textBaseline='alphabetic';x.fillText(DOCX_FOOT,0,10.5);logo(x,FW+GAP,2,10.5*1.0)});
+ return{head,foot}}
+const xe=s=>String(s??'').replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g,'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const wFont=n=>`<w:rFonts w:ascii="${n}" w:hAnsi="${n}" w:cs="${n}" w:eastAsia="${n}"/>`;
+/* modelo: corpo Readex Pro Light 9pt; negrito/rótulos e título em Readex Pro Regular */
+function wRun(t,o={}){return`<w:r><w:rPr>${wFont(o.b||o.title?'Readex Pro':'Readex Pro Light')}${o.i?'<w:i/>':''}${o.u?'<w:u w:val="single"/>':''}${o.mark?'<w:highlight w:val="yellow"/>':''}${o.color?`<w:color w:val="${o.color}"/>`:''}<w:sz w:val="${o.sz||18}"/><w:szCs w:val="${o.sz||18}"/></w:rPr><w:t xml:space="preserve">${xe(t)}</w:t></w:r>`}
+function wPara(runs,o={}){return`${o.pb?'<w:p><w:r><w:br w:type="page"/></w:r></w:p>':''}<w:p><w:pPr>${o.keep?'<w:keepNext/>':''}<w:spacing w:before="${o.before||0}" w:after="${o.after??250}" w:line="250" w:lineRule="atLeast"/>${o.ind?`<w:ind w:left="${o.ind}" w:hanging="260"/>`:''}</w:pPr>${runs}</w:p>`}
+function richToW(html){const d=document.createElement('div');d.innerHTML=cleanRich(html);const out=[];
+ const inl=(n,f)=>{let r='';for(const c of n.childNodes){if(c.nodeType===3){if(c.nodeValue)r+=wRun(c.nodeValue.replace(/\s+/g,' '),f);continue}const t=c.tagName.toLowerCase();
+  if(t==='br')r+='<w:r><w:br/></w:r>';else if(t==='ul'||t==='ol')continue;else r+=inl(c,{...f,[t==='h3'?'b':t]:true})}return r};
+ const list=(n,lvl)=>{let i=0;for(const li of n.children){if(li.tagName!=='LI')continue;i++;const pre=n.tagName==='OL'?i+'. ':'• ';out.push(wPara(wRun(pre)+inl(li,{}),{ind:360*lvl,after:120}));for(const s of li.children)if(/^(UL|OL)$/.test(s.tagName))list(s,lvl+1)}};
+ let loose=[];const flush=()=>{const p=document.createElement('p');loose.forEach(x=>p.appendChild(x));loose=[];if(p.textContent.trim())out.push(wPara(inl(p,{})))};
+ for(const n of[...d.childNodes]){const t=n.nodeType===1?n.tagName:'';
+  if(t==='P'){flush();if(n.textContent.trim())out.push(wPara(inl(n,{})))}
+  else if(t==='H3'){flush();out.push(wPara(inl(n,{b:true}),{keep:true}))}
+  else if(t==='UL'||t==='OL'){flush();list(n,1)}
+  else if(t==='BR'){flush()}else loose.push(n)}
+ flush();return out.join('')}
+async function exportDocs(list){
+ const L=list.filter(p=>hasRich(p.copyText)||(p.caption||'').trim()).sort((a,b)=>(a.date||'9999').localeCompare(b.date||'9999'));
+ if(!L.length){toast('Nenhuma dessas tarefas tem roteiro ou legenda escrita.');return}
+ toast('Gerando o documento…');const art=await docxArt();
+ const fd=s=>s?parse(s).toLocaleDateString('pt-BR'):'';
+ const cids=[...new Set(L.map(p=>p.client))];const cname=cids.length===1?cl(cids[0]).name:'';
+ const body=L.map((p,i)=>{
+  let x=wPara(wRun(p.title,{title:true,sz:26}),{pb:i>0,after:290,keep:true});
+  if(hasRich(p.copyText))x+=richToW(p.copyText);
+  const cap=(p.caption||'').trim();
+  if(cap){x+=wPara(wRun('LEGENDA',{b:true}),{keep:true});x+=cap.split('\n').filter(l=>l.trim()).map(l=>wPara(wRun(l))).join('')}
+  return x}).join('');
+ const NS='xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"';
+ const img=(a,id,rid)=>{const{cx,cy}=a;return`<w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${cx}" cy="${cy}"/><wp:docPr id="${id}" name="Logo ${id}"/><a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic><pic:nvPicPr><pic:cNvPr id="${id}" name="logo.png"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="${rid}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r>`};
+ const X='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
+ const header=`${X}<w:hdr ${NS}><w:p><w:pPr><w:pBdr><w:bottom w:val="single" w:sz="6" w:space="0" w:color="111111"/></w:pBdr><w:spacing w:after="0" w:line="240" w:lineRule="auto"/></w:pPr>${img(art.head,1,'rHead')}</w:p></w:hdr>`;
+ const footer=`${X}<w:ftr ${NS}><w:p><w:pPr><w:pBdr><w:top w:val="single" w:sz="12" w:space="10" w:color="111111"/></w:pBdr><w:ind w:left="-60" w:right="-140"/><w:jc w:val="center"/><w:spacing w:after="0" w:line="240" w:lineRule="auto"/></w:pPr>${img(art.foot,2,'rFoot')}</w:p></w:ftr>`;
+ const doc=`${X}<w:document ${NS}><w:body>${body}<w:sectPr><w:headerReference w:type="default" r:id="rHdr"/><w:footerReference w:type="default" r:id="rFtr"/><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="2800" w:right="1500" w:bottom="1800" w:left="1440" w:header="720" w:footer="680" w:gutter="0"/></w:sectPr></w:body></w:document>`;
+ const rel=(id,type,target)=>`<Relationship Id="${id}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/${type}" Target="${target}"/>`;
+ const rels=inner=>`${X}<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${inner}</Relationships>`;
+ const blob=zipStore([
+  ['[Content_Types].xml',`${X}<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="png" ContentType="image/png"/><Override PartName="/word/fontTable.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.fontTable+xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/header1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.header+xml"/><Override PartName="/word/footer1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml"/></Types>`],
+  ['_rels/.rels',rels(rel('rDoc','officeDocument','word/document.xml'))],
+  ['word/document.xml',doc],
+  ['word/_rels/document.xml.rels',rels(rel('rHdr','header','header1.xml')+rel('rFtr','footer','footer1.xml')+rel('rFnt','fontTable','fontTable.xml'))],
+  ['word/fontTable.xml',`${X}<w:fonts xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">${['Readex Pro','Readex Pro Light'].map(n=>`<w:font w:name="${n}"><w:altName w:val="Arial"/><w:charset w:val="00"/><w:family w:val="swiss"/><w:pitch w:val="variable"/></w:font>`).join('')}</w:fonts>`],
+  ['word/header1.xml',header],['word/_rels/header1.xml.rels',rels(rel('rHead','image','media/cabecalho.png'))],
+  ['word/footer1.xml',footer],['word/_rels/footer1.xml.rels',rels(rel('rFoot','image','media/rodape.png'))],
+  ['word/media/cabecalho.png',art.head.png],['word/media/rodape.png',art.foot.png]]);
+ const u=URL.createObjectURL(blob);
+ const name=`Roteiros${cname?' - '+cname.replace(/[\\/:*?"<>|]/g,''):''} - ${new Date().toISOString().slice(0,10)}.docx`;
+ const el=document.createElement('a');el.href=u;el.download=name;document.body.appendChild(el);el.click();el.remove();setTimeout(()=>URL.revokeObjectURL(u),4000);
+ const skip=list.length-L.length;toast(`Documento com ${L.length} roteiro${L.length>1?'s':''} baixado.`+(skip?` ${skip} sem texto ficaram de fora.`:''));
 }
 function bulkApply(fn,msg){const L=S.posts.filter(p=>SEL.has(p.id));L.forEach(fn);save();toast(msg.replace('{n}',L.length));render()}
 function areaHtml(){
@@ -1970,7 +2044,7 @@ function renderModal(){
   <button type="button" data-act="rte" data-cmd="insertUnorderedList" title="Lista com marcadores">• Lista</button><button type="button" data-act="rte" data-cmd="insertOrderedList" title="Lista numerada">1. Lista</button><button type="button" data-act="rte" data-cmd="mark" title="Destacar"><mark style="background:#fff1a8;padding:0 3px">Destaque</mark></button><span class="sep"></span>
   <button type="button" data-act="rte" data-cmd="clear" title="Tirar formatação">Limpar</button></div>
   <div class="in rte richtext" id="m-copytext" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Texto" data-inp="rte" data-ph="Roteiro, texto dos slides ou copy para o cliente aprovar. Dá para colar do Google Docs que a formatação vem junto.">${cleanRich(p.copyText)}</div>
-  <div class="row between meta" style="margin-top:6px"><span>Aparece no portal do cliente acima da legenda.</span><button class="btn ghost sm" data-act="copyText">Copiar texto</button></div>`;
+  <div class="row between meta" style="margin-top:6px"><span>Aparece no portal do cliente acima da legenda.</span><span class="row" style="gap:6px"><button class="btn ghost sm" data-act="exportDocsOne">${ic('download')}Baixar Word</button><button class="btn ghost sm" data-act="copyText">Copiar texto</button></span></div>`;
  if(ui.mtab==='briefing')body=`<textarea class="in" id="m-brief" data-inp="pf" data-k="briefing" placeholder="Ideia central, referências e direcionamento para copy e design" aria-label="Briefing">${esc(p.briefing)}</textarea>`;
  if(ui.mtab==='comentarios')body=`${p.comments.map(c=>`<div class="cmt"><span class="av">${esc(initials(c.who))}</span><div class="grow"><div class="row"><b>${esc(c.who)}</b>${c.client?'<span class="pill t-amber">Cliente</span>':''}<span class="meta">${esc(c.t)}</span></div><p>${esc(c.txt)}</p></div></div>`).join('')||'<div class="faint" style="padding:8px 0 14px">Nenhum comentário ainda.</div>'}
    <div style="margin-top:12px"><textarea class="in" id="m-cmt" style="min-height:80px" placeholder="Escreva um comentário para a equipe"></textarea><div class="row" style="margin-top:8px"><button class="btn sm pri" data-act="addCmt">Comentar</button></div></div>`;
@@ -2125,6 +2199,9 @@ const A={
  search:()=>{document.body.classList.remove('menu');searchSheet()},
  srchOpen:el=>{const p=S.posts.find(x=>x.id===el.dataset.id);if(!p)return;ui.mtab='historico';openPost(p.id)},
  bulkClear:()=>{SEL.clear();render()},
+ exportDocs:()=>exportDocs(navList()),
+ exportDocsSel:()=>exportDocs(S.posts.filter(p=>SEL.has(p.id))),
+ exportDocsOne:()=>exportDocs(S.posts.filter(p=>p.id===ui.modal)),
  bulkDel:el=>{if(!el.classList.contains('armed')){el.classList.add('armed');el.lastChild.textContent='Confirmar exclusão';setTimeout(()=>{if(el.isConnected){el.classList.remove('armed');el.lastChild.textContent='Excluir'}},3000);return}
   const L=S.posts.filter(p=>SEL.has(p.id));S.posts=S.posts.filter(p=>!SEL.has(p.id));L.forEach(p=>[...(p.slides||[]),...(p.video?[p.video]:[])].forEach(x=>{if(x.path&&sb&&!pathUsed(x.path))sb.storage.from('media').remove([x.path]).catch(()=>{})}));SEL.clear();save();toast(`${L.length} tarefa${L.length>1?'s':''} excluída${L.length>1?'s':''}.`);render()},
  rowDup:el=>{const p=S.posts.find(x=>x.id===el.dataset.id);if(!p)return;const q=JSON.parse(JSON.stringify(p));
